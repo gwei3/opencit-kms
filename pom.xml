@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.intel.mtwilson.kms</groupId>
+  <artifactId>kms-maven-build</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <description>
+  The Key Management Server is a proxy adding trust-based key retrieval to a
+  backend key server such as OpenStack Barbican or a server with a KMIP API. 
+  </description>
+  
+  <modules>
+    <module>kms-html5</module>
+    <module>kms-jersey2</module>
+    <module>kms-jetty9</module>
+    <module>kms-keystore</module>
+    <module>kms-keystore-api</module>
+    <module>kms-keystore-directory</module>
+	<module>kms-keystore-proxy</module>
+    <module>kms-launcher</module>
+	<module>kms-maven-java</module>
+	<module>kms-maven-package-makeself</module>
+	<module>kms-maven-package-zip</module>
+	<module>kms-maven-root</module>
+	<module>kms-password-vault</module>
+	<module>kms-saml</module>
+	<module>kms-servlet3</module>
+  </modules>
+
+</project>

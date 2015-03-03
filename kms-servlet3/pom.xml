@@ -1,0 +1,25 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+
+    <artifactId>kms-servlet3</artifactId>
+    <packaging>jar</packaging>
+    <description>Application-specific code related to JSR 315 - the Java Servlet 3.0 specification - including the web.xml descriptor</description>
+    <parent>
+		  <groupId>com.intel.mtwilson.kms</groupId>
+		  <artifactId>kms-maven-root</artifactId>
+		  <version>0.1-SNAPSHOT</version>
+          <relativePath/>
+    </parent>
+
+    <dependencies>
+
+    <dependency>
+	<groupId>javax.servlet</groupId>
+	<artifactId>javax.servlet-api</artifactId>
+	<version>3.1.0</version>
+    </dependency>
+
+
+    </dependencies>  
+</project>

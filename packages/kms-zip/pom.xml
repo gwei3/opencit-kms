@@ -1,0 +1,152 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+
+    <artifactId>kms-zip</artifactId>
+    <packaging>jar</packaging>
+    <description>Key management server</description>
+    <parent>
+		<groupId>com.intel.mtwilson.kms</groupId>
+		<artifactId>kms-maven-package-zip</artifactId>
+		<version>0.1-SNAPSHOT</version>
+		<relativePath />
+    </parent>
+
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-launcher</artifactId>
+        </dependency>
+        
+		<!--
+		also a transitive dependency from kms-keystore and kms-jetty9
+		-->
+        <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-configuration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-configuration-settings-ws-v2</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-html5</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        
+		<!--
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-jersey2</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+		-->
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-jetty9</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-keystore</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-keystore-directory</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+		<!--
+		transitive dependency from kms-keystore
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-keystore-api</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+		-->
+		<!--
+        launcher properties file merged into this project, separate launcher project not needed
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-launcher</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+		-->
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-password-vault</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-saml</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-servlet3</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-jersey2-util</artifactId>
+        </dependency>
+
+        <!-- for the RepeatableRequestFilter -->
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-http-servlets</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+                
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-shiro-file</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-shiro-ws-v2</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-extensions-cache</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-extensions-ws-v2</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+
+            
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>        
+    
+
+    </dependencies>  
+</project>
