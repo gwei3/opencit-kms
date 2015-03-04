@@ -18,7 +18,6 @@
     <module>kms-keystore</module>
     <module>kms-keystore-api</module>
     <module>kms-keystore-directory</module>
-	<module>kms-keystore-proxy</module>
     <module>kms-launcher</module>
 	<module>kms-maven-java</module>
 	<module>kms-maven-package-makeself</module>
@@ -26,7 +25,7 @@
 	<module>kms-maven-root</module>
 	<module>kms-password-vault</module>
 	<module>kms-saml</module>
-	<module>kms-servlet3</module>
+	<module>kmsproxy-saml-cache</module>
   </modules>
 
 </project>

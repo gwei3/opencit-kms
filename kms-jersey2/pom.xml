@@ -7,7 +7,7 @@
     <description>Jersey 2 supporting files</description>
     <parent>
 		  <groupId>com.intel.mtwilson.kms</groupId>
-		  <artifactId>kms-maven-root</artifactId>
+		  <artifactId>kms-maven-java</artifactId>
 		  <version>0.1-SNAPSHOT</version>
           <relativePath/>
     </parent>

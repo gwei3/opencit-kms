@@ -73,8 +73,16 @@
 
 
         <script type="text/javascript">
-            var endpoint = "/v1";
-            
+            console.log("Window.location: %O", window.location);
+            console.log("Window location href %s",window.location.href);
+            console.log("Window location hash %s",window.location.hash);
+            console.log("Window location pathname %s",window.location.pathname);
+            console.log("Window location search %s",window.location.search);
+            console.log("Window location protocol %s host %s port %s",window.location.protocol, window.location.host, window.location.port);
+//            var origin = URI.parse(window.location.href);
+//            var endpoint = URI.build({protocol: origin.protocol, hostname: origin.hostname, port: origin.port, path: "/v1"}); 
+            endpoint = "/v1";
+            console.log("Endpoint: %s", endpoint);
 
             function MainViewModel() {
                 var self = this;

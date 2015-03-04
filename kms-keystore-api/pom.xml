@@ -6,7 +6,7 @@
     <description>KMS request and response data structures</description>
     <parent>
 		  <groupId>com.intel.mtwilson.kms</groupId>
-		  <artifactId>kms-maven-root</artifactId>
+		  <artifactId>kms-maven-java</artifactId>
 		  <version>0.1-SNAPSHOT</version>
           <relativePath/>
      </parent>
