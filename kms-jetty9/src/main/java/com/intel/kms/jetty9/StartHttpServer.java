@@ -10,6 +10,7 @@ import com.intel.mtwilson.configuration.EncryptedConfigurationProvider;
 import com.intel.kms.setup.Jetty;
 import com.intel.kms.setup.JettyTlsKeystore;
 import static com.intel.kms.setup.JettyTlsKeystore.JAVAX_NET_SSL_KEYSTOREPASSWORD;
+import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.configuration.PasswordVaultFactory;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
@@ -129,7 +130,7 @@ public class StartHttpServer implements Runnable {
      * or absolute URL
      */
     public String getDescriptorUrl() {
-        return configuration.get(JETTY_WEBXML, path("kms-servlet3/src/main/resources/WEB-INF/web.xml"));
+        return configuration.get(JETTY_WEBXML, Folders.features("servlet3")+File.separator+"WEB-INF"+File.separator+"web.xml");
     }
 
     /*

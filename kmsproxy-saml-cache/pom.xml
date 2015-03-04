@@ -2,14 +2,14 @@
     <modelVersion>4.0.0</modelVersion>
 
 
-    <artifactId>kms-keystore-proxy</artifactId>
+    <artifactId>kmsproxy-saml-cache</artifactId>
     <packaging>jar</packaging>
     <description>A keyserver proxy which implements a GetKey method that accepts an AIK public key from the client, 
 	obtains a SAML report from Mt Wilson, and forwards the SAML report to the original requested URL.
 	</description>
     <parent>
 		  <groupId>com.intel.mtwilson.kms</groupId>
-		  <artifactId>kms-maven-root</artifactId>
+		  <artifactId>kms-maven-java</artifactId>
 		  <version>0.1-SNAPSHOT</version>
           <relativePath/>
     </parent>

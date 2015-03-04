@@ -51,7 +51,7 @@ public class PasswordVault extends AbstractSetupTask {
             // if user lost password, delete the file and we can recreate it
             // with a new random password
             if (keystorePassword.length == 0) {
-                configuration("Password vault exists but master password is missing; set KMS_PASSWORD");
+                configuration("Password vault exists but master password is missing; set "+Environment.prefix()+"PASSWORD");
             }
         }
 
@@ -60,7 +60,7 @@ public class PasswordVault extends AbstractSetupTask {
     @Override
     protected void validate() throws Exception {
         if (keystorePassword == null || keystorePassword.length == 0) {
-            validation("Password vault master password is missing; set KMS_PASSWORD");
+            validation("Password vault master password is missing; set "+Environment.prefix()+"PASSWORD");
             return;
         }
         if (!keystoreFile.exists()) {
@@ -80,7 +80,7 @@ public class PasswordVault extends AbstractSetupTask {
     protected void execute() throws Exception {
         // the password vault master password must be set by the user by exporting KMS_PASSWORD; we must not generate it here
         if (keystorePassword == null || keystorePassword.length == 0) {
-            throw new IllegalStateException("Password vault master password is missing; set KMS_PASSWORD");
+            throw new IllegalStateException("Password vault master password is missing; set "+Environment.prefix()+"PASSWORD");
         }
 
         // ensure directories exist

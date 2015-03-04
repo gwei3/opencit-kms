@@ -9,6 +9,7 @@
       
   <modules>
 	<module>kms-linux-makeself</module>
+	<module>kmsproxy-linux-makeself</module>
 	<module>kmsproxy-zip</module>
 	<module>kms-zip</module>
 	<!-- 

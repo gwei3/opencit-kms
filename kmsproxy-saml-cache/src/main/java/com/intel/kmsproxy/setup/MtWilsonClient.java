@@ -15,6 +15,7 @@ import com.intel.dcsg.cpg.crypto.RandomUtil;
 import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
 import com.intel.dcsg.cpg.io.FileResource;
+import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.net.NetUtils;
 import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
 import com.intel.dcsg.cpg.x509.X509Builder;
@@ -105,7 +106,9 @@ public class MtWilsonClient extends AbstractSetupTask {
             }
         }
 
-        dn = getConfiguration().get(KMS_TLS_CERT_DN, "CN=kms-proxy"); //trustagentConfiguration.getTrustagentTlsCertDn();
+        // if a specific DN is not configured, use "kmsproxy" with a random UUID to avoid collisions when multiple kmsproxy instances
+        // register with the same mtwilson
+        dn = getConfiguration().get(KMS_TLS_CERT_DN, String.format("CN=kmsproxy.%s", new UUID().toHexString()));
         // we need to know our own local ip addresses/hostname in order to add them to the ssl cert
         ip = getTrustagentTlsCertIpArray();
         dns = getTrustagentTlsCertDnsArray();

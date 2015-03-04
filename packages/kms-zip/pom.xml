@@ -90,12 +90,6 @@
         </dependency>
         
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-servlet3</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-        
-        <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-jersey2-util</artifactId>
         </dependency>

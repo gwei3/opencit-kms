@@ -7,7 +7,7 @@
     <description>Key wrapping and storage service with console commands and JAX-RS interface</description>
     <parent>
 		  <groupId>com.intel.mtwilson.kms</groupId>
-		  <artifactId>kms-maven-root</artifactId>
+		  <artifactId>kms-maven-java</artifactId>
 		  <version>0.1-SNAPSHOT</version>
           <relativePath/>
     </parent>
