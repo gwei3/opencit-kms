@@ -4,6 +4,7 @@
  */
 package com.intel.kms.setup;
 
+import com.intel.dcsg.cpg.crypto.key.password.Password;
 import com.intel.mtwilson.configuration.PasswordVaultFactory;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.setup.AbstractSetupTask;
@@ -34,15 +35,17 @@ public class PasswordVault extends AbstractSetupTask {
     private String keystorePath;
     private String keystoreType; // JCEKS
     private File keystoreFile;
-    private char[] keystorePassword;
+    private Password keystorePassword;
+    private PasswordVaultFactory passwordVaultFactory;
 
 //    private String storageKeyAlgorithm;
 //    private int storageKeyLengthBits;
     @Override
     protected void configure() throws Exception {
-        keystorePath = getConfiguration().get(PasswordVaultFactory.PASSWORD_VAULT_FILE_PROPERTY, Folders.configuration() + File.separator + "password-vault.jck");
-        keystoreType = getConfiguration().get(PasswordVaultFactory.PASSWORD_VAULT_TYPE_PROPERTY, "JCEKS");
-        keystorePassword = Environment.get("PASSWORD", "").toCharArray();
+        passwordVaultFactory = new PasswordVaultFactory(getConfiguration());
+        keystorePath = passwordVaultFactory.getKeystorePath(); //getConfiguration().get(PasswordVaultFactory.PASSWORD_VAULT_FILE_PROPERTY, Folders.configuration() + File.separator + "password-vault.jck");
+        keystoreType = passwordVaultFactory.getKeystoreType(); //getConfiguration().get(PasswordVaultFactory.PASSWORD_VAULT_TYPE_PROPERTY, "JCEKS");
+        keystorePassword = passwordVaultFactory.getKeystorePassword(); //Environment.get("PASSWORD", "").toCharArray();
 
         keystoreFile = new File(keystorePath);
 
@@ -50,8 +53,8 @@ public class PasswordVault extends AbstractSetupTask {
             // we only need to know the password if the file already exists
             // if user lost password, delete the file and we can recreate it
             // with a new random password
-            if (keystorePassword.length == 0) {
-                configuration("Password vault exists but master password is missing; set "+Environment.prefix()+"PASSWORD");
+            if (keystorePassword.isEmpty() ) {
+                configuration("Password vault exists but master password is missing");
             }
         }
 
@@ -59,8 +62,8 @@ public class PasswordVault extends AbstractSetupTask {
 
     @Override
     protected void validate() throws Exception {
-        if (keystorePassword == null || keystorePassword.length == 0) {
-            validation("Password vault master password is missing; set "+Environment.prefix()+"PASSWORD");
+        if (keystorePassword == null || keystorePassword.isEmpty() ) {
+            validation("Password vault master password is missing");
             return;
         }
         if (!keystoreFile.exists()) {
@@ -68,7 +71,7 @@ public class PasswordVault extends AbstractSetupTask {
             return;
         }
 
-        try (PasswordKeyStore keystore = new PasswordKeyStore(keystoreType, keystoreFile, keystorePassword)) {
+        try (PasswordKeyStore keystore = new PasswordKeyStore(keystoreType, keystoreFile, keystorePassword.toCharArray())) {
             log.debug("Password vault has {} entries", keystore.aliases().size()); // empty keystore is ok too
         } catch (KeyStoreException | IOException e) {
             validation("Cannot open password vault", e);
@@ -79,8 +82,8 @@ public class PasswordVault extends AbstractSetupTask {
     @Override
     protected void execute() throws Exception {
         // the password vault master password must be set by the user by exporting KMS_PASSWORD; we must not generate it here
-        if (keystorePassword == null || keystorePassword.length == 0) {
-            throw new IllegalStateException("Password vault master password is missing; set "+Environment.prefix()+"PASSWORD");
+        if (keystorePassword == null || keystorePassword.isEmpty() ) {
+            throw new IllegalStateException("Password vault master password is missing");
         }
 
         // ensure directories exist
@@ -91,7 +94,7 @@ public class PasswordVault extends AbstractSetupTask {
         }
 
         // create an empty password vault
-        try (PasswordKeyStore keystore = new PasswordKeyStore(keystoreType, keystoreFile, keystorePassword)) {
+        try (PasswordKeyStore keystore = new PasswordKeyStore(keystoreType, keystoreFile, keystorePassword.toCharArray())) {
             log.debug("Password vault has {} entries", keystore.aliases().size()); // empty keystore is ok too
             keystore.modified(); // force to write out when we close it
         } catch (KeyStoreException | IOException e) {

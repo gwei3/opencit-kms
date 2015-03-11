@@ -25,6 +25,7 @@
 	<module>kms-maven-root</module>
 	<module>kms-password-vault</module>
 	<module>kms-saml</module>
+	<module>kms-user</module>
 	<module>kmsproxy-saml-cache</module>
   </modules>
 

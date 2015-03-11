@@ -6,15 +6,17 @@ package com.intel.kms.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 //    @JacksonXmlRootElement(localName="host_attestation_collection")
 
-public class SearchKeyAttributesResponse {
-    // jackson 2.0
-    @JsonInclude(value = JsonInclude.Include.ALWAYS)
-//    @JacksonXmlElementWrapper(localName = "search_results")
-//    @JacksonXmlProperty(localName = "search_results")
-    public Collection<KeyAttributes> searchResults = new ArrayList<>();
+public class SearchKeyAttributesResponse extends AbstractResponse {
+    public SearchKeyAttributesResponse() {
+        super();
+    }
     
+    private final ArrayList<KeyAttributes> data = new ArrayList<>();
+    
+    @JsonInclude(value = JsonInclude.Include.ALWAYS)
+    public List<KeyAttributes> getData() { return data; }
 }

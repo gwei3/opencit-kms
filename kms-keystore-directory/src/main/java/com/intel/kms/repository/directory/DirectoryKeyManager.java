@@ -129,10 +129,10 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
     @Override
     public CreateKeyResponse createKey(CreateKeyRequest createKeyRequest) {
         log.debug("createKey");
-        CreateKeyResponse response = new CreateKeyResponse();
         ArrayList<Fault> faults = new ArrayList<>();
         faults.addAll(validateCreateKey(createKeyRequest));
         if (!faults.isEmpty()) {
+            CreateKeyResponse response = new CreateKeyResponse();
             response.getFaults().addAll(faults);
             return response;
         }
@@ -140,31 +140,34 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
         try {
             // prepare a response with all the input attributes,
             // a new key id, and the default transfer policy
-            response.attributes = new KeyAttributes();
-            response.attributes.copyFrom(createKeyRequest);
-            response.attributes.id = new UUID().toString();
-            response.attributes.transferPolicy = "urn:intel:trustedcomputing:key-transfer-policy:require-trust-or-authorization";
+            KeyAttributes created = new KeyAttributes();
+            created.copyFrom(createKeyRequest);
+            created.id = new UUID().toString();
+            created.transferPolicy = "urn:intel:trustedcomputing:key-transfer-policy:require-trust-or-authorization";
             // create the key
             SecretKey skey = generateKey(createKeyRequest.getAlgorithm(), createKeyRequest.getKeyLength());
 
             CipherKey cipherKey = new CipherKey();
-            cipherKey.setAlgorithm(response.attributes.getAlgorithm());
-            cipherKey.setKeyId(response.attributes.id);
-            cipherKey.setKeyLength(response.attributes.getKeyLength());
-            cipherKey.setMode(response.attributes.getMode());
+            cipherKey.setAlgorithm(created.getAlgorithm());
+            cipherKey.setKeyId(created.id);
+            cipherKey.setKeyLength(created.getKeyLength());
+            cipherKey.setMode(created.getMode());
             cipherKey.setEncoded(skey.getEncoded());
-            cipherKey.setPaddingMode(response.attributes.getPaddingMode());
+            cipherKey.setPaddingMode(created.getPaddingMode());
             // store the key and its attributes
             log.debug("Storing cipher key {}", cipherKey.getKeyId());
-            repository.store(response.attributes.id, cipherKey);
+            repository.store(created.id, cipherKey);
             // TODO: encrypt the key using a storage key then write a PEM
             // file with the info. 
             log.info(KeyLogMarkers.CREATE_KEY, "Created key id: {}", cipherKey.getKeyId());
+            
+            CreateKeyResponse response = new CreateKeyResponse(created);
             return response;
             // wrap it with a storage key
         } catch (NoSuchAlgorithmException ex) {
             log.debug("GenerateKey failed", ex);
             faults.add(new InvalidParameter("algorithm", new UnsupportedAlgorithm(createKeyRequest.getAlgorithm())));
+            CreateKeyResponse response = new CreateKeyResponse();
             response.getFaults().addAll(faults);
             return response;
         }
@@ -267,9 +270,9 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             // create the response object
             TransferKeyResponse response = new TransferKeyResponse(encryptedKey, descriptor);
             // add the serialized json because that's what was actually signed; this prevents any issue with slightly different serialization by the caller
-            response.set("cipher.key", encryptedKey);
-            response.set("cipher.json", cipherJson);
-            response.set("integrity.sig", signature);
+            response.getExtensions().set("cipher.key", encryptedKey);
+            response.getExtensions().set("cipher.json", cipherJson);
+            response.getExtensions().set("integrity.sig", signature);
             
             log.info(KeyLogMarkers.TRANSFER_KEY, "Transferred key id: {}", keyRequest.getKeyId());
             return response;
@@ -321,12 +324,14 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
         // store the key and its attributes
         repository.store(registerKeyRequest.getDescriptor().getContent().getKeyId(), cipherKey);
 
-        RegisterKeyResponse response = new RegisterKeyResponse();
-        response.copyFrom(registerKeyRequest.getDescriptor());
-        response.set("keyId", cipherKey.getKeyId());
+        
+        KeyAttributes registered = new KeyAttributes();
+        registered.copyFrom(registerKeyRequest.getDescriptor());
+        registered.set("keyId", cipherKey.getKeyId());
         // TODO: encrypt the key using a storage key then write a PEM
         // file with the info. 
         log.info(KeyLogMarkers.REGISTER_KEY, "Registered key id: {}", cipherKey.getKeyId());
+        RegisterKeyResponse response = new RegisterKeyResponse(registered);
         return response;
     }
 
@@ -346,7 +351,7 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             CipherKey key = repository.retrieve(keyId);
             KeyAttributes keyAttributes = new KeyAttributes();
             keyAttributes.copyFrom(key);
-            response.searchResults.add(keyAttributes);
+            response.getData().add(keyAttributes);
         }
         return response;
 

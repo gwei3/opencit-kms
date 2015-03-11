@@ -41,7 +41,7 @@ public class SearchKeyAttributes extends AbstractEndpoint {
      * Content-Type: application/json
      * 
      * {
-     *   search_results: [
+     *   data: [
      *     {"id":"85a7a2b5-95b2-4fb3-96f2-f2618a485763","algorithm":"AES","key_length":128,"cipher_mode":"OFB"},
      *     {"id":"a2d6c172-85ae-4fb3-96f2-a17ce2df1c92","algorithm":"AES","key_length":128,"cipher_mode":"OFB"}
      *   ]

@@ -62,6 +62,11 @@
             <artifactId>kms-keystore-directory</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-user</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
 		<!--
 		transitive dependency from kms-keystore
         <dependency>
