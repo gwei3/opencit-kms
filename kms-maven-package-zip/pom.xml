@@ -19,7 +19,7 @@
         <!-- NOTE: the order of plugins listed here is important because
         when multiple plugins have the same phase, maven 3.0.3 and later
         executes them in the order listed in the pom.  so first we create
-        the jar, then we copy all resources in to the feature directory,
+        the jar, then we copy all resources in to the application directory,
         then we create the zip file. -->
         
         <plugins>
@@ -54,7 +54,7 @@
                                     <goal>copy-dependencies</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/feature/java</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/application/java</outputDirectory>
                                 </configuration>
                             </execution>
                         </executions>
@@ -72,10 +72,10 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/feature</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/application</outputDirectory>
                                     <resources>
                                         <resource>
-                                            <directory>src/main/feature</directory>
+                                            <directory>src/main/application</directory>
                                             <filtering>false</filtering>
                                         </resource>
                                     </resources>
@@ -88,7 +88,7 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/feature/java</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/application/java</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>${project.build.directory}</directory>
@@ -116,7 +116,7 @@
                                 <configuration>
                                     <target>
                                         <zip destfile="${project.build.directory}/${project.artifactId}-${project.version}.zip">
-                                            <fileset dir="${project.build.directory}/feature" />
+                                            <fileset dir="${project.build.directory}/application" />
                                         </zip>
                                     </target>
                                 </configuration>
