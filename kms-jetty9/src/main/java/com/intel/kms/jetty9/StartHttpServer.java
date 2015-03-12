@@ -6,10 +6,8 @@ package com.intel.kms.jetty9;
 
 import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
-import com.intel.mtwilson.configuration.EncryptedConfigurationProvider;
 import com.intel.kms.setup.Jetty;
 import com.intel.kms.setup.JettyTlsKeystore;
-import static com.intel.kms.setup.JettyTlsKeystore.JAVAX_NET_SSL_KEYSTOREPASSWORD;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.configuration.PasswordVaultFactory;
@@ -17,8 +15,6 @@ import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyStoreException;
-//import org.apache.commons.configuration.Configuration;
-//import org.apache.commons.configuration.ConfigurationException;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -106,20 +102,54 @@ public class StartHttpServer implements Runnable {
         }
     }
 
-    // converts forward slashes to the platform's path separator (forward on linux/mac, backslash on windows)
+    /**
+     * Converts forward slashes to the platform path separator
+     * (forward on linux/mac, backslash on windows)
+     * 
+     * Example:
+     * <pre>
+     * path("C:/kms/configuration") on Windows would produce "C:\\kms\\configuration"
+     * </pre>
+     * 
+     * @param pathForwardSlashes
+     * @return 
+     */
     private String path(String pathForwardSlashes) {
         return pathForwardSlashes.replace("/", File.separator);
     }
+    
+    /**
+     * URLs with a file or jar:file scheme require forward slashes on both Linux
+     * and Windows. So given a platform absolute path which could have either
+     * forward slashes (Linux) or back slashes (Windows) this will convert
+     * those slashes to forward slashes. 
+     * 
+     * Example:
+     * <pre>
+     * "jar:file://" + jarpath(absolutePathToJar) + "!/path/within/jar"
+     * </pre>
+     * 
+     * @param pathPlatformSlashes
+     * @return 
+     */
+    private String jarpath(String pathPlatformSlashes) {
+        return pathPlatformSlashes.replace(File.separator, "/");
+    }
 
     /**
-     * Default is used during development so you can run "kms start" from
-     * the dcg_security-kms source directory.
+     * Assumes an "html5" feature containing static resources in the file system. 
+     * The static resources
+     * provided by kms-html5 are available under the URL path /v1/resources.
+     * So the minimum HTML content needed to make things work out of the box
+     * without the user knowing the full URL is to put an index.html file in
+     * KMS_HOME/features/html5/index.html with a splash screen and redirect to
+     * "/v1/resources/index.html" 
      * 
      * @return location of hypertext directory either as relative path, absolute
      * file path, or jar resource path
      */
     public String getHypertextUrl() {
-        return configuration.get(JETTY_HYPERTEXT, path("kms-html5/src/main/resources/www"));
+        return configuration.get(JETTY_HYPERTEXT, Folders.features("html5"));
     }
 
     /**
