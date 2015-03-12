@@ -41,6 +41,12 @@ if [ -d $KMS_ENV ]; then
   done
 fi
 
+# if non-root execution is specified, and we are currently root, start over; the KMS_SUDO variable limits this to one attempt
+if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ]; then
+  sudo -u $KMS_USERNAME KMS_PASSWORD=$KMS_PASSWORD KMS_SUDO=true kms $*
+  exit $?
+fi
+
 # load linux utility
 if [ -f "$KMS_HOME/bin/functions.sh" ]; then
   . $KMS_HOME/bin/functions.sh
@@ -90,12 +96,6 @@ kms_complete_setup() {
   # useful configuration files
   kms_run setup $KMS_SETUP_FIRST_TASKS
   kms_run setup $KMS_SETUP_TASKS
-
-  ## check if admin user needs to be created
-  #if [ -n "$KMS_ADMIN_USERNAME" ] && [ -n "$KMS_ADMIN_PASSWORD" ]; then
-  #  echo "Creating administrative user: $KMS_ADMIN_USERNAME"
-  #  kms_run password "$KMS_ADMIN_USERNAME" "$KMS_ADMIN_PASSWORD" --permissions *:*
-  #fi
 }
 
 # arguments are optional, if provided they are the names of the tasks to run, in order
@@ -111,12 +111,19 @@ kms_start() {
       return 1
     fi
 
+    # check if we need to use authbind or if we can start java directly
+    prog="java"
+    if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n $(which authbind) ]; then
+      prog="authbind java"
+      JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true"
+    fi
+
     # the subshell allows the java process to have a reasonable current working
     # directory without affecting the user's working directory. 
     # the last background process pid $! must be stored from the subshell.
     (
       cd $KMS_HOME
-      java $JAVA_OPTS com.intel.mtwilson.launcher.console.Main start >>$KMS_HTTP_LOG_FILE 2>&1 &
+      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main start >>$KMS_HTTP_LOG_FILE 2>&1 &
       echo $! > $KMS_PID_FILE
     )
     if kms_is_running; then
