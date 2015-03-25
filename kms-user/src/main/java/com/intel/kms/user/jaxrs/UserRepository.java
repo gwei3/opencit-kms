@@ -4,10 +4,15 @@
  */
 package com.intel.kms.user.jaxrs;
 
+import com.intel.kms.user.UserCollection;
+import com.intel.kms.user.UserFilterCriteria;
+import com.intel.kms.user.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intel.dcsg.cpg.crypto.CryptographyException;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.io.file.DirectoryFilter;
+import com.intel.kms.integrity.PublicKeyNotary;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.jaxrs2.server.resource.DocumentRepository;
 import com.intel.mtwilson.repository.RepositoryCreateException;
@@ -20,8 +25,13 @@ import com.intel.mtwilson.repository.RepositoryStoreException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.security.KeyStoreException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.io.FileUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 /**
@@ -33,15 +43,22 @@ public class UserRepository implements DocumentRepository<User, UserCollection, 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserRepository.class);
     private File directory;
     private ObjectMapper mapper;
+    private PublicKeyNotary notary = null;
 
     public UserRepository() {
         super();
         directory = new File(Folders.repository("users"));
-        if( !directory.exists() && !directory.mkdirs() ) {
+        if (!directory.exists() && !directory.mkdirs()) {
             throw new IllegalStateException("Cannot create user repository directory");
         }
         mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        try {
+            notary = new PublicKeyNotary();
+        }
+        catch(IOException | KeyStoreException e) {
+            log.error("Cannot load notary", e);
+        }
     }
 
     public File getDirectoryForUser(UUID id) {
@@ -112,20 +129,31 @@ public class UserRepository implements DocumentRepository<User, UserCollection, 
             throw new FileNotFoundException(userId.toString());
         }
         User user = mapper.readValue(userProfile, User.class);
+        
         /*
-         // read the transfer key (not required)
          File userTransferKeyPem = new File(userDirectory.getAbsolutePath() + File.separator + "transferkey.pem");
          if( userTransferKeyPem.exists() ) {
-         user.setTransferKeyPem(FileUtils.readFileToString(userTransferKeyPem, Charset.forName("UTF-8")));
+             user.setTransferKeyPem(FileUtils.readFileToString(userTransferKeyPem, Charset.forName("UTF-8")));
          }
-         */
-        return user;
+        */
+        
+         return user;
     }
 
     private void writeUserProfile(User user) throws IOException {
         File userDirectory = getDirectoryForUser(user.getId());
         if (!userDirectory.exists() && !userDirectory.mkdirs()) {
             throw new FileNotFoundException(user.getId().toString());
+        }
+        // automatically notarize user submitted transfer public key 
+        if( user.getTransferKeyPem() != null && user.getTransferKeyPem().startsWith("-----BEGIN PUBLIC KEY-----")) {
+            try {
+                X509Certificate certificate = notary.certifyTransferKey(user.getTransferKey(), user.getUsername());
+                user.setTransferKey(certificate);
+            }
+            catch(CryptographyException | CertificateException e) {
+                throw new IOException(e);
+            }
         }
         File userProfile = new File(userDirectory.getAbsolutePath() + File.separator + "profile.json");
         mapper.writeValue(userProfile, user);
@@ -178,6 +206,9 @@ public class UserRepository implements DocumentRepository<User, UserCollection, 
     public void create(User item) {
         log.debug("User:Create - Got request to create a new User.");
         UserLocator locator = new UserLocator();
+        if( item.getId() == null ) {
+            item.setId(new UUID());
+        }
         locator.id = item.getId();
         try {
             writeUserProfile(item);

@@ -62,7 +62,7 @@
         </init-param>
         <init-param>
             <param-name>jersey.config.server.mediaTypeMappings</param-name>
-            <param-value>txt:text/plain, xml:application/xml, json:application/json, html:text/html, bin:application/octet-stream, yaml:text/yaml, pem:application/x-pem-file, crt:application/pkix-cert</param-value>
+            <param-value>txt:text/plain, xml:application/xml, json:application/json, jsonapi:application/vnd.api+json, html:text/html, bin:application/octet-stream, yaml:text/yaml, pem:application/x-pem-file, crt:application/pkix-cert, saml:application/samlassertion+xml, tgz:archive/tar+gzip</param-value>
         </init-param>
     </servlet>
  

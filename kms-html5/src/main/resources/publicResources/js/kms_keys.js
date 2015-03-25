@@ -73,7 +73,7 @@
                              self.keys.push(new Key(responseJsonContent.data[i]));
                              }
                              */
-                            var mappedItems = $.map(responseJsonContent.data, function(item) {
+                            var mappedItems = $.map(responseJsonContent.keys, function(item) {
                                 return new Key(item);
                             });
                             self.keys(mappedItems);
@@ -99,7 +99,7 @@
                         data: ko.toJSON(createKeyItem), //$.toJSON($("#createKeyForm").serializeObject()), // could also use JSON.stringify but it only works on newer browsers
                         success: function(responseJsonContent, status, xhr) {
                             console.log("Create key response: %O", responseJsonContent);
-                            self.keys.push(new Key(responseJsonContent.data[0])); // have to add this and not keyItem because server ersponse includes key id
+                            self.keys.push(new Key(responseJsonContent)); // have to add this and not keyItem because server ersponse includes key id
                             $('#addKeyModalDialog').modal('hide');
                         }
                     });
@@ -115,7 +115,7 @@
                         data: registerKeyItem.key_pem,
                         success: function(responseJsonContent, status, xhr) {
                             console.log("Register key response: %O", responseJsonContent);
-                            self.keys.push(new Key(responseJsonContent.data[0])); // have to add this and not keyItem because server ersponse includes key id
+                            self.keys.push(new Key(responseJsonContent)); // have to add this and not keyItem because server ersponse includes key id
                         }
                     });
 

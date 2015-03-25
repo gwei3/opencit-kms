@@ -6,11 +6,9 @@ package com.intel.kms.setup;
 
 import com.intel.dcsg.cpg.crypto.key.password.Password;
 import com.intel.mtwilson.configuration.PasswordVaultFactory;
-import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.setup.AbstractSetupTask;
 import java.io.File;
 import java.security.KeyStoreException;
-import com.intel.mtwilson.Environment;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
 import java.io.IOException;
 

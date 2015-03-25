@@ -24,7 +24,7 @@ NAME=kms
 
 # directory layout
 export KMS_HOME=${KMS_HOME:-/opt/kms}
-export KMS_CONFIGURATION=${KMS_CONFIGURATION:-$KMS_HOME/configuration}
+export KMS_CONFIGURATION=${KMS_CONFIGURATION:-${KMS_CONF:-$KMS_HOME/configuration}}
 export KMS_ENV=${KMS_ENV:-$KMS_CONFIGURATION/env}
 export KMS_JAVA=${KMS_JAVA:-$KMS_HOME/java}
 export KMS_BIN=${KMS_BIN:-$KMS_HOME/bin}
@@ -60,7 +60,7 @@ JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
 JAVA_OPTS=${JAVA_OPTS:-"-Dlogback.configurationFile=$KMS_CONFIGURATION/logback.xml"}
 
 KMS_SETUP_FIRST_TASKS=${KMS_SETUP_FIRST_TASKS:-"filesystem update-extensions-cache-file"}
-KMS_SETUP_TASKS=${KMS_SETUP_TASKS:-"password-vault jetty jetty-tls-keystore envelope-key storage-key saml-certificates tpm-identity-certificates"}
+KMS_SETUP_TASKS=${KMS_SETUP_TASKS:-"password-vault jetty jetty-tls-keystore notary-key envelope-key storage-key saml-certificates tpm-identity-certificates"}
 
 # the standard PID file location /var/run is typically owned by root;
 # if we are running as non-root and the standard location isn't writable 

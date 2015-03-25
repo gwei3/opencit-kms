@@ -15,28 +15,33 @@ import com.intel.mtwilson.util.crypto.key2.CipherKey;
 public class KeyAttributes extends CipherKeyAttributes implements Copyable {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KeyAttributes.class);
 
-    /**
-     * Unique identifier for the key (per tenant)
-     */
-    public String id;
+    private String username;
+    private String transferPolicy;
     
     /**
-     * Optional user-readable name for the key.
+     * Optional user-provided description of the key.
      */
-    public String name;
+    private String description;
     
     /**
      * Optional user-provided role name indicates the use of the key.
      * For example:
      * data encryption, key encryption, signatures, key derivation
      */
-    public String role;
+    private String role;
     
     /**
      * Digest algorithm used in conjunction with this key. Optional.
      */
-    public String digestAlgorithm;
-    
+    private String digestAlgorithm;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     /**
      * URI of a transfer policy to apply to this key.
@@ -66,7 +71,40 @@ public class KeyAttributes extends CipherKeyAttributes implements Copyable {
      * etc.
      * 
      */
-    public String transferPolicy;
+    public String getTransferPolicy() {
+        return transferPolicy;
+    }
+
+    public void setTransferPolicy(String transferPolicy) {
+        this.transferPolicy = transferPolicy;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getDigestAlgorithm() {
+        return digestAlgorithm;
+    }
+
+    public void setDigestAlgorithm(String digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+
+
     
     @Override
     public KeyAttributes copy() {
@@ -83,8 +121,8 @@ public class KeyAttributes extends CipherKeyAttributes implements Copyable {
         this.setKeyLength(source.getKeyLength());
         this.setPaddingMode(source.getPaddingMode());
         this.digestAlgorithm = source.digestAlgorithm;
-        this.id = source.id;
-        this.name = source.name;
+        this.username = source.username;
+        this.description = source.description;
         this.role = source.role;
         this.transferPolicy = source.transferPolicy;
     }
@@ -94,7 +132,7 @@ public class KeyAttributes extends CipherKeyAttributes implements Copyable {
         this.setMode(source.getMode());
         this.setKeyLength(source.getKeyLength());
         this.setPaddingMode(source.getPaddingMode());
-        this.id = source.getKeyId();
+        this.setKeyId(source.getKeyId());
 //        this.name = null;
 //        this.digestAlgorithm = null;
 //        this.role = null;

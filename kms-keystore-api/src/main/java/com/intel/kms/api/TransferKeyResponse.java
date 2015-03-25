@@ -4,6 +4,8 @@
  */
 package com.intel.kms.api;
 
+import com.intel.kms.api.util.AbstractResponse;
+
 /**
  * Note the similarity between TransferKeyResponse and RegisterKeyRequest -
  * the difference is outgoing vs incoming.
@@ -23,6 +25,13 @@ public class TransferKeyResponse extends AbstractResponse {
      * metadata.
      */
     private KeyDescriptor descriptor;
+
+    public TransferKeyResponse() {
+        this.key = null;
+        this.descriptor = null;
+    }
+    
+    
     
     public TransferKeyResponse(byte[] key, KeyDescriptor descriptor) {
         this.key = key;
@@ -39,6 +48,14 @@ public class TransferKeyResponse extends AbstractResponse {
 
     public KeyDescriptor getDescriptor() {
         return descriptor;
+    }
+
+    public void setKey(byte[] key) {
+        this.key = key;
+    }
+
+    public void setDescriptor(KeyDescriptor descriptor) {
+        this.descriptor = descriptor;
     }
     
     

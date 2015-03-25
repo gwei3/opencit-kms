@@ -64,6 +64,11 @@ else
   fi
 fi
 
+# if an existing kms is already running, stop it while we install
+if which kms; then
+  kms stop
+fi
+
 # define application directory layout
 if [ "$KMS_LAYOUT" == "linux" ]; then
   export KMS_CONFIGURATION=${KMS_CONFIGURATION:-/etc/kms}

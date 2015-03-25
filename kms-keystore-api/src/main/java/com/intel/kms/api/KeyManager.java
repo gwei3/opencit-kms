@@ -17,8 +17,6 @@ public interface KeyManager {
     RegisterKeyResponse registerKey(RegisterKeyRequest registerKeyRequest);
     DeleteKeyResponse deleteKey(DeleteKeyRequest deleteKeyRequest);
     TransferKeyResponse transferKey(TransferKeyRequest keyRequest);
-    KeyAttributes getKeyAttributes(String keyId);
-    KeyTransferPolicy getKeyPolicy(String keyId);
-    void setKeyPolicy(String keyId, KeyTransferPolicy keyPolicy);
+    GetKeyAttributesResponse getKeyAttributes(GetKeyAttributesRequest keyAttributesRequest);
     SearchKeyAttributesResponse searchKeyAttributes(SearchKeyAttributesRequest searchKeyAttributesRequest);
 }

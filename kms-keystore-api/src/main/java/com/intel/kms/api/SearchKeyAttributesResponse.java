@@ -4,6 +4,7 @@
  */
 package com.intel.kms.api;
 
+import com.intel.kms.api.util.AbstractResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,5 +19,5 @@ public class SearchKeyAttributesResponse extends AbstractResponse {
     private final ArrayList<KeyAttributes> data = new ArrayList<>();
     
     @JsonInclude(value = JsonInclude.Include.ALWAYS)
-    public List<KeyAttributes> getData() { return data; }
+    public final List<KeyAttributes> getData() { return data; }
 }

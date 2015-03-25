@@ -64,6 +64,11 @@ else
   fi
 fi
 
+# if an existing kmsproxy is already running, stop it while we install
+if which kmsproxy; then
+  kmsproxy stop
+fi
+
 # define application directory layout
 if [ "$KMSPROXY_LAYOUT" == "linux" ]; then
   export KMSPROXY_CONFIGURATION=${KMSPROXY_CONFIGURATION:-/etc/kmsproxy}
@@ -82,6 +87,7 @@ for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_ENV $KMSPROXY_
   chown -R $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $directory
   chmod 700 $directory
 done
+
 
 # store directory layout in env file
 echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-layout
