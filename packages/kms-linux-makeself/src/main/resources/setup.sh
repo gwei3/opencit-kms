@@ -51,7 +51,9 @@ if [ "$(whoami)" == "root" ]; then
   # create a kms user if there isn't already one created
   KMS_USERNAME=${KMS_USERNAME:-kms}
   if ! getent passwd $KMS_USERNAME 2>&1 >/dev/null; then
-    useradd --comment "Mt Wilson KMS" --home $KMS_HOME --system --shell /bin/bash $KMS_USERNAME
+    useradd --comment "Mt Wilson KMS" --home $KMS_HOME --system --shell /bin/false $KMS_USERNAME
+    usermod --lock $KMS_USERNAME
+    # note: to assign a shell and allow login you can run "usermod --shell /bin/bash --unlock $KMS_USERNAME"
   fi
 else
   # already running as kms user
@@ -60,6 +62,11 @@ else
   if [ ! -w "$KMS_HOME" ] && [ ! -w $(dirname $KMS_HOME) ]; then
     export KMS_HOME=$(cd ~ && pwd)
   fi
+fi
+
+# if an existing kms is already running, stop it while we install
+if which kms; then
+  kms stop
 fi
 
 # define application directory layout
@@ -74,7 +81,7 @@ elif [ "$KMS_LAYOUT" == "home" ]; then
 fi
 export KMS_ENV=$KMS_CONFIGURATION/env
 
-# create application directories
+# create application directories (chown will be repeated near end of this script, after setup)
 for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do
   mkdir -p $directory
   chown -R $KMS_USERNAME:$KMS_USERNAME $directory
@@ -90,6 +97,9 @@ echo "export KMS_REPOSITORY=$KMS_REPOSITORY" >> $KMS_ENV/kms-layout
 echo "export KMS_LOGS=$KMS_LOGS" >> $KMS_ENV/kms-layout
 echo "export KMS_ENV=$KMS_ENV" >> $KMS_ENV/kms-layout
 
+# store kms username in env file
+echo "# $(date)" > $KMS_ENV/kms-username
+echo "export KMS_USERNAME=$KMS_USERNAME" >> $KMS_ENV/kms-username
 
 # kms requires java 1.7 or later
 # detect or install java (jdk-1.7.0_51-linux-x64.tar.gz)
@@ -109,23 +119,31 @@ if ! java_ready_report; then
   exit 1
 fi
 
-# make sure unzip is installed
-KMS_YUM_PACKAGES="zip unzip"
-KMS_APT_PACKAGES="zip unzip"
-KMS_YAST_PACKAGES="zip unzip"
-KMS_ZYPPER_PACKAGES="zip unzip"
+# make sure unzip and authbind are installed
+KMS_YUM_PACKAGES="zip unzip authbind"
+KMS_APT_PACKAGES="zip unzip authbind"
+KMS_YAST_PACKAGES="zip unzip authbind"
+KMS_ZYPPER_PACKAGES="zip unzip authbind"
 auto_install "Installer requirements" "KMS"
 
+# setup authbind to allow non-root kms to listen on ports 80 and 443
+if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ -d /etc/authbind/byport ]; then
+  touch /etc/authbind/byport/80 /etc/authbind/byport/443
+  chmod 500 /etc/authbind/byport/80 /etc/authbind/byport/443
+  chown $KMS_USERNAME /etc/authbind/byport/80 /etc/authbind/byport/443
+fi
 
 # extract kms  (kms-zip-0.1-SNAPSHOT.zip)
 echo "Extracting application..."
 KMS_ZIPFILE=`ls -1 kms-*.zip 2>/dev/null | head -n 1`
 unzip -oq $KMS_ZIPFILE -d $KMS_HOME
-chown -R $KMS_USERNAME:$KMS_USERNAME $KMS_HOME
-chmod 700 $KMS_HOME/bin/kms.sh
 
 # copy utilities script file to application folder
 cp $UTIL_SCRIPT_FILE $KMS_HOME/bin/functions.sh
+
+# set permissions
+chown -R $KMS_USERNAME:$KMS_USERNAME $KMS_HOME
+chmod 755 $KMS_HOME/bin/*
 
 # link /usr/local/bin/kms -> /opt/kms/bin/kms
 EXISTING_KMS_COMMAND=`which kms`
@@ -159,6 +177,11 @@ fi
 
 # setup the kms
 kms setup
+
+# ensure the kms owns all the content created during setup
+for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do
+  chown -R $KMS_USERNAME:$KMS_USERNAME $directory
+done
 
 # start the server
 kms start

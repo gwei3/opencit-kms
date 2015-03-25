@@ -98,7 +98,7 @@ public class ProxyGetKeyWithAik {
 
         try {
             Pem pemObject = Pem.valueOf(pem);
-            if (pemObject.getContentType().equals("PUBLIC KEY")) {
+            if (pemObject.getBanner().equals("PUBLIC KEY")) {
                 log.debug("Input is public key");
 //                PublicKey aikPublicKey = RsaUtil.decodePemPublicKey(pem);
                 PublicKey aikPublicKey = RsaUtil.decodeDerPublicKey(pemObject.getContent());
@@ -107,7 +107,7 @@ public class ProxyGetKeyWithAik {
                 ProxyResponse backendResponse = proxyKeyRequestByAik(keyId, aikId, httpRequest);
                 prepareResponse(httpResponse, backendResponse);
                 return backendResponse.content;
-            } else if (pemObject.getContentType().equals("CERTIFICATE")) {
+            } else if (pemObject.getBanner().equals("CERTIFICATE")) {
                 log.debug("Input is certificate");
 //                X509Certificate aikcert = X509Util.decodePemCertificate(pem);
                 X509Certificate aikCertificate = X509Util.decodeDerCertificate(pemObject.getContent());

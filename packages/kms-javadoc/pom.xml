@@ -101,11 +101,6 @@
             <artifactId>kms-keystore</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-servlet3</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
 		<!--
 		transitive dependency from kms-keystore
         <dependency>

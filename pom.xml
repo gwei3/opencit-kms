@@ -12,12 +12,19 @@
   </description>
   
   <modules>
+    <module>kms-barbican-api</module>
+    <module>kms-barbican-server</module>
+    <module>kms-client-jaxrs2</module>
     <module>kms-html5</module>
-    <module>kms-jersey2</module>
+    <module>kms-integrity</module>
     <module>kms-jetty9</module>
+    <module>kms-jsonapi</module>
+    <module>kms-jsonapi-keys</module>
     <module>kms-keystore</module>
     <module>kms-keystore-api</module>
     <module>kms-keystore-directory</module>
+    <module>kms-keys-ws-v2</module>
+    <module>kms-keys-ws-v2-api</module>
     <module>kms-launcher</module>
 	<module>kms-maven-java</module>
 	<module>kms-maven-package-makeself</module>
@@ -25,6 +32,11 @@
 	<module>kms-maven-root</module>
 	<module>kms-password-vault</module>
 	<module>kms-saml</module>
+	<module>kms-test</module>
+	<module>kms-transfer-policy</module>
+	<module>kms-user</module>
+	<module>kms-user-api</module>
+	<module>kms-version</module>
 	<module>kmsproxy-saml-cache</module>
   </modules>
 

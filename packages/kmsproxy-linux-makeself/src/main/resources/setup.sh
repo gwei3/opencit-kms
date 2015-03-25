@@ -51,7 +51,9 @@ if [ "$(whoami)" == "root" ]; then
   # create a kmsproxy user if there isn't already one created
   KMSPROXY_USERNAME=${KMSPROXY_USERNAME:-kmsproxy}
   if ! getent passwd $KMSPROXY_USERNAME 2>&1 >/dev/null; then
-    useradd --comment "Mt Wilson KMSPROXY" --home $KMSPROXY_HOME --system --shell /bin/bash $KMSPROXY_USERNAME
+    useradd --comment "Mt Wilson KMSPROXY" --home $KMSPROXY_HOME --system --shell /bin/false $KMSPROXY_USERNAME
+    usermod --lock $KMSPROXY_USERNAME
+    # note: to assign a shell and allow login you can run "usermod --shell /bin/bash --unlock $KMSPROXY_USERNAME"
   fi
 else
   # already running as kmsproxy user
@@ -60,6 +62,11 @@ else
   if [ ! -w "$KMSPROXY_HOME" ] && [ ! -w $(dirname $KMSPROXY_HOME) ]; then
     export KMSPROXY_HOME=$(cd ~ && pwd)
   fi
+fi
+
+# if an existing kmsproxy is already running, stop it while we install
+if which kmsproxy; then
+  kmsproxy stop
 fi
 
 # define application directory layout
@@ -74,7 +81,7 @@ elif [ "$KMSPROXY_LAYOUT" == "home" ]; then
 fi
 export KMSPROXY_ENV=$KMSPROXY_CONFIGURATION/env
 
-# create application directories
+# create application directories (chown will be repeated near end of this script, after setup)
 for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do
   mkdir -p $directory
   chown -R $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $directory
@@ -90,6 +97,9 @@ echo "export KMSPROXY_REPOSITORY=$KMSPROXY_REPOSITORY" >> $KMSPROXY_ENV/kmsproxy
 echo "export KMSPROXY_LOGS=$KMSPROXY_LOGS" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_ENV=$KMSPROXY_ENV" >> $KMSPROXY_ENV/kmsproxy-layout
 
+# store kmsproxy username in env file
+echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-username
+echo "export KMSPROXY_USERNAME=$KMSPROXY_USERNAME" >> $KMSPROXY_ENV/kmsproxy-username
 
 # kmsproxy requires java 1.7 or later
 # detect or install java (jdk-1.7.0_51-linux-x64.tar.gz)
@@ -109,23 +119,31 @@ if ! java_ready_report; then
   exit 1
 fi
 
-# make sure unzip is installed
-KMSPROXY_YUM_PACKAGES="zip unzip"
-KMSPROXY_APT_PACKAGES="zip unzip"
-KMSPROXY_YAST_PACKAGES="zip unzip"
-KMSPROXY_ZYPPER_PACKAGES="zip unzip"
+# make sure unzip and authbind are installed
+KMSPROXY_YUM_PACKAGES="zip unzip authbind"
+KMSPROXY_APT_PACKAGES="zip unzip authbind"
+KMSPROXY_YAST_PACKAGES="zip unzip authbind"
+KMSPROXY_ZYPPER_PACKAGES="zip unzip authbind"
 auto_install "Installer requirements" "KMSPROXY"
 
+# setup authbind to allow non-root kmsproxy to listen on ports 80 and 443
+if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ -d /etc/authbind/byport ]; then
+  touch /etc/authbind/byport/80 /etc/authbind/byport/443
+  chmod 500 /etc/authbind/byport/80 /etc/authbind/byport/443
+  chown $KMSPROXY_USERNAME /etc/authbind/byport/80 /etc/authbind/byport/443
+fi
 
 # extract kmsproxy  (kmsproxy-zip-0.1-SNAPSHOT.zip)
 echo "Extracting application..."
 KMSPROXY_ZIPFILE=`ls -1 kmsproxy-*.zip 2>/dev/null | head -n 1`
 unzip -oq $KMSPROXY_ZIPFILE -d $KMSPROXY_HOME
-chown -R $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $KMSPROXY_HOME
-chmod 700 $KMSPROXY_HOME/bin/kmsproxy.sh
 
 # copy utilities script file to application folder
 cp $UTIL_SCRIPT_FILE $KMSPROXY_HOME/bin/functions.sh
+
+# set permissions
+chown -R $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $KMSPROXY_HOME
+chmod 755 $KMSPROXY_HOME/bin/*
 
 # link /usr/local/bin/kmsproxy -> /opt/kmsproxy/bin/kmsproxy
 EXISTING_KMSPROXY_COMMAND=`which kmsproxy`
@@ -160,6 +178,11 @@ fi
 
 # setup the kmsproxy
 kmsproxy setup
+
+# ensure the kmsproxy owns all the content created during setup
+for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do
+  chown -R $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $directory
+done
 
 # start the server
 kmsproxy start

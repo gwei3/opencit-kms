@@ -59,21 +59,21 @@
                         url: endpoint + "/keys",
                         accept: "application/json",
                         data: $("#searchKeysForm").serialize(), // or we could use ko to serialize searchCriteriaItem $.params(ko.toJSON(searchCriteriaItem))
-                        success: function(data, status, xhr) {
-                            console.log("Search results: %O", data);
+                        success: function(responseJsonContent, status, xhr) {
+                            console.log("Search results: %O", responseJsonContent);
                             /*
                              * Example:
-                             * {"search_results":[{"algorithm":"AES","key_length":128,"id":"3787f629-1827-411e-866e-ce87e37f805a"},{"algorithm":"AES","key_length":128,"id":"dd552684-8238-4c4c-baba-c5e7467d3604"}]}
+                             * {"data":[{"algorithm":"AES","key_length":128,"id":"3787f629-1827-411e-866e-ce87e37f805a"},{"algorithm":"AES","key_length":128,"id":"dd552684-8238-4c4c-baba-c5e7467d3604"}]}
                              */
                             /*
                              // clear any prior search results
                              while(self.keys.length>0) { self.keys.pop(); }
                              // add new results
-                             for(var i=0; i<data.search_results.length; i++) {
-                             self.keys.push(new Key(data.search_results[i]));
+                             for(var i=0; i<responseJsonContent.data.length; i++) {
+                             self.keys.push(new Key(responseJsonContent.data[i]));
                              }
                              */
-                            var mappedItems = $.map(data.search_results, function(item) {
+                            var mappedItems = $.map(responseJsonContent.keys, function(item) {
                                 return new Key(item);
                             });
                             self.keys(mappedItems);
@@ -97,9 +97,9 @@
                         contentType: "application/json",
                         headers: {'Accept': 'application/json'},
                         data: ko.toJSON(createKeyItem), //$.toJSON($("#createKeyForm").serializeObject()), // could also use JSON.stringify but it only works on newer browsers
-                        success: function(data, status, xhr) {
-                            console.log("Create key response: %O", data);
-                            self.keys.push(new Key(data.attributes)); // have to add this and not keyItem because server ersponse includes key id
+                        success: function(responseJsonContent, status, xhr) {
+                            console.log("Create key response: %O", responseJsonContent);
+                            self.keys.push(new Key(responseJsonContent)); // have to add this and not keyItem because server ersponse includes key id
                             $('#addKeyModalDialog').modal('hide');
                         }
                     });
@@ -113,9 +113,9 @@
                         contentType: "application/x-pem-file",
                         headers: {'Accept': 'application/json'},
                         data: registerKeyItem.key_pem,
-                        success: function(data, status, xhr) {
-                            console.log("Register key response: %O", data);
-                            self.keys.push(new Key(data.attributes)); // have to add this and not keyItem because server ersponse includes key id
+                        success: function(responseJsonContent, status, xhr) {
+                            console.log("Register key response: %O", responseJsonContent);
+                            self.keys.push(new Key(responseJsonContent)); // have to add this and not keyItem because server ersponse includes key id
                         }
                     });
 

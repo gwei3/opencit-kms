@@ -143,11 +143,16 @@ function ResourceLoader() {
     };
     self.postLoadJS = function(request) {
         // check if all the requested scripts have loaded, and if so invoke the callback
+        if( request.statusTimerId ) { clearTimeout(request.statusTimerId); request.statusTimerId = null; }
         var url_array = request.urls;
         var ready = true;
+        var statusCounts = {};
         for (var i = 0; i < url_array.length; i++) {
             var url = url_array[i];
-            ready = ready && self.js[url] && self.js[url].status === "done";
+            var status = (self.js[url] && self.js[url].status ? self.js[url].status : "null");
+            if( !statusCounts[ status ] ) { statusCounts[status] = 0; }
+            statusCounts[status]++;
+            ready = ready && status === "done";
         }
         if (ready) {
             console.log("ResourceLoader.loadJS ready for callback on urls: %O", request.urls);
@@ -165,6 +170,18 @@ function ResourceLoader() {
                 return {"index": index, "url": value, "status": (self.js[value] ? self.js[value].status : "unknown")};
             });
             console.log("ResourceLoader.loadJS status: %O", status_array);
+            // schedule another check unless the load status is error; this is required when two or more simultaneous load requests are issued that share a dependency, the first one sets status to pending and starts the download, the second one sees a download is in progress and calls postLoadJS just to see but if the download has not completed yet  and we don't schedule another check here it would just fail without trying again
+            // TODO: increase the next check time slightly each time we do it (maybe log curve) so that as more resources are loaded we're not trying to do all the checks at the same time
+            var currentTimeMs = new Date().getTime();
+            var priorTimeMs = request.statusTimerRequestedOn ? request.statusTimerRequestedOn : 0;
+            console.log("ResourceLoader.loadJS currentTimeMs = %s, priorTimeMs = %s", currentTimeMs, priorTimeMs);
+            console.log("ResourceLoader.loadJS last status check requested %d ms ago", currentTimeMs - priorTimeMs);
+            console.log("ResourceLoader.loadJS status counts for urls: %O\n%O", url_array, statusCounts);
+            if( !statusCounts["error"] ) {
+//            if( self.js[url.status = "error" ) {
+                request.statusTimerRequestedOn = currentTimeMs;
+                request.statusTimerId = setTimeout(self.postLoadJS, 1000, request);
+            }
         }
     };
     self.loadJS = function(url_array, callback) {
@@ -208,6 +225,7 @@ function ResourceLoader() {
                         catch(e) {
                             self.js[url].status = "error";
                             self.js[url].error = e;
+                            console.log("Error while executing script [%s]: %O", url, e);
                         }
                     },
                     error: function(xhr, jqstatus, httpstatus) {

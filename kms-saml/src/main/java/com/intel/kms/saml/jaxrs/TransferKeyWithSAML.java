@@ -122,15 +122,14 @@ public class TransferKeyWithSAML {
     @Consumes(CryptoMediaType.APPLICATION_SAML)
     @Produces(CryptoMediaType.APPLICATION_X_PEM_FILE)
 //    @RequiresPermissions("keys:transfer")
-    public byte[] getKeyWithSamlAsPem(@PathParam("keyId") String keyId, String saml) {
+    public String getKeyWithSamlAsPem(@PathParam("keyId") String keyId, String saml) {
         log.debug("getKeyWithSamlAsPem");
         log.debug("Received trust assertion to transfer key: {}" + saml);
 //        try {
         TransferKeyResponse transferKeyResponse = transferKeyWithSAML(keyId, saml);
         Pem pem = createPemFromTransferKeyResponse(transferKeyResponse);
 
-        byte[] container = pem.toString().getBytes(Charset.forName("UTF-8"));
-        return container;
+        return pem.toString();
 //        }
 //        catch(IOException e) {
 //            throw new WebApplicationException("Internal error", Status.INTERNAL_SERVER_ERROR);
@@ -245,11 +244,11 @@ public class TransferKeyWithSAML {
         // create cipher.json
 //        ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
 //        String cipherJson = mapper.writeValueAsString(transferKeyResponse.getDescriptor()); // describes the cipher key and its encryption/integrity information but does not include the cipher key itself
-        String cipherJson = (String) transferKeyResponse.get("cipher.json"); // see DirectoryKeyManager transferKey;  we could generate it using the line above BUT it's already been signed by the key manager so we need to make sure we use exactly what the key manager provided so the client can verify the signature
+        String cipherJson = (String) transferKeyResponse.getExtensions().get("cipher.json"); // see DirectoryKeyManager transferKey;  we could generate it using the line above BUT it's already been signed by the key manager so we need to make sure we use exactly what the key manager provided so the client can verify the signature
         // create server.crt
 //        byte[] serverCertificate = null; // XXX TODO load the server certificat from configuration (need setup task to create it -- this is NOT ssl cert, it's key signing cert)
         // create integrity.sig
-        byte[] integritySig = (byte[]) transferKeyResponse.get("integrity.sig"); // see DirectoryKeyManager transferKey
+        byte[] integritySig = (byte[]) transferKeyResponse.getExtensions().get("integrity.sig"); // see DirectoryKeyManager transferKey
         // create index.html
         String indexHtml = createIndexHtml(transferKeyResponse); //  create index.html with entry point link to integrity.json (verify package) and cipher.json (how to decrypt cipher.key)
         // create key.tgz with these files
@@ -350,14 +349,14 @@ public class TransferKeyWithSAML {
     private TrustReport isTrustedByMtWilson(String saml) throws IOException, ClientException, GeneralSecurityException, CryptographyException, ApiException {
         X509Certificate[] trustedSamlAuthorities = getTrustedSamlCertificateAuthorities();
         TrustAssertion trustAssertion = new TrustAssertion(trustedSamlAuthorities, saml);
-        log.debug("trust status for {}", trustAssertion.getHosts());
         log.debug("trust assertion valid? {}", trustAssertion.isValid());
 
         if (!trustAssertion.isValid()) {
-            log.error("Invalid signature on trust report");
+            log.error("Invalid signature on trust report", trustAssertion.error());
             return TrustReport.UNTRUSTED;
         }
 
+        log.debug("trust status for {}", trustAssertion.getHosts());
         // we only support getting an assertion for one host, so
         // find the first listed host and throw an exception if there's more
         // than one

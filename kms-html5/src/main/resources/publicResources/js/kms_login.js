@@ -5,9 +5,10 @@ var KMS_PAGES = [
     { "href": "dashboard.html", "target": "#main", "target_tab": "dashboard" },  // TODO:  target_tab should be calculated automatically or generated and synchronized with the links ... the links should be generated from this list too...
     { "href": "settings.html", "target": "#main", "target_tab": "settings" },
     { "href": "help.html", "target": "#main", "target_tab": "help" },
-    { "href": "profile.html", "target": "#main", "target_tab": "my_profile" },
     { "href": "logout.html", "target": "#main", "target_tab": "logout" },
     { "href": "license.html", "target": "#main", "target_tab": "license" },
+    { "href": "/v1/resources/profile.html", "target": "#main", "target_tab": "my_profile" },
+    { "href": "/v1/resources/users.html", "target": "#main", "target_tab": "users" },
     { "href": "/v1/resources/saml_certificates.html", "target": "#main", "target_tab": "saml_certificates" },
     { "href": "/v1/resources/tpm_identity_certificates.html", "target": "#main", "target_tab": "tpm_identity_certificates" }
 ];

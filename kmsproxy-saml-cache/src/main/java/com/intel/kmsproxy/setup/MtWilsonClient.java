@@ -10,23 +10,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.intel.dcsg.cpg.configuration.PropertiesConfiguration;
 import com.intel.dcsg.cpg.crypto.RandomUtil;
-import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
 import com.intel.dcsg.cpg.io.FileResource;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.net.NetUtils;
-import com.intel.dcsg.cpg.tls.policy.TlsPolicy;
-import com.intel.dcsg.cpg.x509.X509Builder;
-import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.kmsproxy.MtWilsonClientConfiguration;
-import com.intel.mtwilson.Folders;
-import com.intel.mtwilson.KeystoreUtil;
 import com.intel.mtwilson.configuration.PasswordVaultFactory;
-import com.intel.mtwilson.jaxrs2.client.PropertiesTlsPolicyFactory;
 import com.intel.mtwilson.setup.AbstractSetupTask;
-import com.intel.mtwilson.tls.policy.factory.TlsPolicyFactory;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
 import com.intel.mtwilson.v2.client.MwClientUtil;
 import java.io.File;
@@ -34,18 +25,12 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.security.KeyPair;
 import java.security.KeyStoreException;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -61,9 +46,9 @@ public class MtWilsonClient extends AbstractSetupTask {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MtWilsonClient.class);
     // configuration keys
-    private static final String KMS_TLS_CERT_DN = "kms.tls.cert.dn";
-    private static final String KMS_TLS_CERT_IP = "kms.tls.cert.ip";
-    private static final String KMS_TLS_CERT_DNS = "kms.tls.cert.dns";
+    private static final String KMSPROXY_TLS_CERT_DN = "kmsproxy.tls.cert.dn";
+    private static final String KMSPROXY_TLS_CERT_IP = "kmsproxy.tls.cert.ip";
+    private static final String KMSPROXY_TLS_CERT_DNS = "kmsproxy.tls.cert.dns";
     private String keystorePath;
     private File keystoreFile;
     private String keystorePasswordAlias;
@@ -108,7 +93,7 @@ public class MtWilsonClient extends AbstractSetupTask {
 
         // if a specific DN is not configured, use "kmsproxy" with a random UUID to avoid collisions when multiple kmsproxy instances
         // register with the same mtwilson
-        dn = getConfiguration().get(KMS_TLS_CERT_DN, String.format("CN=kmsproxy.%s", new UUID().toHexString()));
+        dn = getConfiguration().get(KMSPROXY_TLS_CERT_DN, String.format("CN=kmsproxy.%s", new UUID().toHexString()));
         // we need to know our own local ip addresses/hostname in order to add them to the ssl cert
         ip = getTrustagentTlsCertIpArray();
         dns = getTrustagentTlsCertDnsArray();
@@ -260,25 +245,25 @@ public class MtWilsonClient extends AbstractSetupTask {
         getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_KEYSTORE_PASSWORD_PROPERTY, keystorePasswordAlias);
         getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_API_URL, mtwilsonUrl.toExternalForm());
         getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA1, mtwilsonTlsCertSha1);
-        getConfiguration().set(KMS_TLS_CERT_DN, dn);
+        getConfiguration().set(KMSPROXY_TLS_CERT_DN, dn);
         if (ip != null) {
-            getConfiguration().set(KMS_TLS_CERT_IP, StringUtils.join(ip, ","));
+            getConfiguration().set(KMSPROXY_TLS_CERT_IP, StringUtils.join(ip, ","));
         }
         if (dns != null) {
-            getConfiguration().set(KMS_TLS_CERT_DNS, StringUtils.join(dns, ","));
+            getConfiguration().set(KMSPROXY_TLS_CERT_DNS, StringUtils.join(dns, ","));
         }
 
     }
 
     // note: duplicated from TrustagentConfiguration
     public String getTrustagentTlsCertIp() {
-        return getConfiguration().get(KMS_TLS_CERT_IP, "");
+        return getConfiguration().get(KMSPROXY_TLS_CERT_IP, "");
     }
     // note: duplicated from TrustagentConfiguration
 
     public String[] getTrustagentTlsCertIpArray() throws SocketException {
 //        return getConfiguration().getString(KMS_TLS_CERT_IP, "127.0.0.1").split(",");
-        String[] TlsCertIPs = getConfiguration().get(KMS_TLS_CERT_IP, "").split(",");
+        String[] TlsCertIPs = getConfiguration().get(KMSPROXY_TLS_CERT_IP, "").split(",");
         if (TlsCertIPs != null && !TlsCertIPs[0].isEmpty()) {
             log.debug("Retrieved IPs from configuration: {}", (Object[]) TlsCertIPs);
             return TlsCertIPs;
@@ -295,13 +280,13 @@ public class MtWilsonClient extends AbstractSetupTask {
     // note: duplicated from TrustagentConfiguration
 
     public String getTrustagentTlsCertDns() {
-        return getConfiguration().get(KMS_TLS_CERT_DNS, "");
+        return getConfiguration().get(KMSPROXY_TLS_CERT_DNS, "");
     }
     // note: duplicated from TrustagentConfiguration
 
     public String[] getTrustagentTlsCertDnsArray() throws SocketException {
 //        return getConfiguration().getString(KMS_TLS_CERT_DNS, "localhost").split(",");
-        String[] TlsCertDNs = getConfiguration().get(KMS_TLS_CERT_DNS, "").split(",");
+        String[] TlsCertDNs = getConfiguration().get(KMSPROXY_TLS_CERT_DNS, "").split(",");
         if (TlsCertDNs != null && !TlsCertDNs[0].isEmpty()) {
             log.debug("Retrieved Domain Names from configuration: {}", (Object[]) TlsCertDNs);
             return TlsCertDNs;

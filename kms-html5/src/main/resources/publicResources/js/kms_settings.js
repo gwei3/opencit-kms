@@ -53,22 +53,22 @@ function sortBy(propertyName) {
                         url: endpoint + "/configuration-settings",
                         accept: "application/json",
                         data: $("#searchSettingsForm").serialize(), // or we could use ko to serialize searchCriteriaItem $.params(ko.toJSON(searchCriteriaItem))
-                        success: function(data, status, xhr) {
-                            console.log("Search results: %O", data);
+                        success: function(responseJsonContent, status, xhr) {
+                            console.log("Search results: %O", responseJsonContent);
                             /*
                              * Example:
-                             * {"meta":{},"settings":[{"name":"kms.tls.cert.ip","value":"127.0.0.1"},{"name":"jetty.webxml","value":"C:\\Users\\jbuhacof\\workspace\\dcg_security-kms\\kms-servlet3\\src\\main\\resources\\WEB-INF\\web.xml"},{"name":"jetty.secure.port","value":"443"},{"name":"kms.tls.cert.dns","value":"JBUHACOF-MOBL.amr.corp.intel.com"},{"name":"javax.net.ssl.keyStore","value":"C:\\kms\\configuration\\keystore.jks"},{"name":"envelope.keystore.file","value":"C:\\kms\\configuration\\envelope.p12"},{"name":"storage.keystore.file","value":"C:\\kms\\configuration\\storage.jck"},{"name":"jetty.port","value":"80"},{"name":"jetty.hypertext","value":"C:\\Users\\jbuhacof\\workspace\\dcg_security-kms\\kms-html5\\src\\main\\resources\\publicResources"},{"name":"kms.tls.cert.dn","value":"CN=kms"}]}
+                             * {"meta":{},"data":[{"name":"kms.tls.cert.ip","value":"127.0.0.1"},{"name":"jetty.webxml","value":"C:\\Users\\jbuhacof\\workspace\\dcg_security-kms\\kms-servlet3\\src\\main\\resources\\WEB-INF\\web.xml"},{"name":"jetty.secure.port","value":"443"},{"name":"kms.tls.cert.dns","value":"JBUHACOF-MOBL.amr.corp.intel.com"},{"name":"javax.net.ssl.keyStore","value":"C:\\kms\\configuration\\keystore.jks"},{"name":"envelope.keystore.file","value":"C:\\kms\\configuration\\envelope.p12"},{"name":"storage.keystore.file","value":"C:\\kms\\configuration\\storage.jck"},{"name":"jetty.port","value":"80"},{"name":"jetty.hypertext","value":"C:\\Users\\jbuhacof\\workspace\\dcg_security-kms\\kms-html5\\src\\main\\resources\\publicResources"},{"name":"kms.tls.cert.dn","value":"CN=kms"}]}
                              */
                             /*
                              // clear any prior search results
                              while(self.keys.length>0) { self.keys.pop(); }
                              // add new results
-                             for(var i=0; i<data.search_results.length; i++) {
-                             self.keys.push(new Key(data.search_results[i]));
+                             for(var i=0; i<responseJsonContent.settings.length; i++) {
+                             self.keys.push(new Key(responseJsonContent.settings[i]));
                              }
                              */
-                            data.settings.sort(sortBy("name")); // sort by setting name
-                            var mappedItems = $.map(data.settings, function(item) {
+                            responseJsonContent.settings.sort(sortBy("name")); // sort by setting name
+                            var mappedItems = $.map(responseJsonContent.settings, function(item) {
                                 return new Setting(item);
                             });
                             self.settings(mappedItems);
