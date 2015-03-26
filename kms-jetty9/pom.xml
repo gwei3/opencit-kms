@@ -39,12 +39,6 @@
 
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-servlet3</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-            
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore-api</artifactId>
             <version>${project.version}</version>
         </dependency>
