@@ -6,7 +6,7 @@ package com.intel.kms.jetty9;
 
 import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
-import com.intel.kms.setup.Jetty;
+import com.intel.kms.setup.JettyPorts;
 import com.intel.kms.setup.JettyTlsKeystore;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
@@ -61,8 +61,9 @@ import org.eclipse.jetty.webapp.WebAppContext;
 public class StartHttpServer implements Runnable {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StartHttpServer.class);
     
-    public final static String JETTY_HYPERTEXT = "jetty.hypertext"; //"JETTY_HYPERTEXT";
-    public final static String JETTY_WEBXML = "jetty.webxml"; //"JETTY_WEBXML";
+    // configuration keys
+    public final static String JETTY_HYPERTEXT = "jetty.hypertext";
+    public final static String JETTY_WEBXML = "jetty.webxml";
     
     public static final Server jetty = new Server();
     private Configuration configuration;
@@ -72,7 +73,7 @@ public class StartHttpServer implements Runnable {
     }
 
     protected File getKeystoreFile() {
-        return new File(configuration.get(JettyTlsKeystore.JAVAX_NET_SSL_KEYSTORE));
+        return new File(configuration.get(JettyTlsKeystore.JAVAX_NET_SSL_KEYSTORE, Folders.configuration()+File.separator+"keystore.jks"));
     }
     protected Password getKeystorePassword() throws KeyStoreException, IOException {
         try(PasswordKeyStore passwordVault = PasswordVaultFactory.getPasswordKeyStore(configuration)) {
@@ -84,11 +85,11 @@ public class StartHttpServer implements Runnable {
     }
 
     public Integer getHttpPort() {
-        return Integer.valueOf(configuration.get(Jetty.JETTY_PORT, "80"));
+        return Integer.valueOf(configuration.get(JettyPorts.JETTY_PORT, "80"));
     }
 
     public Integer getHttpsPort() {
-        return Integer.valueOf(configuration.get(Jetty.JETTY_SECURE_PORT, "443"));
+        return Integer.valueOf(configuration.get(JettyPorts.JETTY_SECURE_PORT, "443"));
     }
 
     @Override
@@ -222,7 +223,7 @@ public class StartHttpServer implements Runnable {
         // http connector
         ServerConnector http = new ServerConnector(jetty, new ConnectionFactory[]{new HttpConnectionFactory(httpConfiguration)});
         http.setPort(getHttpPort());
-        log.debug("{}={}", Jetty.JETTY_PORT, http.getPort());
+        log.debug("{}={}", JettyPorts.JETTY_PORT, http.getPort());
 
         // https connector
         try {
@@ -235,7 +236,7 @@ public class StartHttpServer implements Runnable {
         sslConnectionFactory.setIncludeProtocols("TLSv1", "TLSv1.1", "TLSv1.2");
         ServerConnector https = new ServerConnector(jetty, new ConnectionFactory[]{new SslConnectionFactory(sslConnectionFactory, "http/1.1"), new HttpConnectionFactory(httpsConfiguration)});
         https.setPort(getHttpsPort());
-        log.debug("{}={}", Jetty.JETTY_SECURE_PORT, https.getPort());
+        log.debug("{}={}", JettyPorts.JETTY_SECURE_PORT, https.getPort());
 
         jetty.setConnectors(new Connector[]{http, https});
         jetty.setHandler(webapp);

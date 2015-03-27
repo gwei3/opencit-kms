@@ -42,7 +42,7 @@
         </encoder>
     </appender>
 
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="LogFile"/>
         <appender-ref ref="ConsoleError"/>
         <appender-ref ref="ConsoleWarn"/>
@@ -57,4 +57,7 @@
     <logger name="com.intel.dcsg.cpg.console" level="INFO"/>
     <logger name="com.intel.dcsg.cpg.configuration" level="INFO"/>
     -->
+    <logger name="com.intel.dcsg.cpg.classpath" level="INFO"/>
+    <logger name="com.intel.dcsg.cpg.extensions" level="INFO"/>
+    <logger name="com.intel.mtwilson.extensions" level="INFO"/>
 </configuration>

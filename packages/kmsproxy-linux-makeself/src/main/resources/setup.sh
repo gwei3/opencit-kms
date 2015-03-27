@@ -25,12 +25,11 @@ KMSPROXY_HOME=${KMSPROXY_HOME:-/opt/kmsproxy}
 KMSPROXY_LAYOUT=linux
 
 # environment file
-if [ -f kmsproxy.env ]; then
-  echo "Loading environment variables from $(pwd)/kmsproxy.env"
-  . kmsproxy.env
-elif [ -f ~/kmsproxy.env ]; then
+if [ -f ~/kmsproxy.env ]; then
   echo "Loading environment variables from $(cd ~ && pwd)/kmsproxy.env"
   . ~/kmsproxy.env
+  env_file_exports=$(cat ~/kmsproxy.env | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+  eval export $env_file_exports
 else
   echo "No environment file"
 fi
@@ -81,6 +80,13 @@ elif [ "$KMSPROXY_LAYOUT" == "home" ]; then
 fi
 export KMSPROXY_ENV=$KMSPROXY_CONFIGURATION/env
 
+# backup current configuration, if there is one
+if [ -d $KMSPROXY_CONFIGURATION ]; then
+  backup_conf_dir=$KMSPROXY_REPOSITORY/backup/configuration.$(date +"%Y%m%d.%H%M")
+  mkdir -p $backup_conf_dir
+  cp -R $KMSPROXY_CONFIGURATION/* $backup_conf_dir
+fi
+
 # create application directories (chown will be repeated near end of this script, after setup)
 for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do
   mkdir -p $directory
@@ -100,6 +106,16 @@ echo "export KMSPROXY_ENV=$KMSPROXY_ENV" >> $KMSPROXY_ENV/kmsproxy-layout
 # store kmsproxy username in env file
 echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-username
 echo "export KMSPROXY_USERNAME=$KMSPROXY_USERNAME" >> $KMSPROXY_ENV/kmsproxy-username
+
+# store the auto-exported environment variables in env file
+# to make them available after the script uses sudo to switch users;
+# we delete that file later
+echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-setup
+for env_file_var_name in $env_file_exports
+do
+  eval env_file_var_value="\$$env_file_var_name"
+  echo "export $env_file_var_name=$env_file_var_value" >> $KMSPROXY_ENV/kmsproxy-setup
+done
 
 # kmsproxy requires java 1.7 or later
 # detect or install java (jdk-1.7.0_51-linux-x64.tar.gz)
@@ -131,6 +147,12 @@ if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ -d /et
   touch /etc/authbind/byport/80 /etc/authbind/byport/443
   chmod 500 /etc/authbind/byport/80 /etc/authbind/byport/443
   chown $KMSPROXY_USERNAME /etc/authbind/byport/80 /etc/authbind/byport/443
+fi
+
+# delete existing java files, to prevent a situation where the installer copies
+# a newer file but the older file is also there
+if [ -d $KMSPROXY_HOME/java ]; then
+  rm $KMSPROXY_HOME/java/*.jar
 fi
 
 # extract kmsproxy  (kmsproxy-zip-0.1-SNAPSHOT.zip)
@@ -178,6 +200,9 @@ fi
 
 # setup the kmsproxy
 kmsproxy setup
+
+# delete the temporary setup environment variables file
+rm $KMSPROXY_ENV/kmsproxy-setup
 
 # ensure the kmsproxy owns all the content created during setup
 for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do

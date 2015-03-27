@@ -70,8 +70,8 @@ public class MtWilsonClientConfiguration {
     }
     
     public String getEndpointUsername() {
-        return configuration.get(MTWILSON_USERNAME, getDefaultEndpointUsername());
+        return configuration.get(MTWILSON_USERNAME); // no default value, each kms-proxy will generate a unique username to avoid conflicts 
     }
     
-    public String getDefaultEndpointUsername() { return "kms-proxy"; }
+//    public String getDefaultEndpointUsername() { return "kms-proxy"; }
 }

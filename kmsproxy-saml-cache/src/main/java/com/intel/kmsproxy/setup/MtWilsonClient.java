@@ -18,6 +18,7 @@ import com.intel.dcsg.cpg.net.NetUtils;
 import com.intel.kmsproxy.MtWilsonClientConfiguration;
 import com.intel.mtwilson.configuration.PasswordVaultFactory;
 import com.intel.mtwilson.setup.AbstractSetupTask;
+import com.intel.mtwilson.setup.faults.ConfigurationKeyNotSet;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
 import com.intel.mtwilson.v2.client.MwClientUtil;
 import java.io.File;
@@ -91,28 +92,35 @@ public class MtWilsonClient extends AbstractSetupTask {
             }
         }
 
+        mtwilsonUsername = configuration.getEndpointUsername();
+        if( mtwilsonUsername == null ) {
+            mtwilsonUsername = String.format("kmsproxy.%s", new UUID().toHexString());
+        }
+        
         // if a specific DN is not configured, use "kmsproxy" with a random UUID to avoid collisions when multiple kmsproxy instances
         // register with the same mtwilson
-        dn = getConfiguration().get(KMSPROXY_TLS_CERT_DN, String.format("CN=kmsproxy.%s", new UUID().toHexString()));
+        dn = getConfiguration().get(KMSPROXY_TLS_CERT_DN, String.format("CN=%s", mtwilsonUsername));
         // we need to know our own local ip addresses/hostname in order to add them to the ssl cert
         ip = getTrustagentTlsCertIpArray();
         dns = getTrustagentTlsCertDnsArray();
         if (dn == null || dn.isEmpty()) {
-            configuration("DN not configured");
+            configuration(new ConfigurationKeyNotSet(KMSPROXY_TLS_CERT_DN)); // "DN not configured"
         }
         // NOTE: keystore file itself does not need to be checked, we will create it automatically in execute() if it does not exist
         if ((ip == null ? 0 : ip.length) + (dns == null ? 0 : dns.length) == 0) {
             configuration("At least one IP or DNS alternative name must be configured");
         }
         
-        mtwilsonUsername = configuration.getEndpointUsername(); //getConfiguration().get(MtWilsonClientConfiguration.MTWILSON_USERNAME, "kms-proxy");
         //mtwilsonUrl = getConfiguration().get(MtWilsonClientConfiguration.MTWILSON_API_URL);
         mtwilsonTlsCertSha1 = getConfiguration().get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA1);
         
         try {
             //URL url = new URL(mtwilsonUrl);
             mtwilsonUrl = configuration.getEndpointURL();
-            log.debug("Mt Wilson URL: {}", mtwilsonUrl.toExternalForm());
+            log.debug("Mt Wilson URL: {}", (mtwilsonUrl==null?"null":mtwilsonUrl.toExternalForm()));
+            if( mtwilsonUrl == null ) {
+                configuration(new ConfigurationKeyNotSet(MtWilsonClientConfiguration.MTWILSON_API_URL));
+            }
         }
         catch(MalformedURLException e) {
             log.debug("Invalid Mt Wilson URL", e);
