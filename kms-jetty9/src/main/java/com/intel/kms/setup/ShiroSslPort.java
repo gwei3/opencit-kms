@@ -4,7 +4,7 @@
  */
 package com.intel.kms.setup;
 
-import static com.intel.kms.setup.Jetty.JETTY_SECURE_PORT;
+import com.intel.kms.jetty9.StartHttpServer;
 import com.intel.kms.setup.faults.IniEntryMismatch;
 import com.intel.kms.setup.faults.IniEntryNotFound;
 import com.intel.mtwilson.Folders;
@@ -35,7 +35,7 @@ public class ShiroSslPort extends AbstractSetupTask {
     
     @Override
     protected void configure() throws Exception {
-        httpsPort = Integer.valueOf(getConfiguration().get(JETTY_SECURE_PORT, "443"));
+        httpsPort = Integer.valueOf(getConfiguration().get(JettyPorts.JETTY_SECURE_PORT, "443"));
         shiroIniFile = new File(Folders.configuration() + File.separator + "shiro.ini");
         if (!shiroIniFile.exists()) {
             configuration(new FileNotFound(shiroIniFile.getAbsolutePath())); // "File not found: shiro.ini"

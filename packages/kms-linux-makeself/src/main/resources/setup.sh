@@ -25,12 +25,11 @@ KMS_HOME=${KMS_HOME:-/opt/kms}
 KMS_LAYOUT=linux
 
 # environment file
-if [ -f kms.env ]; then
-  echo "Loading environment variables from $(pwd)/kms.env"
-  . kms.env
-elif [ -f ~/kms.env ]; then
+if [ -f ~/kms.env ]; then
   echo "Loading environment variables from $(cd ~ && pwd)/kms.env"
   . ~/kms.env
+  env_file_exports=$(cat ~/kms.env | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+  eval export $env_file_exports
 else
   echo "No environment file"
 fi
@@ -81,6 +80,13 @@ elif [ "$KMS_LAYOUT" == "home" ]; then
 fi
 export KMS_ENV=$KMS_CONFIGURATION/env
 
+# backup current configuration, if there is one
+if [ -d $KMS_CONFIGURATION ]; then
+  backup_conf_dir=$KMS_REPOSITORY/backup/configuration.$(date +"%Y%m%d.%H%M")
+  mkdir -p $backup_conf_dir
+  cp -R $KMS_CONFIGURATION/* $backup_conf_dir
+fi
+
 # create application directories (chown will be repeated near end of this script, after setup)
 for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do
   mkdir -p $directory
@@ -100,6 +106,16 @@ echo "export KMS_ENV=$KMS_ENV" >> $KMS_ENV/kms-layout
 # store kms username in env file
 echo "# $(date)" > $KMS_ENV/kms-username
 echo "export KMS_USERNAME=$KMS_USERNAME" >> $KMS_ENV/kms-username
+
+# store the auto-exported environment variables in env file
+# to make them available after the script uses sudo to switch users;
+# we delete that file later
+echo "# $(date)" > $KMS_ENV/kms-setup
+for env_file_var_name in $env_file_exports
+do
+  eval env_file_var_value="\$$env_file_var_name"
+  echo "export $env_file_var_name=$env_file_var_value" >> $KMS_ENV/kms-setup
+done
 
 # kms requires java 1.7 or later
 # detect or install java (jdk-1.7.0_51-linux-x64.tar.gz)
@@ -131,6 +147,12 @@ if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ -d /etc/authbind
   touch /etc/authbind/byport/80 /etc/authbind/byport/443
   chmod 500 /etc/authbind/byport/80 /etc/authbind/byport/443
   chown $KMS_USERNAME /etc/authbind/byport/80 /etc/authbind/byport/443
+fi
+
+# delete existing java files, to prevent a situation where the installer copies
+# a newer file but the older file is also there
+if [ -d $KMS_HOME/java ]; then
+  rm $KMS_HOME/java/*.jar
 fi
 
 # extract kms  (kms-zip-0.1-SNAPSHOT.zip)
@@ -177,6 +199,9 @@ fi
 
 # setup the kms
 kms setup
+
+# delete the temporary setup environment variables file
+rm $KMS_ENV/kms-setup
 
 # ensure the kms owns all the content created during setup
 for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do

@@ -76,7 +76,11 @@ import com.intel.kms.user.User;
 import com.intel.kms.user.UserCollection;
 import com.intel.kms.user.UserFilterCriteria;
 import com.intel.kms.user.jaxrs.UserRepository;
+import com.intel.mtwilson.setup.faults.ConfigurationFault;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.cert.CertificateException;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -160,6 +164,13 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
         return faults;
     }
 
+    private URL getTransferLinkForKeyId(String keyId) throws MalformedURLException {
+        String template = configuration.get("endpoint.key.transfer.url", String.format("%s/v1/keys/{keyId}/transfer", configuration.get("endpoint.url", "http://localhost")));
+        log.debug("getTransferLinkForKeyId template: {}", template);
+        String url = template.replace("{keyId}", keyId);
+        log.debug("getTransferLinkForKeyId url: {}", url);
+        return new URL(url);
+    }
     /**
      * Currently supports creating only AES keys
      *
@@ -184,6 +195,7 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             created.copyFrom(createKeyRequest);
             created.setKeyId(new UUID().toString());
             created.setTransferPolicy("urn:intel:trustedcomputing:key-transfer-policy:require-trust-or-authorization");
+            created.setTransferLink(getTransferLinkForKeyId(created.getKeyId()));
             // create the key
             SecretKey skey = generateKey(createKeyRequest.getAlgorithm(), createKeyRequest.getKeyLength());
 
@@ -194,6 +206,8 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             cipherKey.setMode(created.getMode());
             cipherKey.setEncoded(skey.getEncoded());
             cipherKey.setPaddingMode(created.getPaddingMode());
+            cipherKey.set("transferPolicy", created.getTransferPolicy());
+            cipherKey.set("transferLink", created.getTransferLink().toExternalForm());
             // store the key and its attributes
             log.debug("Storing cipher key {}", cipherKey.getKeyId());
             repository.store(created.getKeyId(), cipherKey);
@@ -204,9 +218,15 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             CreateKeyResponse response = new CreateKeyResponse(created);
             return response;
             // wrap it with a storage key
-        } catch (NoSuchAlgorithmException ex) {
-            log.debug("GenerateKey failed", ex);
+        } catch (NoSuchAlgorithmException e) {
+            log.debug("GenerateKey failed", e);
             faults.add(new InvalidParameter("algorithm", new UnsupportedAlgorithm(createKeyRequest.getAlgorithm())));
+            CreateKeyResponse response = new CreateKeyResponse();
+            response.getFaults().addAll(faults);
+            return response;
+        } catch(MalformedURLException e) {
+            log.debug("Cannot generate transfer url", e);
+            faults.add(new InvalidParameter("endpoint.key.transfer.url")); // maybe should be a configuration fault... 
             CreateKeyResponse response = new CreateKeyResponse();
             response.getFaults().addAll(faults);
             return response;
@@ -521,6 +541,17 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
         if (cipherKey.getKeyId() == null) {
             cipherKey.setKeyId(new UUID().toString());
         }
+        
+        if( cipherKey.get("transferPolicy") == null ) {
+            cipherKey.set("transferPolicy", "urn:intel:trustedcomputing:key-transfer-policy:require-trust-or-authorization");
+        }
+        try {
+        cipherKey.set("transferLink", getTransferLinkForKeyId(cipherKey.getKeyId()));
+        }
+        catch(MalformedURLException e) {
+            log.error("Caannot set transfer link for key", e);
+        }
+        
 
         if (descriptor != null && descriptor.getEncryption() != null) {
             // key is encrypted

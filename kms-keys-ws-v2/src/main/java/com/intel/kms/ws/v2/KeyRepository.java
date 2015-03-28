@@ -18,8 +18,6 @@ import com.intel.kms.api.DeleteKeyRequest;
 import com.intel.kms.api.DeleteKeyResponse;
 import com.intel.kms.api.GetKeyAttributesRequest;
 import com.intel.kms.api.GetKeyAttributesResponse;
-import com.intel.kms.api.GetKeyAttributesRequest;
-import com.intel.kms.api.GetKeyAttributesResponse;
 import com.intel.kms.api.KeyAttributes;
 import com.intel.kms.api.KeyDescriptor;
 import com.intel.kms.api.KeyManager;
@@ -37,8 +35,6 @@ import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryRetrieveException;
 import com.intel.mtwilson.repository.RepositorySearchException;
 import com.intel.mtwilson.repository.RepositoryStoreException;
-import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
-import com.intel.mtwilson.util.crypto.key2.IntegrityKeyAttributes;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 /**
@@ -129,6 +125,7 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
             getKeyAttributesRequest.setKeyId(locator.id.toString());
             GetKeyAttributesResponse getKeyAttributeResponse = getKeyManager().getKeyAttributes(getKeyAttributesRequest);
             KeyAttributes attributes = getKeyAttributeResponse.getData();
+            log.debug("key attributes: {}", mapper.writeValueAsString(attributes));
             Key key = new Key();
             copy(attributes, key);
             return key;
@@ -189,6 +186,7 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
         to.setPaddingMode(from.getPaddingMode());
         to.setRole(from.getRole());
         to.setTransferPolicy(from.getTransferPolicy());
+        to.setTransferLink(from.getTransferLink());
         to.setUsername(from.getUsername());
     }
 
@@ -202,6 +200,7 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
         to.setPaddingMode(from.getPaddingMode());
         to.setRole(from.getRole());
         to.setTransferPolicy(from.getTransferPolicy());
+        to.setTransferLink(from.getTransferLink());
         to.setUsername(from.getUsername());
     }
 

@@ -23,6 +23,7 @@ import com.intel.kms.user.User;
 import com.intel.kms.user.UserCollection;
 import com.intel.kms.ws.v2.api.Key;
 import com.intel.kms.ws.v2.api.KeyCollection;
+import java.net.URL;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
@@ -46,12 +47,17 @@ public class KeyManagerTest {
     
     @BeforeClass
     public static void setup() throws NoSuchAlgorithmException, Exception {
-        // register tls policy extensions
-        WhiteboardExtensionProvider.register(com.intel.mtwilson.tls.policy.factory.TlsPolicyCreator.class, com.intel.mtwilson.tls.policy.creator.impl.CertificateDigestTlsPolicyCreator.class);
         
         mapper = new ObjectMapper();
         // create RSA key pair for wrapping keys
         wrappingKeypair = RsaUtil.generateRsaKeyPair(RsaUtil.MINIMUM_RSA_KEY_SIZE);
+        
+        client();
+    }
+    
+    public static void client() throws Exception {
+        // register tls policy extensions, not needed if you're using the launcher which already loads extensions
+        WhiteboardExtensionProvider.register(com.intel.mtwilson.tls.policy.factory.TlsPolicyCreator.class, com.intel.mtwilson.tls.policy.creator.impl.CertificateDigestTlsPolicyCreator.class);
         // configure the kms client
         Properties properties = new Properties();
         properties.setProperty("endpoint.url", "https://127.0.0.1");
@@ -60,7 +66,7 @@ public class KeyManagerTest {
         properties.setProperty("login.basic.password", "password");
         keys = new Keys(properties);
         users = new Users(properties);
-        login = new Login(properties);
+        login = new Login(properties);        
     }
     
     public static class PasswordLoginRequest { public String username; public String password; }
@@ -84,24 +90,30 @@ public class KeyManagerTest {
         log.debug("create user response: {}", mapper.writeValueAsString(createUserResponse));
     }
     
+    /**
+     * How to register a key encryption key (KEK) also known as a transfer key.
+     * This key is used by the KMS to encrypt keys sent to the client so only
+     * the client can see them regardless of the security of the communication
+     * channel.
+     * 
+     * Example code for trust director.
+     * 
+     */
     @Test
     public void testRegisterPublicKey() throws JsonProcessingException {
         // register public key with kms
-        UserFilterCriteria findUserByUsername = new UserFilterCriteria();
-        findUserByUsername.usernameEqualTo = "username";
-        UserCollection results = users.searchUsers(findUserByUsername);
-        if( results.getUsers().isEmpty() ) {
-            throw new IllegalStateException("no registered users");
-        }
-        if( results.getUsers().size() > 1 ) {
-            throw new IllegalStateException("more than one user matched username");
-        }
-        User user = results.getUsers().get(0);
+        User user = users.findUserByUsername("username");
         user.setTransferKey(wrappingKeypair.getPublic());
         User edited = users.editUser(user);
+        // confirmation:
         log.debug("edit user response: {}", mapper.writeValueAsString(edited));
     }
     
+    
+    /**
+     * Example code for a KMS administration application.
+     * 
+     */
     @Test
     public void testEditPublicKey() throws JsonProcessingException, NoSuchAlgorithmException {
         // find the user, change the public key
@@ -121,6 +133,11 @@ public class KeyManagerTest {
         log.debug("edited user: {}", mapper.writeValueAsString(edited));
     }
     
+    /**
+     * Example code for trust director.  Can be wrapped into a utility method.
+     * @throws JsonProcessingException
+     * @throws CryptographyException 
+     */
     @Test
     public void testCreateKey() throws JsonProcessingException, CryptographyException {
         // register new public key with kms
@@ -158,6 +175,42 @@ public class KeyManagerTest {
         log.debug("Unwrapped key: {}", Base64.encodeBase64String(receivedKey.getEncoded()));
         
     }
+    
+    // this class could be in the application's project; should use setters/getters
+    // also note that after the secret key is used to encrypt the VM  the entire
+    // structure should be "thrown away" ... do not store the key anywhere!
+    // ... the kms is for storing keys, the app can retrieve it again anytime
+    public static class KeyContainer {
+        public SecretKey secretKey;
+        public URL url;
+        public Key attributes;
+    }
+    
+    public KeyContainer requestKeyFromServer() throws CryptographyException {
+        // these are the required inputs:
+        String username = "username"; // can be instance variable from login properties
+        String algorithm = "AES"; // can be method parameter
+        Integer length = 128; // can be method parameter
+        String mode = "OFB"; // can be method parameter
+        // step 1. request server to create a new key        
+        CreateKeyRequest createKeyRequest = new CreateKeyRequest();
+        createKeyRequest.setAlgorithm(algorithm);
+        createKeyRequest.setKeyLength(length);
+        createKeyRequest.setMode(mode);
+        Key createKeyResponse = keys.createKey(createKeyRequest);
+        // step 2. request server to transfer the new key to us (encrypted)
+        String transferKeyPemResponse = keys.transferKey(createKeyResponse.getId().toString());
+        // step 3. decrypt the requested key
+        RsaPublicKeyProtectedPemKeyEnvelopeOpener opener = new RsaPublicKeyProtectedPemKeyEnvelopeOpener(wrappingKeypair.getPrivate(), username);
+        SecretKey secretKey = (SecretKey)opener.unseal(Pem.valueOf(transferKeyPemResponse));
+        // step 4. package all these into a single container
+        KeyContainer keyContainer = new KeyContainer();
+        keyContainer.secretKey = secretKey;
+        keyContainer.url = createKeyResponse.getTransferLink();
+        keyContainer.attributes = createKeyResponse;
+        return keyContainer;
+    }
+    
     
     
     

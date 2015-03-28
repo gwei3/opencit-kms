@@ -42,7 +42,8 @@ if [ -d $KMSPROXY_ENV ]; then
 fi
 
 # if non-root execution is specified, and we are currently root, start over; the KMSPROXY_SUDO variable limits this to one attempt
-if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMSPROXY_SUDO" ]; then
+# we make an exception for the uninstall command, which may require root access to delete users and certain directories
+if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMSPROXY_SUDO" ] && [ "$1" != "uninstall" ]; then
   sudo -u $KMSPROXY_USERNAME KMSPROXY_PASSWORD=$KMSPROXY_PASSWORD KMSPROXY_SUDO=true kmsproxy $*
   exit $?
 fi
@@ -60,7 +61,7 @@ JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
 JAVA_OPTS=${JAVA_OPTS:-"-Dlogback.configurationFile=$KMSPROXY_CONFIGURATION/logback.xml"}
 
 KMSPROXY_SETUP_FIRST_TASKS=${KMSPROXY_SETUP_FIRST_TASKS:-"filesystem update-extensions-cache-file"}
-KMSPROXY_SETUP_TASKS=${KMSPROXY_SETUP_TASKS:-"password-vault jetty jetty-tls-keystore mtwilson-client"}
+KMSPROXY_SETUP_TASKS=${KMSPROXY_SETUP_TASKS:-"password-vault jetty-ports jetty-tls-keystore shiro-ssl-port mtwilson-client"}
 
 # the standard PID file location /var/run is typically owned by root;
 # if we are running as non-root and the standard location isn't writable 

@@ -4,8 +4,6 @@
  */
 package com.intel.kms.api;
 
-import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
-
 /**
  * To request the key server to create a new key, the key request
  * is essentially the set of key attributes that the new key should

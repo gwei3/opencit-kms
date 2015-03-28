@@ -42,7 +42,8 @@ if [ -d $KMS_ENV ]; then
 fi
 
 # if non-root execution is specified, and we are currently root, start over; the KMS_SUDO variable limits this to one attempt
-if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ]; then
+# we make an exception for the uninstall command, which may require root access to delete users and certain directories
+if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ] && [ "$1" != "uninstall" ]; then
   sudo -u $KMS_USERNAME KMS_PASSWORD=$KMS_PASSWORD KMS_SUDO=true kms $*
   exit $?
 fi
@@ -60,7 +61,7 @@ JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
 JAVA_OPTS=${JAVA_OPTS:-"-Dlogback.configurationFile=$KMS_CONFIGURATION/logback.xml"}
 
 KMS_SETUP_FIRST_TASKS=${KMS_SETUP_FIRST_TASKS:-"filesystem update-extensions-cache-file"}
-KMS_SETUP_TASKS=${KMS_SETUP_TASKS:-"password-vault jetty jetty-tls-keystore notary-key envelope-key storage-key saml-certificates tpm-identity-certificates"}
+KMS_SETUP_TASKS=${KMS_SETUP_TASKS:-"password-vault jetty-ports jetty-tls-keystore shiro-ssl-port notary-key envelope-key storage-key saml-certificates tpm-identity-certificates"}
 
 # the standard PID file location /var/run is typically owned by root;
 # if we are running as non-root and the standard location isn't writable 

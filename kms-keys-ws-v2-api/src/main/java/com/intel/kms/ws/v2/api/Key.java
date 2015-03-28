@@ -6,6 +6,7 @@ package com.intel.kms.ws.v2.api;
 
 import com.intel.dcsg.cpg.validation.Regex;
 import com.intel.mtwilson.jaxrs2.AbstractDocument;
+import java.net.URL;
 
 /**
  *
@@ -18,6 +19,7 @@ public class Key extends AbstractDocument {
     private String paddingMode;
     private String username;
     private String transferPolicy;
+    private URL transferLink;
     private String description;
     private String role;
     private String digestAlgorithm;
@@ -75,6 +77,14 @@ public class Key extends AbstractDocument {
         this.transferPolicy = transferPolicy;
     }
 
+    public URL getTransferLink() {
+        return transferLink;
+    }
+
+    public void setTransferLink(URL transferLink) {
+        this.transferLink = transferLink;
+    }
+    
     public String getDescription() {
         return description;
     }

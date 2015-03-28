@@ -57,6 +57,7 @@ public class JettyTlsKeystore extends AbstractSetupTask {
     private static final String KMS_TLS_CERT_DNS = "kms.tls.cert.dns";
     public static final String JAVAX_NET_SSL_KEYSTORE = "javax.net.ssl.keyStore";
     public static final String JAVAX_NET_SSL_KEYSTOREPASSWORD = "javax.net.ssl.keyStorePassword";
+    public static final String ENDPOINT_URL = "endpoint.url";
     
     private File keystoreFile;
     private File propertiesFile;
@@ -225,8 +226,42 @@ public class JettyTlsKeystore extends AbstractSetupTask {
             passwordVault.set(JAVAX_NET_SSL_KEYSTOREPASSWORD, keystorePassword);
         }
         
+        // save a special endpoint url parameter used to generate the transfer key links
+        getConfiguration().set(ENDPOINT_URL, getEndpoint());
     }
     
+
+    private String getEndpoint() {
+        // do we have a DNS name configured?
+        String endpointHost = null;
+        if( dns != null ) {
+            for(String hostname : dns) {
+                if( !hostname.equals("localhost") ) {
+                    endpointHost = hostname;
+                }
+            }
+        }
+        // if no DNS name, do we have an external IP address configured?
+        if( endpointHost == null && ip != null ) {
+            for(String hostname : ip) {
+                if( !hostname.equals("127.0.0.1")) {
+                    endpointHost = hostname;
+                }
+            }
+        }
+        // if no DNS or external IP, just use "localhost" as default
+        if( endpointHost == null ) {
+            endpointHost = "localhost";
+        }
+        // do we have a custom port or default port?
+        String port = getConfiguration().get("jetty.port", "80");
+        if( port.equals("80") ) {
+            return String.format("http://%s", endpointHost); //  http://localhost
+        }
+        else {
+            return String.format("http://%s:%s", endpointHost, port);  //  http://localhost:80
+        }
+    }    
     
     // note: duplicated from TrustagentConfiguration
     public String getTrustagentTlsCertIp() {

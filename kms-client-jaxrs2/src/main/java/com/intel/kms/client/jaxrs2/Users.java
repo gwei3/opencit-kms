@@ -102,6 +102,17 @@ public class Users extends JaxrsClient {
         UserCollection searchUsersResponse = getTargetPathWithQueryParams("/v1/users", searchUsersRequest).request().accept(MediaType.APPLICATION_JSON).get(UserCollection.class);
         return searchUsersResponse;
     }
+
+    public User findUserByUsername(String username) {
+        UserFilterCriteria findUserByUsername = new UserFilterCriteria();
+        findUserByUsername.usernameEqualTo = username;
+        UserCollection results = searchUsers(findUserByUsername);
+        if( results.getUsers().isEmpty() ) {
+            return null;
+        }
+        User user = results.getUsers().get(0);
+        return user;
+    }
     
     public User retrieveUser(String userId) {
         log.debug("retrieveUser: {}", getTarget().getUri().toString());
