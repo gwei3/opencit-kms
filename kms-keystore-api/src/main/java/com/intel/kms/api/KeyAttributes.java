@@ -7,6 +7,8 @@ package com.intel.kms.api;
 import com.intel.dcsg.cpg.io.Copyable;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
 import com.intel.mtwilson.util.crypto.key2.CipherKey;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * 
@@ -17,6 +19,7 @@ public class KeyAttributes extends CipherKeyAttributes implements Copyable {
 
     private String username;
     private String transferPolicy;
+    private URL transferLink;
     
     /**
      * Optional user-provided description of the key.
@@ -79,6 +82,15 @@ public class KeyAttributes extends CipherKeyAttributes implements Copyable {
         this.transferPolicy = transferPolicy;
     }
 
+    public URL getTransferLink() {
+        return transferLink;
+    }
+
+    public void setTransferLink(URL transferLink) {
+        this.transferLink = transferLink;
+    }
+
+    
     public String getRole() {
         return role;
     }
@@ -125,6 +137,7 @@ public class KeyAttributes extends CipherKeyAttributes implements Copyable {
         this.description = source.description;
         this.role = source.role;
         this.transferPolicy = source.transferPolicy;
+        this.transferLink = source.transferLink;
     }
     
     public void copyFrom(CipherKey source) {
@@ -133,6 +146,20 @@ public class KeyAttributes extends CipherKeyAttributes implements Copyable {
         this.setKeyLength(source.getKeyLength());
         this.setPaddingMode(source.getPaddingMode());
         this.setKeyId(source.getKeyId());
+        
+        if( source.get("transferPolicy")  != null ) {
+            log.debug("copyFrom transferPolicy {}", source.get("transferPolicy"));
+            this.setTransferPolicy((String)source.get("transferPolicy"));
+        }
+        if( source.get("transferLink") != null ) {
+            log.debug("copyFrom transferLink {}", source.get("transferLink"));
+            try {
+            this.setTransferLink(new URL((String)source.get("transferLink")));
+            }
+            catch(MalformedURLException e) {
+                log.error("Cannot set transfer policy for key", e);
+            }
+        }
 //        this.name = null;
 //        this.digestAlgorithm = null;
 //        this.role = null;

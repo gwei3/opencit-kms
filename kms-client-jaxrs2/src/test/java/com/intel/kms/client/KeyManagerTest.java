@@ -206,7 +206,7 @@ public class KeyManagerTest {
         // step 4. package all these into a single container
         KeyContainer keyContainer = new KeyContainer();
         keyContainer.secretKey = secretKey;
-        keyContainer.url = null;
+        keyContainer.url = createKeyResponse.getTransferLink();
         keyContainer.attributes = createKeyResponse;
         return keyContainer;
     }
