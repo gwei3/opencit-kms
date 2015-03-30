@@ -13,6 +13,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-password-vault</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-client-jaxrs2</artifactId>
             <version>${project.version}</version>
@@ -35,11 +39,6 @@
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keys-ws-v2</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-password-vault</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

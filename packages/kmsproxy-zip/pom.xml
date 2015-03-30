@@ -26,6 +26,10 @@
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-configuration</artifactId>
         </dependency>
+<!--        <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-password-vault</artifactId>
+        </dependency>-->
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-html5</artifactId>
@@ -68,11 +72,6 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
 		-->
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-password-vault</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
         
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
