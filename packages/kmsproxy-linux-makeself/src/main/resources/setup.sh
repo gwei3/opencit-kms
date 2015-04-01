@@ -21,15 +21,35 @@
 #####
 
 # default settings
+# note the layout setting is used only by this script
+# and it is not saved or used by the app script
 KMSPROXY_HOME=${KMSPROXY_HOME:-/opt/kmsproxy}
-KMSPROXY_LAYOUT=linux
+KMSPROXY_LAYOUT=${KMSPROXY_LAYOUT:-home}
 
-# environment file
+# the env directory is not configurable; it is defined as KMSPROXY_HOME/env and the
+# administrator may use a symlink if necessary to place it anywhere else
+export KMSPROXY_ENV=$KMSPROXY_HOME/env
+
+# the env directory is not configurable; it is defined as KMSPROXY_HOME/env and the
+# administrator may use a symlink if necessary to place it anywhere else
+export KMSPROXY_ENV=$KMSPROXY_HOME/env
+
+# load application environment variables if already defined
+if [ -d $KMSPROXY_ENV ]; then
+  KMSPROXY_ENV_FILES=$(ls -1 $KMSPROXY_ENV/*)
+  for env_file in $KMSPROXY_ENV_FILES; do
+    . $env_file
+    env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+  done
+fi
+
+# load installer environment file, if present
 if [ -f ~/kmsproxy.env ]; then
   echo "Loading environment variables from $(cd ~ && pwd)/kmsproxy.env"
   . ~/kmsproxy.env
   env_file_exports=$(cat ~/kmsproxy.env | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-  eval export $env_file_exports
+  if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 else
   echo "No environment file"
 fi
@@ -78,14 +98,31 @@ elif [ "$KMSPROXY_LAYOUT" == "home" ]; then
   export KMSPROXY_REPOSITORY=${KMSPROXY_REPOSITORY:-$KMSPROXY_HOME/repository}
   export KMSPROXY_LOGS=${KMSPROXY_LOGS:-$KMSPROXY_HOME/logs}
 fi
-export KMSPROXY_ENV=$KMSPROXY_CONFIGURATION/env
+
+# note that the env dir is not configurable; it is defined as "env" under home
+export KMSPROXY_ENV=$KMSPROXY_HOME/env
+
+kmsproxy_backup_configuration() {
+  if [ -n "$KMSPROXY_CONFIGURATION" ] && [ -d "$KMSPROXY_CONFIGURATION" ]; then
+    datestr=`date +%Y%m%d.%H%M`
+    backupdir=/var/backup/kmsproxy.configuration.$datestr
+    mkdir -p $backupdir
+    cp -r $KMSPROXY_CONFIGURATION/* $backupdir
+  fi
+}
+
+kmsproxy_backup_repository() {
+  if [ -n "$KMSPROXY_REPOSITORY" ] && [ -d "$KMSPROXY_REPOSITORY" ]; then
+    datestr=`date +%Y%m%d.%H%M`
+    backupdir=/var/backup/kmsproxy.repository.$datestr
+    mkdir -p $backupdir
+    cp -r $KMSPROXY_REPOSITORY/* $backupdir
+  fi
+}
 
 # backup current configuration, if there is one
-if [ -d $KMSPROXY_CONFIGURATION ]; then
-  backup_conf_dir=$KMSPROXY_REPOSITORY/backup/configuration.$(date +"%Y%m%d.%H%M")
-  mkdir -p $backup_conf_dir
-  cp -R $KMSPROXY_CONFIGURATION/* $backup_conf_dir
-fi
+kmsproxy_backup_configuration
+kmsproxy_backup_repository
 
 # create application directories (chown will be repeated near end of this script, after setup)
 for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do
@@ -99,9 +136,10 @@ done
 echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_HOME=$KMSPROXY_HOME" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_CONFIGURATION=$KMSPROXY_CONFIGURATION" >> $KMSPROXY_ENV/kmsproxy-layout
+echo "export KMSPROXY_JAVA=$KMSPROXY_JAVA" >> $KMSPROXY_ENV/kms-layout
+echo "export KMSPROXY_BIN=$KMSPROXY_BIN" >> $KMSPROXY_ENV/kms-layout
 echo "export KMSPROXY_REPOSITORY=$KMSPROXY_REPOSITORY" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_LOGS=$KMSPROXY_LOGS" >> $KMSPROXY_ENV/kmsproxy-layout
-echo "export KMSPROXY_ENV=$KMSPROXY_ENV" >> $KMSPROXY_ENV/kmsproxy-layout
 
 # store kmsproxy username in env file
 echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-username
@@ -177,10 +215,13 @@ fi
 # register linux startup script
 register_startup_script $KMSPROXY_HOME/bin/kmsproxy.sh kmsproxy
 
-# the master password is required
-if [ -z "$KMSPROXY_PASSWORD" ]; then
-  echo_failure "Master password required in environment variable KMSPROXY_PASSWORD"
-  echo 'To generate a new master password, run the following command:
+# setup the kmsproxy, unless the NOSETUP variable is defined
+if [ -z "$KMSPROXY_NOSETUP" ]; then
+
+  # the master password is required
+  if [ -z "$KMSPROXY_PASSWORD" ]; then
+    echo_failure "Master password required in environment variable KMSPROXY_PASSWORD"
+    echo 'To generate a new master password, run the following command:
 
   KMSPROXY_PASSWORD=$(kmsproxy generate-password) && echo KMSPROXY_PASSWORD=$KMSPROXY_PASSWORD
 
@@ -195,19 +236,19 @@ After you set KMSPROXY_PASSWORD, run the following command to complete installat
   kmsproxy setup
 
 '
-  exit 1
-fi
+    exit 1
+  fi
 
-# setup the kmsproxy
-kmsproxy setup
+  kmsproxy setup
+fi
 
 # delete the temporary setup environment variables file
 rm $KMSPROXY_ENV/kmsproxy-setup
 
 # ensure the kmsproxy owns all the content created during setup
-for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do
+for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION  $KMSPROXY_JAVA $KMSPROXY_BIN $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do
   chown -R $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $directory
 done
 
-# start the server
-kmsproxy start
+# start the server, unless the NOSETUP variable is defined
+if [ -z "$KMSPROXY_NOSETUP" ]; then kmsproxy start; fi

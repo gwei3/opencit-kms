@@ -21,15 +21,31 @@
 #####
 
 # default settings
-KMS_HOME=${KMS_HOME:-/opt/kms}
-KMS_LAYOUT=linux
+# note the layout setting is used only by this script
+# and it is not saved or used by the app script
+export KMS_HOME=${KMS_HOME:-/opt/kms}
+KMS_LAYOUT=${KMS_LAYOUT:-home}
 
-# environment file
+# the env directory is not configurable; it is defined as KMS_HOME/env and the
+# administrator may use a symlink if necessary to place it anywhere else
+export KMS_ENV=$KMS_HOME/env
+
+# load application environment variables if already defined
+if [ -d $KMS_ENV ]; then
+  KMS_ENV_FILES=$(ls -1 $KMS_ENV/*)
+  for env_file in $KMS_ENV_FILES; do
+    . $env_file
+    env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+  done
+fi
+
+# load installer environment file, if present
 if [ -f ~/kms.env ]; then
   echo "Loading environment variables from $(cd ~ && pwd)/kms.env"
   . ~/kms.env
   env_file_exports=$(cat ~/kms.env | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-  eval export $env_file_exports
+  if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 else
   echo "No environment file"
 fi
@@ -78,9 +94,32 @@ elif [ "$KMS_LAYOUT" == "home" ]; then
   export KMS_REPOSITORY=${KMS_REPOSITORY:-$KMS_HOME/repository}
   export KMS_LOGS=${KMS_LOGS:-$KMS_HOME/logs}
 fi
-export KMS_ENV=$KMS_CONFIGURATION/env
+
+# note that the env dir is not configurable; it is defined as "env" under home
+export KMS_ENV=$KMS_HOME/env
+
+kms_backup_configuration() {
+  if [ -n "$KMS_CONFIGURATION" ] && [ -d "$KMS_CONFIGURATION" ]; then
+    datestr=`date +%Y%m%d.%H%M`
+    backupdir=/var/backup/kms.configuration.$datestr
+    mkdir -p $backupdir
+    cp -r $KMS_CONFIGURATION/* $backupdir
+  fi
+}
+
+kms_backup_repository() {
+  if [ -n "$KMS_REPOSITORY" ] && [ -d "$KMS_REPOSITORY" ]; then
+    datestr=`date +%Y%m%d.%H%M`
+    backupdir=/var/backup/kms.repository.$datestr
+    mkdir -p $backupdir
+    cp -r $KMS_REPOSITORY/* $backupdir
+  fi
+}
 
 # backup current configuration, if there is one
+kms_backup_configuration
+kms_backup_repository
+
 if [ -d $KMS_CONFIGURATION ]; then
   backup_conf_dir=$KMS_REPOSITORY/backup/configuration.$(date +"%Y%m%d.%H%M")
   mkdir -p $backup_conf_dir
@@ -99,9 +138,10 @@ done
 echo "# $(date)" > $KMS_ENV/kms-layout
 echo "export KMS_HOME=$KMS_HOME" >> $KMS_ENV/kms-layout
 echo "export KMS_CONFIGURATION=$KMS_CONFIGURATION" >> $KMS_ENV/kms-layout
+echo "export KMS_JAVA=$KMS_JAVA" >> $KMS_ENV/kms-layout
+echo "export KMS_BIN=$KMS_BIN" >> $KMS_ENV/kms-layout
 echo "export KMS_REPOSITORY=$KMS_REPOSITORY" >> $KMS_ENV/kms-layout
 echo "export KMS_LOGS=$KMS_LOGS" >> $KMS_ENV/kms-layout
-echo "export KMS_ENV=$KMS_ENV" >> $KMS_ENV/kms-layout
 
 # store kms username in env file
 echo "# $(date)" > $KMS_ENV/kms-username
@@ -176,11 +216,13 @@ fi
 
 # register linux startup script
 register_startup_script $KMS_HOME/bin/kms.sh kms
+# setup the kms, unless the NOSETUP variable is defined
+if [ -z "$KMS_NOSETUP" ]; then
 
-# the master password is required
-if [ -z "$KMS_PASSWORD" ]; then
-  echo_failure "Master password required in environment variable KMS_PASSWORD"
-  echo 'To generate a new master password, run the following command:
+  # the master password is required
+  if [ -z "$KMS_PASSWORD" ]; then
+    echo_failure "Master password required in environment variable KMS_PASSWORD"
+    echo 'To generate a new master password, run the following command:
 
   KMS_PASSWORD=$(kms generate-password) && echo KMS_PASSWORD=$KMS_PASSWORD
 
@@ -194,19 +236,20 @@ After you set KMS_PASSWORD, run the following command to complete installation:
   kms setup
 
 '
-  exit 1
-fi
+    exit 1
+  fi
 
-# setup the kms
-kms setup
+
+  kms setup
+fi
 
 # delete the temporary setup environment variables file
 rm $KMS_ENV/kms-setup
 
 # ensure the kms owns all the content created during setup
-for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do
+for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_JAVA $KMS_BIN $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do
   chown -R $KMS_USERNAME:$KMS_USERNAME $directory
 done
 
-# start the server
-kms start
+# start the server, unless the NOSETUP variable is defined
+if [ -z "$KMS_NOSETUP" ]; then kms start; fi
