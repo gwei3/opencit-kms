@@ -197,6 +197,11 @@
             <artifactId>mtwilson-launcher-api</artifactId>
             <version>${mtwilson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-password-vault</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
             
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>

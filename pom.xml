@@ -30,7 +30,6 @@
 	<module>kms-maven-package-makeself</module>
 	<module>kms-maven-package-zip</module>
 	<module>kms-maven-root</module>
-	<module>kms-password-vault</module>
 	<module>kms-saml</module>
 	<module>kms-test</module>
 	<module>kms-transfer-policy</module>
