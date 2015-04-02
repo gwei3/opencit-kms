@@ -60,7 +60,7 @@ fi
 # echo_failure echo_warning
 # register_startup_script
 UTIL_SCRIPT_FILE=`ls -1 mtwilson-linux-util-*.sh | head -n 1`
-if [ -f "$UTIL_SCRIPT_FILE" ]; then
+if [ -n "$UTIL_SCRIPT_FILE" ] && [ -f "$UTIL_SCRIPT_FILE" ]; then
   . $UTIL_SCRIPT_FILE
 fi
 
@@ -239,11 +239,12 @@ After you set KMSPROXY_PASSWORD, run the following command to complete installat
     exit 1
   fi
 
+  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-'mtwilson,kms'}" >/dev/null
   kmsproxy setup
 fi
 
 # delete the temporary setup environment variables file
-rm $KMSPROXY_ENV/kmsproxy-setup
+rm -f $KMSPROXY_ENV/kmsproxy-setup
 
 # ensure the kmsproxy owns all the content created during setup
 for directory in $KMSPROXY_HOME $KMSPROXY_CONFIGURATION  $KMSPROXY_JAVA $KMSPROXY_BIN $KMSPROXY_ENV $KMSPROXY_REPOSITORY $KMSPROXY_LOGS; do

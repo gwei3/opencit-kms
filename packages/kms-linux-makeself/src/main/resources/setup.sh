@@ -56,7 +56,7 @@ fi
 # echo_failure echo_warning
 # register_startup_script
 UTIL_SCRIPT_FILE=`ls -1 mtwilson-linux-util-*.sh | head -n 1`
-if [ -f "$UTIL_SCRIPT_FILE" ]; then
+if [ -n "$UTIL_SCRIPT_FILE" ] && [ -f "$UTIL_SCRIPT_FILE" ]; then
   . $UTIL_SCRIPT_FILE
 fi
 
@@ -239,12 +239,12 @@ After you set KMS_PASSWORD, run the following command to complete installation:
     exit 1
   fi
 
-
+  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-'mtwilson,kms'}" >/dev/null
   kms setup
 fi
 
 # delete the temporary setup environment variables file
-rm $KMS_ENV/kms-setup
+rm -f $KMS_ENV/kms-setup
 
 # ensure the kms owns all the content created during setup
 for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_JAVA $KMS_BIN $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do
