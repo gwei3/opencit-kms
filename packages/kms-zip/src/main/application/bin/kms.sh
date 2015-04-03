@@ -22,10 +22,35 @@ NAME=kms
 
 ###################################################################################################
 
-# directory layout
+# if non-root execution is specified, and we are currently root, start over; the KMS_SUDO variable limits this to one attempt
+# we make an exception for the uninstall command, which may require root access to delete users and certain directories
+if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ] && [ "$1" != "uninstall" ]; then
+  sudo -u $KMS_USERNAME KMS_HOME=$KMS_HOME KMS_PASSWORD=$KMS_PASSWORD KMS_SUDO=true kms $*
+  exit $?
+fi
+
+###################################################################################################
+
+# the home directory must be defined before we load any environment or
+# configuration files; it is explicitly passed through the sudo command
 export KMS_HOME=${KMS_HOME:-/opt/kms}
+
+# the env directory is not configurable; it is defined as KMS_HOME/env and the
+# administrator may use a symlink if necessary to place it anywhere else
+export KMS_ENV=$KMS_HOME/env
+
+# load environment variables (these may override the defaults set above)
+if [ -d $KMS_ENV ]; then
+  KMS_ENV_FILES=$(ls -1 $KMS_ENV/*)
+  for env_file in $KMS_ENV_FILES; do
+    . $env_file
+    env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+  done
+fi
+
+# default directory layout follows the 'home' style
 export KMS_CONFIGURATION=${KMS_CONFIGURATION:-${KMS_CONF:-$KMS_HOME/configuration}}
-export KMS_ENV=${KMS_ENV:-$KMS_CONFIGURATION/env}
 export KMS_JAVA=${KMS_JAVA:-$KMS_HOME/java}
 export KMS_BIN=${KMS_BIN:-$KMS_HOME/bin}
 export KMS_REPOSITORY=${KMS_REPOSITORY:-$KMS_HOME/repository}
@@ -33,20 +58,6 @@ export KMS_LOGS=${KMS_LOGS:-$KMS_HOME/logs}
 
 ###################################################################################################
 
-# load environment variables (these may override the defaults set above)
-if [ -d $KMS_ENV ]; then
-  KMS_ENV_FILES=$(ls -1 $KMS_ENV/*)
-  for env_file in $KMS_ENV_FILES; do
-    . $env_file
-  done
-fi
-
-# if non-root execution is specified, and we are currently root, start over; the KMS_SUDO variable limits this to one attempt
-# we make an exception for the uninstall command, which may require root access to delete users and certain directories
-if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ] && [ "$1" != "uninstall" ]; then
-  sudo -u $KMS_USERNAME KMS_PASSWORD=$KMS_PASSWORD KMS_SUDO=true kms $*
-  exit $?
-fi
 
 # load linux utility
 if [ -f "$KMS_HOME/bin/functions.sh" ]; then
@@ -148,7 +159,7 @@ kms_is_running() {
   fi
   if [ -z "$KMS_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMS_PID=$(ps ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | awk '{ print $1 }')
+    KMS_PID=$(ps wwx | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMS_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMS_PID" ]; then
     # KMS is not running
@@ -171,18 +182,6 @@ kms_stop() {
   fi
 }
 
-kms_backup_configuration() {
-    datestr=`date +%Y-%m-%d.%H%M`
-    mkdir -p /var/backup/kms.configuration.$datestr
-    cp -r /opt/kms/configuration/* /var/backup/kms.configuration.$datestr
-}
-
-kms_backup_repository() {
-    datestr=`date +%Y-%m-%d.%H%M`
-    mkdir -p /var/backup/kms.repository.$datestr
-    cp -r /opt/kms/repository/* /var/backup/kms.repository.$datestr
-}
-
 # removes KMS home directory (including configuration and data if they are there).
 # if you need to keep those, back them up before calling uninstall,
 # or if the configuration and data are outside the home directory
@@ -190,7 +189,7 @@ kms_backup_repository() {
 # and KMS_REPOSITORY=/var/opt/kms and then they would not be deleted by this.
 kms_uninstall() {
     remove_startup_script kms
-	rm /usr/local/bin/kms
+	rm -f /usr/local/bin/kms
     rm -rf /opt/kms
     groupdel kms > /dev/null 2>&1
     userdel kms > /dev/null 2>&1

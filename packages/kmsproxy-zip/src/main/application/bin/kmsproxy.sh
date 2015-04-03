@@ -22,10 +22,35 @@ NAME=kmsproxy
 
 ###################################################################################################
 
-# directory layout
+# if non-root execution is specified, and we are currently root, start over; the KMSPROXY_SUDO variable limits this to one attempt
+# we make an exception for the uninstall command, which may require root access to delete users and certain directories
+if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMSPROXY_SUDO" ] && [ "$1" != "uninstall" ]; then
+  sudo -u $KMSPROXY_USERNAME KMSPROXY_HOME=$KMSPROXY_HOME KMSPROXY_PASSWORD=$KMSPROXY_PASSWORD KMSPROXY_SUDO=true kmsproxy $*
+  exit $?
+fi
+
+###################################################################################################
+
+# the home directory must be defined before we load any environment or
+# configuration files; it is explicitly passed through the sudo command
 export KMSPROXY_HOME=${KMSPROXY_HOME:-/opt/kmsproxy}
+
+# the env directory is not configurable; it is defined as KMSPROXY_HOME/env and the
+# administrator may use a symlink if necessary to place it anywhere else
+export KMSPROXY_ENV=$KMSPROXY_HOME/env
+
+# load environment variables (these may override the defaults set above)
+if [ -d $KMSPROXY_ENV ]; then
+  KMSPROXY_ENV_FILES=$(ls -1 $KMSPROXY_ENV/*)
+  for env_file in $KMSPROXY_ENV_FILES; do
+    . $env_file
+    env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+  done
+fi
+
+# default directory layout follows the 'home' style
 export KMSPROXY_CONFIGURATION=${KMSPROXY_CONFIGURATION:-$KMSPROXY_HOME/configuration}
-export KMSPROXY_ENV=${KMSPROXY_ENV:-$KMSPROXY_CONFIGURATION/env}
 export KMSPROXY_JAVA=${KMSPROXY_JAVA:-$KMSPROXY_HOME/java}
 export KMSPROXY_BIN=${KMSPROXY_BIN:-$KMSPROXY_HOME/bin}
 export KMSPROXY_REPOSITORY=${KMSPROXY_REPOSITORY:-$KMSPROXY_HOME/repository}
@@ -33,20 +58,6 @@ export KMSPROXY_LOGS=${KMSPROXY_LOGS:-$KMSPROXY_HOME/logs}
 
 ###################################################################################################
 
-# load environment variables (these may override the defaults set above)
-if [ -d $KMSPROXY_ENV ]; then
-  KMSPROXY_ENV_FILES=$(ls -1 $KMSPROXY_ENV/*)
-  for env_file in $KMSPROXY_ENV_FILES; do
-    . $env_file
-  done
-fi
-
-# if non-root execution is specified, and we are currently root, start over; the KMSPROXY_SUDO variable limits this to one attempt
-# we make an exception for the uninstall command, which may require root access to delete users and certain directories
-if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMSPROXY_SUDO" ] && [ "$1" != "uninstall" ]; then
-  sudo -u $KMSPROXY_USERNAME KMSPROXY_PASSWORD=$KMSPROXY_PASSWORD KMSPROXY_SUDO=true kmsproxy $*
-  exit $?
-fi
 
 # load linux utility
 if [ -f "$KMSPROXY_HOME/bin/functions.sh" ]; then
@@ -148,7 +159,7 @@ kmsproxy_is_running() {
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMSPROXY_PID=$(ps ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | awk '{ print $1 }')
+    KMSPROXY_PID=$(ps wwx | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMSPROXY_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # KMSPROXY is not running
@@ -171,18 +182,6 @@ kmsproxy_stop() {
   fi
 }
 
-kmsproxy_backup_configuration() {
-    datestr=`date +%Y-%m-%d.%H%M`
-    mkdir -p /var/backup/kmsproxy.configuration.$datestr
-    cp -r /opt/kmsproxy/configuration/* /var/backup/kmsproxy.configuration.$datestr
-}
-
-kmsproxy_backup_repository() {
-    datestr=`date +%Y-%m-%d.%H%M`
-    mkdir -p /var/backup/kmsproxy.repository.$datestr
-    cp -r /opt/kmsproxy/repository/* /var/backup/kmsproxy.repository.$datestr
-}
-
 # removes KMSPROXY home directory (including configuration and data if they are there).
 # if you need to keep those, back them up before calling uninstall,
 # or if the configuration and data are outside the home directory
@@ -190,7 +189,7 @@ kmsproxy_backup_repository() {
 # and KMSPROXY_REPOSITORY=/var/opt/kmsproxy and then they would not be deleted by this.
 kmsproxy_uninstall() {
     remove_startup_script kmsproxy
-	rm /usr/local/bin/kmsproxy
+	rm -f /usr/local/bin/kmsproxy
     rm -rf /opt/kmsproxy
     groupdel kmsproxy > /dev/null 2>&1
     userdel kmsproxy > /dev/null 2>&1
