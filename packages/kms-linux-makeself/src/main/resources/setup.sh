@@ -94,16 +94,18 @@ elif [ "$KMS_LAYOUT" == "home" ]; then
   export KMS_REPOSITORY=${KMS_REPOSITORY:-$KMS_HOME/repository}
   export KMS_LOGS=${KMS_LOGS:-$KMS_HOME/logs}
 fi
+export KMS_BIN=${KMS_BIN:-$KMS_HOME/bin}
+export KMS_JAVA=${KMS_JAVA:-$KMS_HOME/java}
 
 # note that the env dir is not configurable; it is defined as "env" under home
 export KMS_ENV=$KMS_HOME/env
+
 
 kms_backup_configuration() {
   if [ -n "$KMS_CONFIGURATION" ] && [ -d "$KMS_CONFIGURATION" ]; then
     datestr=`date +%Y%m%d.%H%M`
     backupdir=/var/backup/kms.configuration.$datestr
-    mkdir -p $backupdir
-    cp -r $KMS_CONFIGURATION/* $backupdir
+    cp -r $KMS_CONFIGURATION $backupdir
   fi
 }
 
@@ -111,12 +113,11 @@ kms_backup_repository() {
   if [ -n "$KMS_REPOSITORY" ] && [ -d "$KMS_REPOSITORY" ]; then
     datestr=`date +%Y%m%d.%H%M`
     backupdir=/var/backup/kms.repository.$datestr
-    mkdir -p $backupdir
-    cp -r $KMS_REPOSITORY/* $backupdir
+    cp -r $KMS_REPOSITORY $backupdir
   fi
 }
 
-# backup current configuration, if there is one
+# backup current configuration and data, if they exist
 kms_backup_configuration
 kms_backup_repository
 
@@ -239,7 +240,7 @@ After you set KMS_PASSWORD, run the following command to complete installation:
     exit 1
   fi
 
-  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-'mtwilson,kms'}" >/dev/null
+  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
   kms setup
 fi
 
