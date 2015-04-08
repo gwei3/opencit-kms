@@ -20,17 +20,6 @@
 DESC="KMS"
 NAME=kms
 
-###################################################################################################
-
-# if non-root execution is specified, and we are currently root, start over; the KMS_SUDO variable limits this to one attempt
-# we make an exception for the uninstall command, which may require root access to delete users and certain directories
-if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ] && [ "$1" != "uninstall" ]; then
-  sudo -u $KMS_USERNAME KMS_HOME=$KMS_HOME KMS_PASSWORD=$KMS_PASSWORD KMS_SUDO=true kms $*
-  exit $?
-fi
-
-###################################################################################################
-
 # the home directory must be defined before we load any environment or
 # configuration files; it is explicitly passed through the sudo command
 export KMS_HOME=${KMS_HOME:-/opt/kms}
@@ -39,14 +28,38 @@ export KMS_HOME=${KMS_HOME:-/opt/kms}
 # administrator may use a symlink if necessary to place it anywhere else
 export KMS_ENV=$KMS_HOME/env
 
-# load environment variables (these may override the defaults set above)
+kms_load_env() {
+  local env_files="$@"
+  local env_file_exports
+  for env_file in $env_files; do
+    if [ -n "$env_file" ] && [ -f "$env_file" ]; then
+      . $env_file
+      env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+      if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+    fi
+  done  
+}
+
+if [ -z "$KMS_USERNAME" ]; then
+  kms_load_env $KMS_HOME/env/kms-username
+fi
+
+###################################################################################################
+
+# if non-root execution is specified, and we are currently root, start over; the KMS_SUDO variable limits this to one attempt
+# we make an exception for the uninstall command, which may require root access to delete users and certain directories
+if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ] && [ "$1" != "uninstall" ]; then
+  sudo -u $KMS_USERNAME KMS_USERNAME=$KMS_USERNAME KMS_HOME=$KMS_HOME KMS_PASSWORD=$KMS_PASSWORD KMS_SUDO=true kms $*
+  exit $?
+fi
+
+###################################################################################################
+
+# load environment variables; these may override the defaults set above and 
+# also note that kms-username file is loaded twice, once before sudo and once
+# here after sudo.
 if [ -d $KMS_ENV ]; then
-  KMS_ENV_FILES=$(ls -1 $KMS_ENV/*)
-  for env_file in $KMS_ENV_FILES; do
-    . $env_file
-    env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
-  done
+  kms_load_env $(ls -1 $KMS_ENV/*)
 fi
 
 # default directory layout follows the 'home' style
@@ -123,6 +136,12 @@ kms_start() {
       return 1
     fi
 
+    # check if we're already running - don't start a second instance
+    if kms_is_running; then
+        echo "KMS is running"
+        return 0
+    fi
+
     # check if we need to use authbind or if we can start java directly
     prog="java"
     if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n $(which authbind) ]; then
@@ -151,7 +170,7 @@ kms_is_running() {
   KMS_PID=
   if [ -f $KMS_PID_FILE ]; then
     KMS_PID=$(cat $KMS_PID_FILE)
-    local is_running=`ps -eo pid | grep "^\s*${KMS_PID}$"`
+    local is_running=`ps -A -o pid | grep "^\s*${KMS_PID}$"`
     if [ -z "$is_running" ]; then
       # stale PID file
       KMS_PID=
@@ -159,7 +178,7 @@ kms_is_running() {
   fi
   if [ -z "$KMS_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMS_PID=$(ps wwx | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMS_CONFIGURATION" | awk '{ print $1 }')
+    KMS_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMS_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMS_PID" ]; then
     # KMS is not running
@@ -175,7 +194,10 @@ kms_stop() {
     kill -9 $KMS_PID
     if [ $? ]; then
       echo "Stopped KMS"
-      rm $KMS_PID_FILE
+      # truncate pid file instead of erasing,
+      # because we may not have permission to create it
+      # if we're running as a non-root user
+      echo > $KMS_PID_FILE
     else
       echo "Failed to stop KMS"
     fi

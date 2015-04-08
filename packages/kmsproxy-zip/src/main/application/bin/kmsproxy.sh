@@ -20,6 +20,31 @@
 DESC="KMSPROXY"
 NAME=kmsproxy
 
+# the home directory must be defined before we load any environment or
+# configuration files; it is explicitly passed through the sudo command
+export KMSPROXY_HOME=${KMSPROXY_HOME:-/opt/kmsproxy}
+
+# the env directory is not configurable; it is defined as KMSPROXY_HOME/env and the
+# administrator may use a symlink if necessary to place it anywhere else
+export KMSPROXY_ENV=$KMSPROXY_HOME/env
+
+kmsproxy_load_env() {
+  local env_files="$@"
+  local env_file_exports
+  for env_file in $env_files; do
+    if [ -n "$env_file" ] && [ -f "$env_file" ]; then
+      . $env_file
+      env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+      if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+    fi
+  done
+}
+
+if [ -z "$KMSPROXY_USERNAME" ]; then
+  kmsproxy_load_env $KMSPROXY_HOME/env/kmsproxy-username
+fi
+
+
 ###################################################################################################
 
 # if non-root execution is specified, and we are currently root, start over; the KMSPROXY_SUDO variable limits this to one attempt
@@ -31,22 +56,11 @@ fi
 
 ###################################################################################################
 
-# the home directory must be defined before we load any environment or
-# configuration files; it is explicitly passed through the sudo command
-export KMSPROXY_HOME=${KMSPROXY_HOME:-/opt/kmsproxy}
-
-# the env directory is not configurable; it is defined as KMSPROXY_HOME/env and the
-# administrator may use a symlink if necessary to place it anywhere else
-export KMSPROXY_ENV=$KMSPROXY_HOME/env
-
-# load environment variables (these may override the defaults set above)
+# load environment variables; these may override the defaults set above and 
+# also note that kmsproxy-username file is loaded twice, once before sudo and once
+# here after sudo.
 if [ -d $KMSPROXY_ENV ]; then
-  KMSPROXY_ENV_FILES=$(ls -1 $KMSPROXY_ENV/*)
-  for env_file in $KMSPROXY_ENV_FILES; do
-    . $env_file
-    env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
-  done
+  kmsproxy_load_env $(ls -1 $KMSPROXY_ENV/*)
 fi
 
 # default directory layout follows the 'home' style
@@ -123,6 +137,12 @@ kmsproxy_start() {
       return 1
     fi
 
+    # check if we're already running - don't start a second instance
+    if kmsproxy_is_running; then
+        echo "KMSPROXY is running"
+        return 0
+    fi
+
     # check if we need to use authbind or if we can start java directly
     prog="java"
     if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n $(which authbind) ]; then
@@ -159,7 +179,7 @@ kmsproxy_is_running() {
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMSPROXY_PID=$(ps wwx | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMSPROXY_CONFIGURATION" | awk '{ print $1 }')
+    KMSPROXY_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMSPROXY_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # KMSPROXY is not running
@@ -175,7 +195,10 @@ kmsproxy_stop() {
     kill -9 $KMSPROXY_PID
     if [ $? ]; then
       echo "Stopped KMSPROXY"
-      rm $KMSPROXY_PID_FILE
+      # truncate pid file instead of erasing,
+      # because we may not have permission to create it
+      # if we're running as a non-root user
+      echo > $KMSPROXY_PID_FILE
     else
       echo "Failed to stop KMSPROXY"
     fi

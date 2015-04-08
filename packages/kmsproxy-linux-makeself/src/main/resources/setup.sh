@@ -98,6 +98,8 @@ elif [ "$KMSPROXY_LAYOUT" == "home" ]; then
   export KMSPROXY_REPOSITORY=${KMSPROXY_REPOSITORY:-$KMSPROXY_HOME/repository}
   export KMSPROXY_LOGS=${KMSPROXY_LOGS:-$KMSPROXY_HOME/logs}
 fi
+export KMSPROXY_BIN=${KMSPROXY_BIN:-$KMSPROXY_HOME/bin}
+export KMSPROXY_JAVA=${KMSPROXY_JAVA:-$KMSPROXY_HOME/java}
 
 # note that the env dir is not configurable; it is defined as "env" under home
 export KMSPROXY_ENV=$KMSPROXY_HOME/env
@@ -106,8 +108,7 @@ kmsproxy_backup_configuration() {
   if [ -n "$KMSPROXY_CONFIGURATION" ] && [ -d "$KMSPROXY_CONFIGURATION" ]; then
     datestr=`date +%Y%m%d.%H%M`
     backupdir=/var/backup/kmsproxy.configuration.$datestr
-    mkdir -p $backupdir
-    cp -r $KMSPROXY_CONFIGURATION/* $backupdir
+    cp -r $KMSPROXY_CONFIGURATION $backupdir
   fi
 }
 
@@ -115,12 +116,11 @@ kmsproxy_backup_repository() {
   if [ -n "$KMSPROXY_REPOSITORY" ] && [ -d "$KMSPROXY_REPOSITORY" ]; then
     datestr=`date +%Y%m%d.%H%M`
     backupdir=/var/backup/kmsproxy.repository.$datestr
-    mkdir -p $backupdir
-    cp -r $KMSPROXY_REPOSITORY/* $backupdir
+    cp -r $KMSPROXY_REPOSITORY $backupdir
   fi
 }
 
-# backup current configuration, if there is one
+# backup current configuration and data, if they exist
 kmsproxy_backup_configuration
 kmsproxy_backup_repository
 
@@ -239,7 +239,7 @@ After you set KMSPROXY_PASSWORD, run the following command to complete installat
     exit 1
   fi
 
-  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-'mtwilson,kms'}" >/dev/null
+  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
   kmsproxy setup
 fi
 
