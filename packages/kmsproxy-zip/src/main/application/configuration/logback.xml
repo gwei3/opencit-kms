@@ -2,7 +2,7 @@
 
     <appender name="LogFile" class="ch.qos.logback.core.FileAppender">
         <!-- environment variable or JVM property KMSPROXY_LOGS must be set -->
-        <file>${KMSPROXY_LOGS}/kmsproxy.log</file>
+        <file>${KMSPROXY_LOGS:-/opt/kmsproxy/logs}/kmsproxy.log</file>
         <append>true</append>
         <encoder>
             <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
@@ -43,7 +43,7 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="${KMSPROXY_LOG_LEVEL:-INFO}">
         <appender-ref ref="LogFile"/>
         <appender-ref ref="ConsoleError"/>
         <appender-ref ref="ConsoleWarn"/>

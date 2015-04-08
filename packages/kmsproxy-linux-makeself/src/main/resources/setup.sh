@@ -145,6 +145,12 @@ echo "export KMSPROXY_LOGS=$KMSPROXY_LOGS" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-username
 echo "export KMSPROXY_USERNAME=$KMSPROXY_USERNAME" >> $KMSPROXY_ENV/kmsproxy-username
 
+# store log level in env file, if it's set
+if [ -n "$KMXPROXY_LOG_LEVEL" ]; then
+  echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-logging
+  echo "export KMXPROXY_LOG_LEVEL=$KMXPROXY_LOG_LEVEL" >> $KMSPROXY_ENV/kmsproxy-logging
+fi
+
 # store the auto-exported environment variables in env file
 # to make them available after the script uses sudo to switch users;
 # we delete that file later

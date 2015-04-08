@@ -148,6 +148,12 @@ echo "export KMS_LOGS=$KMS_LOGS" >> $KMS_ENV/kms-layout
 echo "# $(date)" > $KMS_ENV/kms-username
 echo "export KMS_USERNAME=$KMS_USERNAME" >> $KMS_ENV/kms-username
 
+# store log level in env file, if it's set
+if [ -n "$KMS_LOG_LEVEL" ]; then
+  echo "# $(date)" > $KMS_ENV/kms-logging
+  echo "export KMS_LOG_LEVEL=$KMS_LOG_LEVEL" >> $KMS_ENV/kms-logging
+fi
+
 # store the auto-exported environment variables in env file
 # to make them available after the script uses sudo to switch users;
 # we delete that file later
