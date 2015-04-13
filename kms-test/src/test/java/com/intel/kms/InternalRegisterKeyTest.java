@@ -70,8 +70,8 @@ import static org.junit.Assert.*;
  * 
  * @author jbuhacoff
  */
-public class ClientRegisterKeyTest {
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ClientRegisterKeyTest.class);
+public class InternalRegisterKeyTest {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InternalRegisterKeyTest.class);
     private static final ObjectMapper mapper = JacksonObjectMapperProvider.createDefaultMapper();
     private static final ArrayList<String> keys = new ArrayList<>(); // can be added to or cleared by individual methods as necessary for reusing work
     

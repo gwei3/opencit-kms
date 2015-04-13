@@ -53,11 +53,28 @@ function LoginViewModel() {
                 console.log("Login results: %O", data);
                 /*
                  * Example:
-                 * {authorization_token: "AclEx5EuuEIxgDYLto/7vimX3LvUvXT66IH4mtnFT0OLTD3bP+4mfylcH6SbfUnhwhTvCk7jt6Ez8H13tBMt0MGZE+bxOppqXyPa9RWH+5irIKj1GuAVE+Y/j4r25zoFXvhr9YqkTpEKWUc3caA+2E7ETpgupISb9RRXS7OjhXp/rzqR+D8CBJ9rc7uBqZeGoJjBJfl9ii8l+iZWS28BmrnFUr2iFU4P7xj1Gk8HeI6HRFooRZq5zN6j2knLbCrOpZgNsMqsx/bub8Gc/VzE/fuuYJAatHj1w2ZgAR8eelp/3mb6evyY+Oj11jrNpZz+H/3Itoh699H+Jc23Gz0UEaA4kjDjcL+A6HeK45PXsPaHmxYi2NHru9nCeHc96fqBCWnnhNjv3koPXRjA2vxFEgkkT484T74rB/vGbDGK3cLrccQjDoqutzyCmu4zQDVUV1cg1mz7taMJQY90oGnT6y81/Pw1UqO4U0zlUSlHOfywHmFzLZauKea4w3p3LScf9ayyKKdnSqwhlD/D2q0Cce7c8N5LH3RUqCl2o4oel+WtfinRmSebi0G4X6GvxqHturqtYvLbKIPdH0Dl"}
+                 * {"authorization_token":"G4zpaAK426bZNqMTGGGbWVMiYJnd04Iy5DK75J1iVb4="}
                  */
+                
+                var authorizationToken = data.authorization_token;
+                
                 self.userProfile.username(self.loginRequest.username);
-                self.userProfile.authorizationToken(data.authorization_token);
+                self.userProfile.authorizationToken(authorizationToken);
                 self.userProfile.authenticated(true);
+                
+                // send the authorization token automatically with every ajax request
+                $(document).ajaxSend(function(event,jqxhr,settings){
+                    console.log("ajaxSend: url = "+settings.url);
+                    // check if url starts with /v1  (for example /v1/users)
+                    if( settings.url.lastIndexOf('/v1',0) === 0 ) {
+                        console.log("ajaxSend: accept header: %O", settings.accept);
+                        console.log("ajaxSend: headers object: %O", settings.headers);
+                        console.log("ajaxSend: AJAX request to /v1, setting authorization token: "+authorizationToken);
+                        jqxhr.setRequestHeader("Authorization", "Token "+authorizationToken);
+                    }
+                });
+                
+                
                 // load the navbar and the dashboard, and activate the post-login primary view
                 
                 var nextView = self.options.postLoginActivatePage; // "dashboard.html";

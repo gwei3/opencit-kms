@@ -57,7 +57,8 @@
                     $.ajax({
                         type: "GET",
                         url: endpoint + "/keys",
-                        accept: "application/json",
+                        //accept: "application/json",
+                        headers: {'Accept': 'application/json'},
                         data: $("#searchKeysForm").serialize(), // or we could use ko to serialize searchCriteriaItem $.params(ko.toJSON(searchCriteriaItem))
                         success: function(responseJsonContent, status, xhr) {
                             console.log("Search results: %O", responseJsonContent);

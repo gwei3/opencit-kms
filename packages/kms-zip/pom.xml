@@ -178,11 +178,20 @@
             <artifactId>mtwilson-shiro-file</artifactId>
             <version>${mtwilson.version}</version>
         </dependency>
+        <!-- replacing the original login api with our new one that uses tokens and in-memory database -->
+        <!--
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-shiro-ws-v2</artifactId>
             <version>${mtwilson.version}</version>
         </dependency>
+        -->
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-login-token</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        
         
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
