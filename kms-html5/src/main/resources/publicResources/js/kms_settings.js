@@ -51,7 +51,8 @@ function sortBy(propertyName) {
                     $.ajax({
                         type: "GET",
                         url: endpoint + "/configuration-settings",
-                        accept: "application/json",
+                        //accept: "application/json",
+                        headers: {'Accept': 'application/json'},
                         data: $("#searchSettingsForm").serialize(), // or we could use ko to serialize searchCriteriaItem $.params(ko.toJSON(searchCriteriaItem))
                         success: function(responseJsonContent, status, xhr) {
                             console.log("Search results: %O", responseJsonContent);

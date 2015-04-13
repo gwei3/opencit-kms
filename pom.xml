@@ -26,6 +26,7 @@
     <module>kms-keys-ws-v2</module>
     <module>kms-keys-ws-v2-api</module>
     <module>kms-launcher</module>
+    <module>kms-login-token</module>
 	<module>kms-maven-java</module>
 	<module>kms-maven-package-makeself</module>
 	<module>kms-maven-package-zip</module>
