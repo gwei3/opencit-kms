@@ -26,10 +26,10 @@
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-configuration</artifactId>
         </dependency>
-<!--        <dependency>
+        <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-password-vault</artifactId>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-html5</artifactId>
