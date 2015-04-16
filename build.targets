@@ -1,0 +1,3 @@
+# A successful build produces the following files:
+packages/kms-linux-makeself/target/kms-0.1-SNAPSHOT.bin
+packages/kmsproxy-linux-makeself/target/kmsproxy-0.1-SNAPSHOT.bin
