@@ -82,6 +82,10 @@ public class TransferKeyWithSAML {
      * wrapped key and its metadata are returned in a document container in .tgz
      * format.
      *
+     * Note that the "keys:transfer" permission is NOT required to access this
+     * API since we expect that anonymous clients will use this API to request
+     * keys based on trust only.
+     * 
      * @param keyId
      * @param saml
      * @return
@@ -113,6 +117,10 @@ public class TransferKeyWithSAML {
      * the "cipher.key" file in the document container returned by
      * getKeyWithSamlAsTgz
      *
+     * Note that the "keys:transfer" permission is NOT required to access this
+     * API since we expect that anonymous clients will use this API to request
+     * keys based on trust only.
+     * 
      * @param keyId
      * @param saml
      * @return
@@ -148,6 +156,10 @@ public class TransferKeyWithSAML {
      * possibly some additional attributes of the key, same as would be found in
      * the getKeyWithSamlAsPem.
      *
+     * Note that the "keys:transfer" permission is NOT required to access this
+     * API since we expect that anonymous clients will use this API to request
+     * keys based on trust only.
+     * 
      * @param keyId
      * @param saml
      * @return
