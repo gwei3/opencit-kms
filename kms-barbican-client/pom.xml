@@ -2,9 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.intel.mtwilson.kms</groupId>
-        <artifactId>kms-maven-build</artifactId>
-        <version>0.1-SNAPSHOT</version>
+		  <groupId>com.intel.mtwilson.kms</groupId>
+		  <artifactId>kms-maven-java</artifactId>
+		  <version>0.1-SNAPSHOT</version>
+          <relativePath/>
     </parent>
     <artifactId>kms-barbican-client</artifactId>
     <packaging>jar</packaging>
@@ -81,6 +82,25 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.4</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-configuration</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-configuration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-crypto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-crypto-key</artifactId>
         </dependency>
 
     </dependencies>

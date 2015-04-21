@@ -1,5 +1,6 @@
 package com.intel.kms.barbican.client;
 
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.validation.Fault;
 import com.intel.kms.api.CreateKeyRequest;
 import com.intel.kms.api.CreateKeyResponse;
@@ -21,6 +22,33 @@ import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.intel.dcsg.cpg.crypto.key.HKDF;   // from mtwilson-util-crypto-key  dependency
+import com.intel.dcsg.cpg.crypto.RandomUtil; // from mtwilson-util-crypto dependency
+import com.intel.dcsg.cpg.crypto.key.password.Password;
+import com.intel.kms.api.KeyAttributes;
+import com.intel.kms.api.KeyDescriptor;
+import com.intel.mtwilson.Folders;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
+import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.util.crypto.key2.CipherKey;
+import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
+import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
+import com.intel.mtwilson.util.crypto.keystore.SecretKeyStore;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * Implementation for a south-bound Barbican specific adapter.
@@ -31,8 +59,29 @@ import org.slf4j.LoggerFactory;
 public class BarbicanKeyManager implements KeyManager {
 
     private static final Logger log = LoggerFactory.getLogger(BarbicanKeyManager.class);
-
-    public BarbicanKeyManager() {
+    
+    // TODO: following constants duplicated from kms-keystore-directory StorageKey setup task; refactor will be required
+    public static final String KMS_STORAGE_KEYSTORE_FILE_PROPERTY = "kms.storage.keystore.file";
+    public static final String KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY = "kms.storage.keystore.password";
+    // TODO: following constant duplicated from kms-keystore-directory StorageKeyManager; refactor will be required
+    public static final String STORAGE_KEYSTORE_TYPE = "JCEKS"; // JCEKS is required in order to store secret keys;  JKS only allows private keys
+    
+    private SecretKeyStore storageKeyStore = null;
+    
+    public BarbicanKeyManager() throws IOException, KeyStoreException {
+        this(ConfigurationFactory.getConfiguration());
+        
+    }
+    public BarbicanKeyManager(Configuration configuration) throws IOException, KeyStoreException {
+        String keystorePath = configuration.get(KMS_STORAGE_KEYSTORE_FILE_PROPERTY, Folders.configuration() + File.separator + "storage.jck");
+        String keystorePasswordAlias = configuration.get(KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY, "storage_keystore");
+        try (PasswordKeyStore passwordVault = PasswordVaultFactory.getPasswordKeyStore(configuration)) {
+            if (passwordVault.contains(keystorePasswordAlias)) {
+                Password keystorePassword = passwordVault.get(keystorePasswordAlias);
+                File keystoreFile = new File(keystorePath);
+                storageKeyStore = new SecretKeyStore(STORAGE_KEYSTORE_TYPE, keystoreFile, keystorePassword.toCharArray());
+            }
+        }
     }
 
     /**
@@ -141,4 +190,92 @@ public class BarbicanKeyManager implements KeyManager {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * 
+     * @param barbicanCreatedKey the raw key material returned from Barbican
+     * @param algorithm for example "AES"
+     * @param keyLengthBits for example 128, 192, or 256 for AES
+     * @return
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeyException 
+     */
+    private byte[] deriveKeyFromBarbican(byte[] barbicanCreatedKey, String algorithm, int keyLengthBits) throws NoSuchAlgorithmException, InvalidKeyException {
+        int keyLengthBytes = keyLengthBits/8;
+        HKDF hkdf = new HKDF("HmacSHA256");
+        byte[] salt = RandomUtil.randomByteArray(128);
+        byte[] info = String.format("Barbican %s-%d", algorithm, keyLengthBytes).getBytes(Charset.forName("UTF-8"));
+        byte[] derivedKey = hkdf.deriveKey(salt, barbicanCreatedKey, keyLengthBytes, info);
+        return derivedKey;
+    }
+    
+    
+    private static String toJavaCipherSpec(CipherKeyAttributes cipherKey) {
+        return String.format("%s/%s/%s", cipherKey.getAlgorithm(), cipherKey.getMode(), cipherKey.getPaddingMode()); // for example AES/CBC/PKCS5Padding or AES/CBC/NoPadding
+    }
+    
+    // TODO: maybe refactor to use an "internal" data type instead of TransferKeyResponse, esp. since TransferKeyResponse and RegisterKeyRequest are equivalent, there should be a base class
+    private TransferKeyResponse wrapKey(byte[] keyToWrap, CipherKey storageKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        Cipher cipher = Cipher.getInstance(toJavaCipherSpec(storageKey));
+        SecretKey secretKey = new SecretKeySpec(storageKey.getEncoded(), storageKey.getAlgorithm()); // byte[], "AES"
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] iv = cipher.getIV();
+        byte[] ciphertext = cipher.doFinal(keyToWrap);
+            
+        KeyAttributes storageKeyAttributes = new KeyAttributes();
+        storageKeyAttributes.copyFrom(storageKey);
+        KeyDescriptor descriptor = new KeyDescriptor();
+        descriptor.setEncryption(storageKeyAttributes);
+        descriptor.getEncryption().set("iv", Base64.encodeBase64String(iv)); // TODO:  "iv" is a typical encryption parameter, possibly need to adjust the KeyDescriptor class to accomodate this in the encryption section
+        TransferKeyResponse response = new TransferKeyResponse();
+        response.setKey(ciphertext); // wrapped key
+        response.setDescriptor(descriptor);
+        return response;
+    }
+    
+    private byte[] unwrapKey(TransferKeyResponse wrappedKey, CipherKey storageKey) throws InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
+        Cipher cipher = Cipher.getInstance(toJavaCipherSpec(storageKey));
+        SecretKey secretKey = new SecretKeySpec(storageKey.getEncoded(), storageKey.getAlgorithm()); // byte[], "AES"
+        byte[] ciphertext = wrappedKey.getKey();
+        byte[] iv = Base64.decodeBase64((String)wrappedKey.getDescriptor().getEncryption().get("iv"));
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+        return cipher.doFinal(ciphertext);        
+    }
+    
+    /**
+     * Get the current storage key (to wrap a new key or re-wrap an existing key)
+     * 
+     * @return
+     * @throws KeyStoreException 
+     */
+    private CipherKey getCurrentStorageKey() throws KeyStoreException {
+        if( storageKeyStore == null ) { return null; }
+        // for now, just get the first available storage key
+        List<String> aliases = storageKeyStore.aliases();
+        if( aliases.isEmpty() ) { return null; }
+        String currentStorageKeyAlias = aliases.get(0);
+        return getStorageKey(currentStorageKeyAlias);
+    }
+    
+    /**
+     * Get a specific storage key (to unwrap an existing key)
+     * 
+     * @param storageKeyAlias
+     * @return
+     * @throws KeyStoreException 
+     */
+    private CipherKey getStorageKey(String storageKeyAlias) throws KeyStoreException {
+        if( storageKeyStore == null ) { return null; }
+        SecretKey storageKey = storageKeyStore.get(storageKeyAlias);
+        CipherKey key = new CipherKey();
+        key.setAlgorithm("AES"); // TODO: current hard-coded storage key algorithm; will require future work
+        key.setKeyId(storageKeyAlias);
+        key.setKeyLength(storageKey.getEncoded().length * 8); // key length is in bits, so converting from byte[] length
+        key.setMode("CBC");
+        key.setPaddingMode("NoPadding"); // because storage/wrapping key must be same length or longer than wrapped key; another possible value is PKCS5Padding
+        key.setEncoded(storageKey.getEncoded());
+        key.set("format", storageKey.getFormat()); // TODO: adjustment required since key encoding format is part of java built-in api, there should be a method for it
+        return key;
+    }
+    
+    
 }

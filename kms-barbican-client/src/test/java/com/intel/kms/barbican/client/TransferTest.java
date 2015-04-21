@@ -3,6 +3,8 @@ package com.intel.kms.barbican.client;
 import com.intel.kms.api.KeyManager;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
+import java.io.IOException;
+import java.security.KeyStoreException;
 import org.junit.Assert;
 import static org.junit.Assert.assertNotNull;
 
@@ -11,7 +13,7 @@ import org.junit.Test;
 public class TransferTest {
 
     @Test
-    public void testInvalidRequest() {
+    public void testInvalidRequest() throws IOException, KeyStoreException {
         TransferKeyRequest request = new TransferKeyRequest();
         request.setKeyId(null);
         KeyManager kmsManager = new BarbicanKeyManager();
@@ -20,7 +22,7 @@ public class TransferTest {
     }
 
     @Test
-    public void testValidRequest() {
+    public void testValidRequest() throws IOException, KeyStoreException {
         TransferKeyRequest request = new TransferKeyRequest();
         request.setKeyId("KEY_ID");
 

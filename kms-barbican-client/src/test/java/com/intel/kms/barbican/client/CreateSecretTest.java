@@ -6,6 +6,8 @@ import com.intel.kms.api.KeyAttributes;
 import com.intel.kms.api.KeyManager;
 import com.intel.kms.barbican.client.exception.BarbicanClientException;
 import com.intel.kms.barbican.client.httpclient.BarbicanHttpClient;
+import java.io.IOException;
+import java.security.KeyStoreException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -23,7 +25,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class CreateSecretTest {
 
     @Test
-    public void testInvalidRequest() {
+    public void testInvalidRequest() throws IOException, KeyStoreException {
         CreateKeyRequest request = new CreateKeyRequest();
         KeyManager kmsManager = new BarbicanKeyManager();
         CreateKeyResponse response = kmsManager.createKey(request);
@@ -31,7 +33,7 @@ public class CreateSecretTest {
     }
 
     @Test
-    public void testValidRequest() throws BarbicanClientException {                
+    public void testValidRequest() throws BarbicanClientException, IOException, KeyStoreException {                
         KeyAttributes expectedKA = new KeyAttributes();
         expectedKA.setTransferPolicy("URL_TO_TRANSFER_POCLIY");
         CreateKeyResponse expectedResponse = new CreateKeyResponse(expectedKA);
