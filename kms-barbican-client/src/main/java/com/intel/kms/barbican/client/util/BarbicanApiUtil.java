@@ -1,0 +1,163 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.intel.kms.barbican.client.util;
+
+import com.intel.kms.api.CreateKeyRequest;
+import com.intel.kms.api.CreateKeyResponse;
+import com.intel.kms.api.DeleteKeyResponse;
+import com.intel.kms.api.KeyAttributes;
+import com.intel.kms.api.RegisterKeyRequest;
+import com.intel.kms.api.RegisterKeyResponse;
+import com.intel.kms.api.TransferKeyRequest;
+import com.intel.kms.api.TransferKeyResponse;
+import com.intel.kms.barbican.api.CreateOrderRequest;
+import com.intel.kms.barbican.api.DeleteSecretRequest;
+import com.intel.kms.barbican.api.RegisterSecretRequest;
+import com.intel.kms.barbican.api.RegisterSecretResponse;
+import com.intel.kms.barbican.api.TransferSecretRequest;
+import com.intel.kms.barbican.api.TransferSecretResponse;
+import com.intel.kms.barbican.client.exception.BarbicanClientException;
+import com.intel.mtwilson.jaxrs2.Link;
+import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
+import javax.ws.rs.core.MediaType;
+
+/**
+ *
+ * @author soakx
+ */
+public class BarbicanApiUtil {
+
+    /**
+     * Method to map the generic create request object to the barbican specific
+     * request object
+     *
+     * Barbican create order request:
+     *
+     * POST v1/orders
+     *
+     * Header: content-type=application/json X-Project-Id: {project_id} {
+     * "type": "key", "meta": { "name": "secretname", "algorithm": "AES",
+     * "bit_length": 256, "mode": "cbc", "payload_content_type":
+     * "application/octet-stream" } }
+     *
+     *
+     *
+     *
+     * @param createKeyRequest
+     * @return CreateOrderRequest
+     * @throws BarbicanClientException
+     */
+    public static CreateOrderRequest mapCreateKeyRequestToCreateOrderRequest(CreateKeyRequest createKeyRequest) throws BarbicanClientException {
+        if (createKeyRequest == null) {
+            throw new BarbicanClientException(new NullPointerException("mapCreateKeyRequestToCreateOrderRequest: The CreateKeyRequest is null"));
+        }
+        CreateOrderRequest createOrderRequest = new CreateOrderRequest();
+        RegisterSecretRequest registerSecretRequest = new RegisterSecretRequest();
+        createOrderRequest.type = "key";
+        createOrderRequest.meta = registerSecretRequest;
+        registerSecretRequest.name = "BarbicanKMSKey";
+        registerSecretRequest.algorithm = createKeyRequest.getAlgorithm();
+        registerSecretRequest.bit_length = createKeyRequest.getKeyLength();
+        registerSecretRequest.mode = createKeyRequest.getMode();
+        registerSecretRequest.payload_content_type = MediaType.APPLICATION_OCTET_STREAM;
+        return createOrderRequest;
+    }
+
+    /**
+     * Map the Barbican Transfer object to the generic transfer object
+     *
+     * @param transferSecretResponse
+     * @return TransferKeyResponse
+     * @throws BarbicanClientException
+     */
+    public static TransferKeyResponse mapTransferSecretResponseToTransferKeyResponse(TransferSecretResponse transferSecretResponse) throws BarbicanClientException {
+        if (transferSecretResponse == null) {
+            throw new BarbicanClientException(new NullPointerException("mapTransferSecretResponseToTransferKeyResponse: The transferSecretResponse is null"));
+        }
+        TransferKeyResponse transferKeyResponse = new TransferKeyResponse();
+        transferKeyResponse.setKey(transferSecretResponse.secret);
+        return transferKeyResponse;
+    }
+
+    /**
+     * Map the Barbican delete object to the generic delete object
+     *
+     * @param deleteSecretRequest
+     * @return DeleteKeyResponse
+     * @throws BarbicanClientException
+     */
+    public static DeleteKeyResponse mapDeleteSecretResponseToDeleteKeyResponse(DeleteSecretRequest deleteSecretRequest) throws BarbicanClientException {
+        if (deleteSecretRequest == null) {
+            throw new BarbicanClientException(new NullPointerException("mapDeleteSecretResponseToDeleteKeyResponse: The deleteSecretRequest is null"));
+        }
+        DeleteKeyResponse deleteKeyResponse = new DeleteKeyResponse();
+        deleteKeyResponse.getHttpResponse().setStatusCode(200);
+        deleteKeyResponse.getExtensions().set("id", deleteSecretRequest.id);
+        return deleteKeyResponse;
+    }
+
+    public static RegisterSecretRequest mapRegisterKeyRequestToRegisterSecretRequest(RegisterKeyRequest registerKeyRequest) throws BarbicanClientException {
+        if (registerKeyRequest == null) {
+            throw new BarbicanClientException(new NullPointerException("mapRegisterKeyRequestToRegisterSecretRequest: The registerKeyRequest is null"));
+        }
+        if (registerKeyRequest.getKey() == null) {
+            throw new BarbicanClientException(new NullPointerException("mapRegisterKeyRequestToRegisterSecretRequest: The key data is null"));
+        }
+        RegisterSecretRequest registerSecretRequest = new RegisterSecretRequest();
+        registerSecretRequest.algorithm = registerKeyRequest.getDescriptor().getEncryption().getAlgorithm();
+        registerSecretRequest.bit_length = registerKeyRequest.getDescriptor().getContent().getKeyLength();
+        registerSecretRequest.mode = registerKeyRequest.getDescriptor().getContent().getMode();
+        registerSecretRequest.payload_content_type = MediaType.APPLICATION_OCTET_STREAM;
+        registerSecretRequest.secretType = "symmetric";
+        registerSecretRequest.payload_content_encoding = "base64";
+        registerSecretRequest.payload = new String(registerKeyRequest.getKey());
+        //TODO: Store the storage key alias and the "iv" in custom attributes
+        return registerSecretRequest;
+    }
+
+    public static RegisterKeyResponse mapRegisterSecretResponseToRegisterKeyResponse(RegisterSecretResponse registerSecretResponse, RegisterKeyRequest registerKeyRequest) throws BarbicanClientException {
+        if (registerSecretResponse == null) {
+            throw new BarbicanClientException(new NullPointerException("mapRegisterSecretResponseToRegisterKeyResponse: The registerSecretResponse is null"));
+        }
+        Link link = new Link("secret_ref", registerSecretResponse.secretRef);
+        KeyAttributes attributes = new KeyAttributes();
+        CipherKeyAttributes content = registerKeyRequest.getDescriptor().getContent();
+        attributes.setAlgorithm(content.getAlgorithm());
+        attributes.setKeyLength(content.getKeyLength());
+        String keyId = registerSecretResponse.secretRef.substring(registerSecretResponse.secretRef.lastIndexOf("/")+1);
+        attributes.setKeyId(keyId);
+        RegisterKeyResponse registerKeyResponse = new RegisterKeyResponse(attributes);
+        registerKeyResponse.getLinks().add(link);
+        return registerKeyResponse;
+    }
+
+    public static TransferSecretRequest mapTransferKeyRequestToTransferSecretRequest(TransferKeyRequest transferKeyRequest) throws BarbicanClientException {
+        if (transferKeyRequest == null) {
+            throw new BarbicanClientException(new NullPointerException("mapTransferKeyRequestToTransferSecretRequest: The transferKeyRequest is null"));
+        }
+        TransferSecretRequest transferSecretRequest = new TransferSecretRequest();
+        transferSecretRequest.accept = MediaType.APPLICATION_OCTET_STREAM;
+        transferSecretRequest.id = transferKeyRequest.getKeyId();
+        return transferSecretRequest;
+
+    }
+
+
+    public static CreateKeyResponse mapRegisterKeyResponseToCreateKeyResponse(RegisterKeyResponse registerKeyResponse) throws BarbicanClientException {
+        if (registerKeyResponse == null) {
+            throw new BarbicanClientException(new NullPointerException("mapRegisterKeyResponseToCreateKeyResponse: The registerKeyResponse is null"));
+        }
+        KeyAttributes keyAttributes = new KeyAttributes();
+        
+        keyAttributes.setAlgorithm(registerKeyResponse.getData().get(0).getAlgorithm());
+        keyAttributes.setKeyId(registerKeyResponse.getData().get(0).getKeyId());
+        keyAttributes.setKeyLength(registerKeyResponse.getData().get(0).getKeyLength());
+
+        CreateKeyResponse createKeyResponse = new CreateKeyResponse(keyAttributes);
+        return createKeyResponse;
+    }
+
+}

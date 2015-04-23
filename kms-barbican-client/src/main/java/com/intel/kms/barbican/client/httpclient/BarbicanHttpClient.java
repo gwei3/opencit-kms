@@ -1,31 +1,28 @@
 package com.intel.kms.barbican.client.httpclient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.kms.api.CreateKeyRequest;
 import com.intel.kms.api.CreateKeyResponse;
 import com.intel.kms.api.DeleteKeyRequest;
 import com.intel.kms.api.DeleteKeyResponse;
-import com.intel.kms.api.KeyAttributes;
 import com.intel.kms.api.RegisterKeyRequest;
 import com.intel.kms.api.RegisterKeyResponse;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
-import com.intel.kms.barbican.client.dto.BarbicanDTO;
+import com.intel.kms.barbican.api.CreateOrderRequest;
+import com.intel.kms.barbican.api.CreateOrderResponse;
+import com.intel.kms.barbican.api.DeleteSecretRequest;
+import com.intel.kms.barbican.api.DeleteSecretResponse;
+import com.intel.kms.barbican.api.GetOrderRequest;
+import com.intel.kms.barbican.api.GetOrderResponse;
+import com.intel.kms.barbican.api.RegisterSecretRequest;
+import com.intel.kms.barbican.api.RegisterSecretResponse;
+import com.intel.kms.barbican.api.TransferSecretRequest;
+import com.intel.kms.barbican.api.TransferSecretResponse;
+import com.intel.kms.barbican.client.util.BarbicanApiUtil;
 import com.intel.kms.barbican.client.exception.BarbicanClientException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.util.Map;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HostConfiguration;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+import com.intel.kms.barbican.client.httpclient.rs.Orders;
+import com.intel.kms.barbican.client.httpclient.rs.Secrets;
 
 /**
  *
@@ -34,35 +31,25 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 public class BarbicanHttpClient {
 
     private static BarbicanHttpClient barbicanHttpClient = null;
-    private HttpClient httpClient;
+    private Configuration configuration;
+    private static String PROJECT_ID = null;
+    private static Orders ordersClient ;
+    private static Secrets secretsClient;
 
-    public void setHttpClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
+    public BarbicanHttpClient(Configuration configuration) {
+        this.configuration = configuration;
     }
 
-    private static final String BARBICAN_SERVER_HOST = "localhost";
-    private static final int BARBICAN_SERVER_PORT = 9311;
-    private static final String BARBICAN_POST_SECRET = "/v1/secrets";
-    private static final String BARBICAN_CREATE_SECRET = "/v1/orders";
-    private static final String REQUEST_HEADER_CONTENT_TYPE = "content-type";
-    private static final String REQUEST_HEADER_ACCEPT = "content-type";
-    private static final String REQUEST_HEADER_PROJECT_ID = "X-Project-Id";
-    private static final String REQUEST_HEADER_CONTENT_TYPE_APP_JSON = "application/json";
-    private static final String REQUEST_HEADER_CONTENT_TYPE_APP_OCTET_STREAM = "application/octet-stream";
-
-    private BarbicanHttpClient() {
-        httpClient = new HttpClient();
-        HostConfiguration configuration = new HostConfiguration();
-        configuration.setHost(BARBICAN_SERVER_HOST, BARBICAN_SERVER_PORT);
-        httpClient.setHostConfiguration(configuration);
-    }
-
-    public static BarbicanHttpClient getBarbicanHttpClient() {
+    public static BarbicanHttpClient getBarbicanHttpClient(Configuration configuration) throws BarbicanClientException {
         if (barbicanHttpClient == null) {
-            barbicanHttpClient = new BarbicanHttpClient();
+            barbicanHttpClient = new BarbicanHttpClient(configuration);
         }
+        PROJECT_ID = configuration.get("X-PROJECT-ID");        
+        ordersClient = new Orders(configuration);
+        secretsClient = new Secrets(configuration);
         return barbicanHttpClient;
     }
+    
 
     /**
      * Barbican can generate secrets via the orders resource Create an order
@@ -91,78 +78,64 @@ public class BarbicanHttpClient {
      * "content_types": {"default": "application/octet-stream"}, "mode": "cbc",
      * "bit_length": 256, "expiration": null}
      *
-     * @param request
+     * @param createKeyRequest
      * @return CreateKeyResponse with the URL to the secret
      * @throws BarbicanClientException
      */
-    public CreateKeyResponse createSecret(CreateKeyRequest request)
-            throws BarbicanClientException {
-        CreateKeyResponse response = null;
-        PostMethod postMethod = new PostMethod(BARBICAN_CREATE_SECRET);
+    public TransferKeyResponse createSecret(CreateKeyRequest createKeyRequest) throws BarbicanClientException {
+        /*
+         1) Construct a CreateOrderRequest object from the  createKeyRequest and Create order in Barbican
+         2) Get the order details from barbican containing the secret_ref
+         3) Make a GetSecret call to Barbican to get the actual key
+         4) Encrypt the key with storage key
+         5) Make a registerSecret call and replace Barbican key with the new key
+         6) Delete the barbican key as keys are immutable in Barbican
+         7) return the response
+         */
 
-        //Set the header
-        Header headerContentType = new Header(REQUEST_HEADER_CONTENT_TYPE, REQUEST_HEADER_CONTENT_TYPE_APP_JSON);
-        Header headerProjectId = new Header(REQUEST_HEADER_PROJECT_ID, "123456");
-        postMethod.addRequestHeader(headerContentType);
-        postMethod.addRequestHeader(headerProjectId);
+        //Step 1
 
-        //build the JSON representation of the data to be sent to Barbican
-        String body = null;
-        try {
-            body = BarbicanDTO.getBarbicanJsonForCreateKey(request);
-        } catch (JsonProcessingException ex) {
-            throw new BarbicanClientException("Unable to contruct JSON for CREATE request", ex);
-        }
+        CreateOrderRequest createOrderRequest = BarbicanApiUtil.mapCreateKeyRequestToCreateOrderRequest(createKeyRequest);
+        CreateOrderResponse createOrderResponse = ordersClient.createOrderRequest(createOrderRequest);
 
-        //Construct an entity
-        RequestEntity entity;
-        try {
-            entity = new StringRequestEntity(body, "application/json", "UTF-8");
-        } catch (UnsupportedEncodingException e1) {
-            throw new BarbicanClientException("Error constructing request body");
-        }
+        //Step 2
+        //Here we get the secret_ref
+        String orderId = createOrderResponse.order_ref.substring(createOrderResponse.order_ref.lastIndexOf("/") + 1);
+        GetOrderRequest getOrderRequest = new GetOrderRequest();
+        getOrderRequest.id = orderId;
+        getOrderRequest.projectId = configuration.get("PROJECT_ID");
+        GetOrderResponse getOrderResponse = ordersClient.getOrderRequest(getOrderRequest);
+        String keyId = getOrderResponse.secret_ref.substring(getOrderResponse.secret_ref.lastIndexOf("/") + 1);
 
-        // Set the JSON string of the CreateSecretRequest in the POST body
-        postMethod.setRequestEntity(entity);
+        //Step 3 
+        TransferKeyRequest transferKeyRequest = new TransferKeyRequest(keyId);
+        TransferKeyResponse transferKeyResponse = retrieveSecret(transferKeyRequest);
+        return transferKeyResponse;
+        
 
-        try {
-            // make the POST request to start the key create process
-            httpClient.executeMethod(postMethod);
-            int statusCode = postMethod.getStatusCode();
-            if (statusCode != 202) {
-                throw new BarbicanClientException("Thhe key generation process was not started");
-            }
-            response = new CreateKeyResponse();
-            KeyAttributes keyAttributes = new KeyAttributes();
+        /*
+        
+        
+        
+        //Step 4
+        //TODO: Encrypt key transferKeyResponse.getKey()        
+        byte[] encryptedKey = "0000000000000000".getBytes();
 
-            String responseBodyAsString = postMethod.getResponseBodyAsString();
+        //Step 5
+        RegisterKeyRequest registerKeyRequest = new RegisterKeyRequest();
+        registerKeyRequest.setKey(encryptedKey);
+        RegisterKeyResponse registerKeyResponse;
+        registerKeyResponse = registerSecret(registerKeyRequest);
 
-            //Extract the order_ref
-            String orderRef = JsonUtil.convertJsonToMap(responseBodyAsString).get("order_ref");
+        //Step 6
+        DeleteKeyRequest deleteKeyRequest = new DeleteKeyRequest(keyId);
+        deleteSecret(deleteKeyRequest);
 
-            //Make a GET request to get the order details            
-            GetMethod getMethod = new GetMethod(orderRef);
-            httpClient.executeMethod(getMethod);
-            responseBodyAsString = getMethod.getResponseBodyAsString();
-            //Extract the secret_ref
-            Map<String, String> map = JsonUtil.convertJsonToMap(responseBodyAsString);
-            String secretRef = map.get("secret_ref");
-            KeyAttributes attribute = new KeyAttributes();
-            attribute.setTransferLink(new URL(secretRef));
-            attribute.setAlgorithm(map.get("algorithm"));
-            attribute.setKeyId(secretRef.substring(secretRef.lastIndexOf("/") + 1));
-            attribute.setKeyLength(Integer.getInteger(map.get("bit_length")));
-            response.getData().add(attribute);
-        } catch (HttpException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "HttpException");
-            throw barbicanClientException;
-        } catch (IOException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "Error communicating with the server");
-            throw barbicanClientException;
-        }
-        return response;
+        //Populate the CreateKeyResponse from the registerKeyResponse
+        CreateKeyResponse createKeyResponse = new CreateKeyResponse();
+        createKeyResponse.getData().addAll(registerKeyResponse.getData());
+        return createKeyResponse;
+        */
     }
 
     /**
@@ -170,38 +143,16 @@ public class BarbicanHttpClient {
      * 'Accept:application/octet-stream' -H 'X-Project-Id: 12345'
      * http://localhost:9311/v1/secrets/2df8d196-76b6-4f89-a6d2-c9e764900791
      *
-     * @param request
+     * @param transferKeyRequest
      * @return TransferKeyResponse with the key populated
+     * @throws com.intel.kms.barbican.client.exception.BarbicanClientException
      */
-    public TransferKeyResponse retrieveSecret(TransferKeyRequest request) throws BarbicanClientException {
-        TransferKeyResponse response = null;
-        StringBuilder url = new StringBuilder(BARBICAN_POST_SECRET);
-        url.append("/");
-        url.append(request.getKeyId());
-        GetMethod getMethod = new GetMethod(url.toString());
-
-        //Set the header
-        Header headerContentType = new Header(REQUEST_HEADER_ACCEPT, REQUEST_HEADER_CONTENT_TYPE_APP_OCTET_STREAM);
-        Header headerProjectId = new Header(REQUEST_HEADER_PROJECT_ID, "123456");
-        getMethod.addRequestHeader(headerContentType);
-        getMethod.addRequestHeader(headerProjectId);
-
-        // make the GET request
-        try {
-            httpClient.executeMethod(getMethod);
-            byte[] key = getMethod.getResponseBody();
-            response = new TransferKeyResponse();
-            response.setKey(key);
-        } catch (HttpException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "HttpException");
-            throw barbicanClientException;
-        } catch (IOException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "Error communicating with the server");
-            throw barbicanClientException;
-        }
-        return response;
+    public TransferKeyResponse retrieveSecret(TransferKeyRequest transferKeyRequest) throws BarbicanClientException {
+        TransferSecretRequest transferSecretRequest = BarbicanApiUtil.mapTransferKeyRequestToTransferSecretRequest(transferKeyRequest);
+        transferSecretRequest.projectId = PROJECT_ID;
+        TransferSecretResponse transferSecret = secretsClient.transferSecret(transferSecretRequest);
+        TransferKeyResponse transferKeyResponse = BarbicanApiUtil.mapTransferSecretResponseToTransferKeyResponse(transferSecret);
+        return transferKeyResponse;
     }
 
     /**
@@ -220,96 +171,32 @@ public class BarbicanHttpClient {
      * "http://localhost:9311/v1/secrets/a8957047-16c6-4b05-ac57-8621edd0e9ee" }
      *
      *
+     * @param registerKeyRequest
+     * @return
+     * @throws BarbicanClientException
+     */
+    public RegisterKeyResponse registerSecret(RegisterKeyRequest registerKeyRequest) throws BarbicanClientException {
+        RegisterKeyResponse registerKeyResponse;
+        Secrets secretsClient = new Secrets(configuration);
+        RegisterSecretRequest registerSecretRequest = BarbicanApiUtil.mapRegisterKeyRequestToRegisterSecretRequest(registerKeyRequest);
+        RegisterSecretResponse registerSecretResponse = secretsClient.registerSecret(registerSecretRequest);
+        registerKeyResponse = BarbicanApiUtil.mapRegisterSecretResponseToRegisterKeyResponse(registerSecretResponse, registerKeyRequest);
+        return registerKeyResponse;
+    }
+
+    /**
+     *
      * @param request
      * @return
      * @throws BarbicanClientException
      */
-    public RegisterKeyResponse registerSecret(RegisterKeyRequest request) throws BarbicanClientException {
-        RegisterKeyResponse response = null;
-        PutMethod putMethod = new PutMethod(BARBICAN_POST_SECRET);
-
-        //Set the header
-        Header headerContentType = new Header(REQUEST_HEADER_CONTENT_TYPE, REQUEST_HEADER_CONTENT_TYPE_APP_JSON);
-        Header headerProjectId = new Header(REQUEST_HEADER_PROJECT_ID, "123456");
-        putMethod.addRequestHeader(headerContentType);
-        putMethod.addRequestHeader(headerProjectId);
-
-        //build the JSON representation of the data to be sent to Barbican
-        String body = null;
-        try {
-            body = BarbicanDTO.getBarbicanJsonForRegisterKey(request);
-        } catch (JsonProcessingException ex) {
-            throw new BarbicanClientException("Unable to construct JSON body for REGISTER request", ex);
-        }
-
-        //Construct an entity
-        RequestEntity entity;
-        try {
-            entity = new StringRequestEntity(body, "application/json", "UTF-8");
-        } catch (UnsupportedEncodingException e1) {
-            throw new BarbicanClientException("Error constructing request body");
-        }
-
-        // Set the JSON string of the CreateSecretRequest in the POST body
-        putMethod.setRequestEntity(entity);
-
-        // make the PUT request
-        try {
-            httpClient.executeMethod(putMethod);
-            int statusCode = putMethod.getStatusCode();
-            if (statusCode != 200) {
-                throw new BarbicanClientException("Unable to PUT the key in Barbican");
-            }
-            String responseBodyAsString = putMethod.getResponseBodyAsString();
-            Map<String, String> map = JsonUtil.convertJsonToMap(responseBodyAsString);
-            response = new RegisterKeyResponse();
-            KeyAttributes attributes = new KeyAttributes();
-            attributes.setTransferLink(new URL(map.get("secret_ref")));
-            response.getData().add(attributes);
-        } catch (HttpException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "HttpException");
-            throw barbicanClientException;
-        } catch (IOException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "Error communicating with the server");
-            throw barbicanClientException;
-        }
-        return response;
-    }
-
     public DeleteKeyResponse deleteSecret(DeleteKeyRequest request) throws BarbicanClientException {
-        DeleteKeyResponse response = null;
-        StringBuilder url = new StringBuilder(BARBICAN_POST_SECRET);
-        url.append("/");
-        url.append(request.getKeyId());
-        DeleteMethod deleteMethod = new DeleteMethod(url.toString());
-
-        //Set the header
-        Header headerContentType = new Header(REQUEST_HEADER_CONTENT_TYPE, REQUEST_HEADER_CONTENT_TYPE_APP_JSON);
-        Header headerProjectId = new Header(REQUEST_HEADER_PROJECT_ID, "123456");
-        deleteMethod.addRequestHeader(headerContentType);
-        deleteMethod.addRequestHeader(headerProjectId);
-
-        // make the DELETE request
-        try {
-            httpClient.executeMethod(deleteMethod);
-            int statusCode = deleteMethod.getStatusCode();
-            if (statusCode == 404) {
-                throw new BarbicanClientException("Unable to delete the key from Barbican");
-            }
-            String responseBodyAsString = deleteMethod.getResponseBodyAsString();
-            response = new DeleteKeyResponse();
-            response.getHttpResponse().setStatusCode(statusCode);
-        } catch (HttpException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "HttpException");
-            throw barbicanClientException;
-        } catch (IOException e) {
-            BarbicanClientException barbicanClientException = new BarbicanClientException(
-                    "Error communicating with the server");
-            throw barbicanClientException;
-        }
+        DeleteKeyResponse response;
+        Secrets secretsClient = new Secrets(configuration);
+        DeleteSecretRequest deleteSecretRequest = new DeleteSecretRequest();
+        deleteSecretRequest.id = request.getKeyId();
+        DeleteSecretResponse deleteSecretResponse = secretsClient.deleteSecret(deleteSecretRequest);
+        response = BarbicanApiUtil.mapDeleteSecretResponseToDeleteKeyResponse(deleteSecretRequest);
         return response;
     }
 

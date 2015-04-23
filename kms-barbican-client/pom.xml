@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-		  <groupId>com.intel.mtwilson.kms</groupId>
-		  <artifactId>kms-maven-java</artifactId>
-		  <version>0.1-SNAPSHOT</version>
-          <relativePath/>
+        <groupId>com.intel.mtwilson.kms</groupId>
+        <artifactId>kms-maven-java</artifactId>
+        <version>0.1-SNAPSHOT</version>
+        <relativePath/>
     </parent>
     <artifactId>kms-barbican-client</artifactId>
     <packaging>jar</packaging>
@@ -15,6 +15,9 @@
         <maven.compiler.target>1.7</maven.compiler.target>
     </properties>
     <dependencies>
+        <!--
+        Junit
+        -->
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
@@ -31,60 +34,23 @@
             <version>1.6.2</version>
         </dependency>
 
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.10</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <version>3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.5.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>2.5.2</version>
-        </dependency>
+        <!-- Intel -->    
+        <dependency>            
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-crypto-key</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>    
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>2.5.2</version>
+            <artifactId>kms-barbican-api</artifactId>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-            <version>1.3</version>
-        </dependency>
-
-
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
-        </dependency>
-
-
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-configuration</artifactId>
@@ -99,10 +65,10 @@
             <artifactId>mtwilson-util-crypto</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.intel.mtwilson.util</groupId>
-            <artifactId>mtwilson-util-crypto-key</artifactId>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-keystore-directory</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
     </dependencies>
         
 </project>

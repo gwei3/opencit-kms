@@ -4,6 +4,8 @@
  */
 package com.intel.kms.barbican.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import javax.ws.rs.HeaderParam;
 
 /**
@@ -11,7 +13,9 @@ import javax.ws.rs.HeaderParam;
  * 
  * @author jbuhacoff
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CreateOrderRequest {
+    @JsonIgnore(true)
     @HeaderParam("X-Project-Id")
     public String projectId; // from header X-Project-Id: {project_id}
 
