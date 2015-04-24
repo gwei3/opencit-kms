@@ -2,7 +2,6 @@ package com.intel.kms.barbican.client.httpclient;
 
 import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.kms.api.CreateKeyRequest;
-import com.intel.kms.api.CreateKeyResponse;
 import com.intel.kms.api.DeleteKeyRequest;
 import com.intel.kms.api.DeleteKeyResponse;
 import com.intel.kms.api.RegisterKeyRequest;
@@ -33,8 +32,15 @@ public class BarbicanHttpClient {
     private static BarbicanHttpClient barbicanHttpClient = null;
     private Configuration configuration;
     private static String PROJECT_ID = null;
-    private static Orders ordersClient ;
+    private static Orders ordersClient;
     private static Secrets secretsClient;
+    
+    public void setOrders(Orders orders){
+        ordersClient = orders;
+    }
+    public void setSecrets(Secrets secrets){
+        secretsClient = secrets;
+    }
 
     public BarbicanHttpClient(Configuration configuration) {
         this.configuration = configuration;
@@ -44,12 +50,11 @@ public class BarbicanHttpClient {
         if (barbicanHttpClient == null) {
             barbicanHttpClient = new BarbicanHttpClient(configuration);
         }
-        PROJECT_ID = configuration.get("X-PROJECT-ID");        
+        PROJECT_ID = configuration.get("X-PROJECT-ID");
         ordersClient = new Orders(configuration);
         secretsClient = new Secrets(configuration);
         return barbicanHttpClient;
     }
-    
 
     /**
      * Barbican can generate secrets via the orders resource Create an order
@@ -94,7 +99,6 @@ public class BarbicanHttpClient {
          */
 
         //Step 1
-
         CreateOrderRequest createOrderRequest = BarbicanApiUtil.mapCreateKeyRequestToCreateOrderRequest(createKeyRequest);
         CreateOrderResponse createOrderResponse = ordersClient.createOrderRequest(createOrderRequest);
 
@@ -111,31 +115,6 @@ public class BarbicanHttpClient {
         TransferKeyRequest transferKeyRequest = new TransferKeyRequest(keyId);
         TransferKeyResponse transferKeyResponse = retrieveSecret(transferKeyRequest);
         return transferKeyResponse;
-        
-
-        /*
-        
-        
-        
-        //Step 4
-        //TODO: Encrypt key transferKeyResponse.getKey()        
-        byte[] encryptedKey = "0000000000000000".getBytes();
-
-        //Step 5
-        RegisterKeyRequest registerKeyRequest = new RegisterKeyRequest();
-        registerKeyRequest.setKey(encryptedKey);
-        RegisterKeyResponse registerKeyResponse;
-        registerKeyResponse = registerSecret(registerKeyRequest);
-
-        //Step 6
-        DeleteKeyRequest deleteKeyRequest = new DeleteKeyRequest(keyId);
-        deleteSecret(deleteKeyRequest);
-
-        //Populate the CreateKeyResponse from the registerKeyResponse
-        CreateKeyResponse createKeyResponse = new CreateKeyResponse();
-        createKeyResponse.getData().addAll(registerKeyResponse.getData());
-        return createKeyResponse;
-        */
     }
 
     /**
