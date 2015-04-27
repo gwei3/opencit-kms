@@ -136,8 +136,8 @@ done
 echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_HOME=$KMSPROXY_HOME" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_CONFIGURATION=$KMSPROXY_CONFIGURATION" >> $KMSPROXY_ENV/kmsproxy-layout
-echo "export KMSPROXY_JAVA=$KMSPROXY_JAVA" >> $KMSPROXY_ENV/kms-layout
-echo "export KMSPROXY_BIN=$KMSPROXY_BIN" >> $KMSPROXY_ENV/kms-layout
+echo "export KMSPROXY_JAVA=$KMSPROXY_JAVA" >> $KMSPROXY_ENV/kmsproxy-layout
+echo "export KMSPROXY_BIN=$KMSPROXY_BIN" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_REPOSITORY=$KMSPROXY_REPOSITORY" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_LOGS=$KMSPROXY_LOGS" >> $KMSPROXY_ENV/kmsproxy-layout
 
@@ -164,17 +164,39 @@ done
 # kmsproxy requires java 1.7 or later
 # detect or install java (jdk-1.7.0_51-linux-x64.tar.gz)
 JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
-java_detect
+java_detect 2>&1 >/dev/null
 if ! java_ready; then
   # java not installed, check if we have the bundle
   JAVA_INSTALL_REQ_BUNDLE=`ls -1 java-*.bin 2>/dev/null | head -n 1`
+  JAVA_INSTALL_REQ_TGZ=`ls -1 jdk*.tar.gz 2>/dev/null | head -n 1`
   if [ -n "$JAVA_INSTALL_REQ_BUNDLE" ]; then
     chmod +x $JAVA_INSTALL_REQ_BUNDLE
     ./$JAVA_INSTALL_REQ_BUNDLE
     java_detect
+  elif [ -n "$JAVA_INSTALL_REQ_TGZ" ]; then
+    tar xzf $JAVA_INSTALL_REQ_TGZ
+    JAVA_INSTALL_REQ_TGZ_UNPACKED=`ls -1d jdk* jre* 2>/dev/null`
+    for f in $JAVA_INSTALL_REQ_TGZ_UNPACKED
+    do
+      #echo "$f"
+      if [ -d "$f" ]; then
+        if [ -d "/usr/share/$f" ]; then
+          echo "Java already installed at /usr/share/$f"
+          export JAVA_HOME="/usr/share/$f"
+        else
+          mv "$f" /usr/share && export JAVA_HOME="/usr/share/$f"
+        fi
+      fi
+    done    
+    java_detect
   fi
 fi
-if ! java_ready_report; then
+if java_ready_report; then
+  # store java location in env file
+  echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-java
+  echo "export JAVA_HOME=$JAVA_HOME" >> $KMSPROXY_ENV/kmsproxy-java
+  echo "export JAVA_CMD=$java" >> $KMSPROXY_ENV/kmsproxy-java
+else
   echo_failure "Java $JAVA_REQUIRED_VERSION not found"
   exit 1
 fi

@@ -97,6 +97,15 @@ fi
 
 ###################################################################################################
 
+# java command
+if [ -z "$JAVA_CMD" ]; then
+  if [ -n "$JAVA_HOME" ]; then
+    JAVA_CMD=$JAVA_HOME/bin/java
+  else
+    JAVA_CMD=`which java`
+  fi
+fi
+
 # generated variables
 JARS=$(ls -1 $KMS_JAVA/*.jar)
 CLASSPATH=$(echo $JARS | tr ' ' ':')
@@ -111,7 +120,7 @@ export CLASSPATH
 # run a kms command
 kms_run() {
   local args="$*"
-  java $JAVA_OPTS com.intel.mtwilson.launcher.console.Main $args
+  $JAVA_CMD $JAVA_OPTS com.intel.mtwilson.launcher.console.Main $args
   return $?
 }
 
@@ -126,7 +135,7 @@ kms_complete_setup() {
 # arguments are optional, if provided they are the names of the tasks to run, in order
 kms_setup() {
   local args="$*"
-  java $JAVA_OPTS com.intel.mtwilson.launcher.console.Main setup $args
+  $JAVA_CMD $JAVA_OPTS com.intel.mtwilson.launcher.console.Main setup $args
   return $?
 }
 
@@ -143,9 +152,9 @@ kms_start() {
     fi
 
     # check if we need to use authbind or if we can start java directly
-    prog="java"
+    prog="$JAVA_CMD"
     if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n $(which authbind) ]; then
-      prog="authbind java"
+      prog="authbind $JAVA_CMD"
       JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true"
     fi
 
@@ -269,7 +278,7 @@ case "$1" in
       print_help
     else
       #echo "args: $*"
-      java $JAVA_OPTS com.intel.mtwilson.launcher.console.Main $*
+      $JAVA_CMD $JAVA_OPTS com.intel.mtwilson.launcher.console.Main $*
     fi
     ;;
 esac
