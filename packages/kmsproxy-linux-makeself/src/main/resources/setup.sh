@@ -245,7 +245,7 @@ After you set KMSPROXY_PASSWORD, run the following command to complete installat
     exit 1
   fi
 
-  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
+  kmsproxy config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
   kmsproxy setup
 fi
 
