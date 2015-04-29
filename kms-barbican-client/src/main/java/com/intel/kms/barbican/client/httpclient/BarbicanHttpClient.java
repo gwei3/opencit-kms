@@ -30,7 +30,7 @@ import com.intel.kms.barbican.client.httpclient.rs.Secrets;
 public class BarbicanHttpClient {
 
     private static BarbicanHttpClient barbicanHttpClient = null;
-    private Configuration configuration;
+    private final Configuration configuration;
     private static String PROJECT_ID = null;
     private static Orders ordersClient;
     private static Secrets secretsClient;
@@ -156,7 +156,6 @@ public class BarbicanHttpClient {
      */
     public RegisterKeyResponse registerSecret(RegisterKeyRequest registerKeyRequest) throws BarbicanClientException {
         RegisterKeyResponse registerKeyResponse;
-        Secrets secretsClient = new Secrets(configuration);
         RegisterSecretRequest registerSecretRequest = BarbicanApiUtil.mapRegisterKeyRequestToRegisterSecretRequest(registerKeyRequest);
         RegisterSecretResponse registerSecretResponse = secretsClient.registerSecret(registerSecretRequest);
         registerKeyResponse = BarbicanApiUtil.mapRegisterSecretResponseToRegisterKeyResponse(registerSecretResponse, registerKeyRequest);
@@ -171,11 +170,10 @@ public class BarbicanHttpClient {
      */
     public DeleteKeyResponse deleteSecret(DeleteKeyRequest request) throws BarbicanClientException {
         DeleteKeyResponse response;
-        Secrets secretsClient = new Secrets(configuration);
         DeleteSecretRequest deleteSecretRequest = new DeleteSecretRequest();
         deleteSecretRequest.id = request.getKeyId();
         DeleteSecretResponse deleteSecretResponse = secretsClient.deleteSecret(deleteSecretRequest);
-        response = BarbicanApiUtil.mapDeleteSecretResponseToDeleteKeyResponse(deleteSecretRequest);
+        response = BarbicanApiUtil.mapDeleteSecretResponseToDeleteKeyResponse(deleteSecretResponse);
         return response;
     }
 

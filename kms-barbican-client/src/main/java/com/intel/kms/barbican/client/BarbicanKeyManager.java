@@ -133,7 +133,7 @@ public class BarbicanKeyManager implements KeyManager {
 
             //Check if the above process was successful
             if (!registerKeyResponse.getFaults().isEmpty()) {
-                response.getFaults().addAll(faults);
+                response.getFaults().addAll(registerKeyResponse.getFaults());
                 return response;
             }
 
@@ -359,15 +359,14 @@ public class BarbicanKeyManager implements KeyManager {
      * @return RegisterKeyResponse containing the keyId
      */
     private RegisterKeyResponse generateKeyFromBarbicanKeyAndRegister(TransferKeyResponse transferKeyResponse, String algorithm, int keyLength) throws BarbicanClientException {
-        RegisterKeyResponse registerKeyResponse = null;
+        RegisterKeyResponse registerKeyResponse = new RegisterKeyResponse();
         List<Fault> faults = new ArrayList<>();
 
-        // validate the input request
         byte[] derivedKey;
         try {
             derivedKey = deriveKeyFromBarbican(transferKeyResponse.getKey(), algorithm, keyLength);
         } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
-            faults.add(new Fault(ex, "Unable to deriveKeyFromBarbican with algorith " + algorithm + " and key length " + keyLength));
+            faults.add(new Fault(ex, "Unable to deriveKeyFromBarbican with algorithm " + algorithm + " and key length " + keyLength));
             registerKeyResponse.getFaults().addAll(faults);
             return registerKeyResponse;
         }

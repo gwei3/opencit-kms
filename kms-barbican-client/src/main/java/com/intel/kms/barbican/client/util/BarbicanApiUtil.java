@@ -15,6 +15,7 @@ import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
 import com.intel.kms.barbican.api.CreateOrderRequest;
 import com.intel.kms.barbican.api.DeleteSecretRequest;
+import com.intel.kms.barbican.api.DeleteSecretResponse;
 import com.intel.kms.barbican.api.RegisterSecretRequest;
 import com.intel.kms.barbican.api.RegisterSecretResponse;
 import com.intel.kms.barbican.api.TransferSecretRequest;
@@ -89,13 +90,13 @@ public class BarbicanApiUtil {
      * @return DeleteKeyResponse
      * @throws BarbicanClientException
      */
-    public static DeleteKeyResponse mapDeleteSecretResponseToDeleteKeyResponse(DeleteSecretRequest deleteSecretRequest) throws BarbicanClientException {
-        if (deleteSecretRequest == null) {
-            throw new BarbicanClientException(new NullPointerException("mapDeleteSecretResponseToDeleteKeyResponse: The deleteSecretRequest is null"));
+    public static DeleteKeyResponse mapDeleteSecretResponseToDeleteKeyResponse(DeleteSecretResponse deleteSecretResponse) throws BarbicanClientException {
+        if (deleteSecretResponse == null) {
+            throw new BarbicanClientException(new NullPointerException("mapDeleteSecretResponseToDeleteKeyResponse: The deleteSecretResponse is null"));
         }
         DeleteKeyResponse deleteKeyResponse = new DeleteKeyResponse();
-        deleteKeyResponse.getHttpResponse().setStatusCode(200);
-        deleteKeyResponse.getExtensions().set("id", deleteSecretRequest.id);
+        
+        deleteKeyResponse.getHttpResponse().setStatusCode(200);        
         return deleteKeyResponse;
     }
 
