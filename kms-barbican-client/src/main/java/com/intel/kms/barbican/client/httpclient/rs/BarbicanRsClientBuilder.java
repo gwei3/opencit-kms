@@ -34,7 +34,6 @@ public class BarbicanRsClientBuilder {
             url();
             Client client = ClientBuilder.newBuilder().build();
             WebTarget target = client.target(url.toExternalForm());
-
             return new BarbicanRsClient(client, target);
         } catch (MalformedURLException ex) {
             throw new BarbicanClientException("Cannot construct rest client", ex);

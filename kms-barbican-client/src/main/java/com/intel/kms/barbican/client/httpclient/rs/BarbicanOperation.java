@@ -14,12 +14,15 @@ import org.slf4j.LoggerFactory;
  *
  * @author GS-0681
  */
-public class BarbicanOperation extends BarbicanRsClient{
+public class BarbicanOperation extends BarbicanRsClient {
+
     protected static final Logger LOG = LoggerFactory.getLogger(BarbicanOperation.class);
+    protected static String xProjectID = null;
 
     public BarbicanOperation(Configuration configuration) throws BarbicanClientException {
-           super(BarbicanRsClientBuilder.factory().configuration(configuration).build());
-     
+        super(BarbicanRsClientBuilder.factory().configuration(configuration).build());
+        xProjectID = configuration.get("X-Project-Id");
+
     }
-    
+
 }

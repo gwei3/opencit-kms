@@ -16,6 +16,7 @@ import java.util.Map;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -28,10 +29,10 @@ public class Orders extends BarbicanOperation {
     }
 
     public CreateOrderResponse createOrderRequest(CreateOrderRequest createOrderRequest) {
-        CreateOrderResponse createOrderResponse=null;
+        CreateOrderResponse createOrderResponse = null;
         LOG.debug("createOrderRequest: {}", getTarget().getUri().toString());
         createOrderResponse = getTarget().path("/v1/orders").request().
-                header("X-Project-Id", createOrderRequest.projectId).
+                header("X-Project-Id", xProjectID).
                 header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).
                 post(Entity.json(createOrderRequest), CreateOrderResponse.class);
         return createOrderResponse;
@@ -43,12 +44,12 @@ public class Orders extends BarbicanOperation {
         Map<String, Object> map = new HashMap<>();
         map.put("id", getOrderRequest.id);
 
-        getOrderResponse = getTarget().path("/v1/orders/{id}").
+        Response getResponse = getTarget().path("/v1/orders/{id}").
                 resolveTemplates(map).
-                request().                
-                header("X-Project-Id", getOrderRequest.projectId).
-                header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).
-                get(GetOrderResponse.class);
+                request().
+                header("X-Project-Id", xProjectID).
+                get();
+        getOrderResponse = getResponse.readEntity(GetOrderResponse.class);
         return getOrderResponse;
     }
 

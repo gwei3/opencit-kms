@@ -130,9 +130,10 @@ public class BarbicanHttpClient {
         TransferSecretRequest transferSecretRequest = BarbicanApiUtil.mapTransferKeyRequestToTransferSecretRequest(transferKeyRequest);
         transferSecretRequest.projectId = PROJECT_ID;
         TransferSecretResponse transferSecret = secretsClient.transferSecret(transferSecretRequest);
-        TransferKeyResponse transferKeyResponse = BarbicanApiUtil.mapTransferSecretResponseToTransferKeyResponse(transferSecret);
+        TransferKeyResponse transferKeyResponse = BarbicanApiUtil.mapTransferSecretResponseToTransferKeyResponse(transferSecret, transferKeyRequest);
         return transferKeyResponse;
     }
+    
 
     /**
      *

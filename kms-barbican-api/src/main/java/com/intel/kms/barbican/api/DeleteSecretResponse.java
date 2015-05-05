@@ -12,5 +12,5 @@ package com.intel.kms.barbican.api;
  * @author jbuhacoff
  */
 public class DeleteSecretResponse {
-    
+    public int status;
 }

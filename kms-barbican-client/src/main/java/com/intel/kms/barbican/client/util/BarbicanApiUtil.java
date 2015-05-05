@@ -9,6 +9,7 @@ import com.intel.kms.api.CreateKeyRequest;
 import com.intel.kms.api.CreateKeyResponse;
 import com.intel.kms.api.DeleteKeyResponse;
 import com.intel.kms.api.KeyAttributes;
+import com.intel.kms.api.KeyDescriptor;
 import com.intel.kms.api.RegisterKeyRequest;
 import com.intel.kms.api.RegisterKeyResponse;
 import com.intel.kms.api.TransferKeyRequest;
@@ -24,6 +25,7 @@ import com.intel.kms.barbican.client.exception.BarbicanClientException;
 import com.intel.mtwilson.jaxrs2.Link;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -74,12 +76,17 @@ public class BarbicanApiUtil {
      * @return TransferKeyResponse
      * @throws BarbicanClientException
      */
-    public static TransferKeyResponse mapTransferSecretResponseToTransferKeyResponse(TransferSecretResponse transferSecretResponse) throws BarbicanClientException {
+    public static TransferKeyResponse mapTransferSecretResponseToTransferKeyResponse(TransferSecretResponse transferSecretResponse, TransferKeyRequest transferKeyRequest) throws BarbicanClientException {
         if (transferSecretResponse == null) {
             throw new BarbicanClientException(new NullPointerException("mapTransferSecretResponseToTransferKeyResponse: The transferSecretResponse is null"));
         }
         TransferKeyResponse transferKeyResponse = new TransferKeyResponse();
         transferKeyResponse.setKey(transferSecretResponse.secret);
+        KeyDescriptor descriptor = new KeyDescriptor();
+        CipherKeyAttributes contentAttributes = new CipherKeyAttributes();
+        contentAttributes.setKeyId(transferKeyRequest.getKeyId());
+        descriptor.setContent(contentAttributes);
+        transferKeyResponse.setDescriptor(descriptor);
         return transferKeyResponse;
     }
 
@@ -109,12 +116,12 @@ public class BarbicanApiUtil {
         }
         RegisterSecretRequest registerSecretRequest = new RegisterSecretRequest();
         registerSecretRequest.algorithm = registerKeyRequest.getDescriptor().getEncryption().getAlgorithm();
-        registerSecretRequest.bit_length = registerKeyRequest.getDescriptor().getContent().getKeyLength();
-        registerSecretRequest.mode = registerKeyRequest.getDescriptor().getContent().getMode();
+        registerSecretRequest.bit_length = registerKeyRequest.getDescriptor().getEncryption().getKeyLength();
+        registerSecretRequest.mode = registerKeyRequest.getDescriptor().getEncryption().getMode();
         registerSecretRequest.payload_content_type = MediaType.APPLICATION_OCTET_STREAM;
         registerSecretRequest.secretType = "symmetric";
         registerSecretRequest.payload_content_encoding = "base64";
-        registerSecretRequest.payload = new String(registerKeyRequest.getKey());
+        registerSecretRequest.payload = Base64.encodeBase64String(registerKeyRequest.getKey());
         //TODO: Store the storage key alias and the "iv" in custom attributes
         return registerSecretRequest;
     }
@@ -123,12 +130,12 @@ public class BarbicanApiUtil {
         if (registerSecretResponse == null) {
             throw new BarbicanClientException(new NullPointerException("mapRegisterSecretResponseToRegisterKeyResponse: The registerSecretResponse is null"));
         }
-        Link link = new Link("secret_ref", registerSecretResponse.secretRef);
+        Link link = new Link("secret_ref", registerSecretResponse.secret_ref);
         KeyAttributes attributes = new KeyAttributes();
-        CipherKeyAttributes content = registerKeyRequest.getDescriptor().getContent();
-        attributes.setAlgorithm(content.getAlgorithm());
-        attributes.setKeyLength(content.getKeyLength());
-        String keyId = registerSecretResponse.secretRef.substring(registerSecretResponse.secretRef.lastIndexOf("/")+1);
+        CipherKeyAttributes encryption = registerKeyRequest.getDescriptor().getEncryption();
+        attributes.setAlgorithm(encryption.getAlgorithm());
+        attributes.setKeyLength(encryption.getKeyLength());
+        String keyId = registerSecretResponse.secret_ref.substring(registerSecretResponse.secret_ref.lastIndexOf("/")+1);
         attributes.setKeyId(keyId);
         RegisterKeyResponse registerKeyResponse = new RegisterKeyResponse(attributes);
         registerKeyResponse.getLinks().add(link);
@@ -151,13 +158,8 @@ public class BarbicanApiUtil {
         if (registerKeyResponse == null) {
             throw new BarbicanClientException(new NullPointerException("mapRegisterKeyResponseToCreateKeyResponse: The registerKeyResponse is null"));
         }
-        KeyAttributes keyAttributes = new KeyAttributes();
         
-        keyAttributes.setAlgorithm(registerKeyResponse.getData().get(0).getAlgorithm());
-        keyAttributes.setKeyId(registerKeyResponse.getData().get(0).getKeyId());
-        keyAttributes.setKeyLength(registerKeyResponse.getData().get(0).getKeyLength());
-
-        CreateKeyResponse createKeyResponse = new CreateKeyResponse(keyAttributes);
+        CreateKeyResponse createKeyResponse = new CreateKeyResponse(registerKeyResponse.getData().get(0));
         return createKeyResponse;
     }
 

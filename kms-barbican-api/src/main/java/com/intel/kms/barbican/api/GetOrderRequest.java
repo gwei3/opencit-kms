@@ -13,7 +13,7 @@ import javax.ws.rs.PathParam;
  */
 public class GetOrderRequest {
     @PathParam("id")
-    public String id; // from URL path template /v1/secrets/{id}
+    public String id; // from URL path template /v1/orders/{id}
     @HeaderParam("X-Project-Id")
     public String projectId; // from header X-Project-Id: {project_id}
 }

@@ -8,16 +8,19 @@ package com.intel.kms.barbican.client.httpclient.rs;
 import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.kms.barbican.api.DeleteSecretRequest;
 import com.intel.kms.barbican.api.DeleteSecretResponse;
+import com.intel.kms.barbican.api.GetOrderResponse;
 import com.intel.kms.barbican.api.RegisterSecretRequest;
 import com.intel.kms.barbican.api.RegisterSecretResponse;
 import com.intel.kms.barbican.api.TransferSecretRequest;
 import com.intel.kms.barbican.api.TransferSecretResponse;
 import com.intel.kms.barbican.client.exception.BarbicanClientException;
+import static com.intel.kms.barbican.client.httpclient.rs.BarbicanOperation.xProjectID;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -33,12 +36,12 @@ public class Secrets extends BarbicanOperation {
         LOG.debug("transferSecret: {}", getTarget().getUri().toString());
         Map<String, Object> map = new HashMap<>();
         map.put("id", transferSecretRequest.id);
-        TransferSecretResponse transferSecretResponse = getTarget().path("/v1/secrets/{id}").
-                resolveTemplates(map).
-                request().
-                header("X-Project-Id", transferSecretRequest.projectId).
+        byte[] sc = getTarget().path("/v1/secrets/{id}").
+                resolveTemplates(map).request().header("X-Project-Id", xProjectID).
                 accept(transferSecretRequest.accept).
-                get(TransferSecretResponse.class);
+                get(byte[].class);
+        TransferSecretResponse transferSecretResponse = new TransferSecretResponse();
+        transferSecretResponse.secret = sc;
         return transferSecretResponse;
 
     }
@@ -46,11 +49,12 @@ public class Secrets extends BarbicanOperation {
     public RegisterSecretResponse registerSecret(RegisterSecretRequest registerSecretRequest) {
         RegisterSecretResponse registerSecretResponse;
         LOG.debug("registerSecretResponse: {}", getTarget().getUri().toString());
-        registerSecretResponse = getTarget().path("/v1/secrets").request().
-                header("X-Project-Id", registerSecretRequest.projectId).
+        Response response = getTarget().path("/v1/secrets").request().
+                header("X-Project-Id", xProjectID).
                 header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).
-                accept(MediaType.APPLICATION_JSON).
-                post(Entity.json(registerSecretRequest), RegisterSecretResponse.class);
+                post(Entity.json(registerSecretRequest));
+        registerSecretResponse = response.readEntity(RegisterSecretResponse.class);
+
         return registerSecretResponse;
     }
 
@@ -59,10 +63,12 @@ public class Secrets extends BarbicanOperation {
         LOG.debug("deleteSecret: {}", getTarget().getUri().toString());
         Map<String, Object> map = new HashMap<>();
         map.put("id", deleteSecretRequest.id);
-        deleteSecretResponse = getTarget().path("/v1/secrets/{id}").resolveTemplates(map).request().
-                header("X-Project-Id", deleteSecretRequest.projectId).
+        Response response = getTarget().path("/v1/secrets/{id}").resolveTemplates(map).request().
+                header("X-Project-Id", xProjectID).
                 accept(MediaType.APPLICATION_JSON).
-                delete(DeleteSecretResponse.class);
+                delete();
+        deleteSecretResponse = new DeleteSecretResponse();
+        deleteSecretResponse.status = response.getStatus();
         return deleteSecretResponse;
     }
 }
