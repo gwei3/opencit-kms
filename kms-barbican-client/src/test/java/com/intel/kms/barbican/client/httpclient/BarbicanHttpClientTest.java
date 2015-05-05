@@ -104,7 +104,7 @@ public class BarbicanHttpClientTest {
         PowerMockito.whenNew(DeleteSecretRequest.class).withAnyArguments().thenReturn(mockDeleteSecretRequest);
         PowerMockito.when(BarbicanApiUtil.mapCreateKeyRequestToCreateOrderRequest(mockCreateKeyRequest)).thenReturn(mockOrderRequest);
         PowerMockito.when(BarbicanApiUtil.mapTransferKeyRequestToTransferSecretRequest(mockTransferKeyRequest)).thenReturn(mockTransferSecretRequest);
-        PowerMockito.when(BarbicanApiUtil.mapTransferSecretResponseToTransferKeyResponse(mockTransferSecretResponse)).thenReturn(mockTransferKeyResponse);
+        PowerMockito.when(BarbicanApiUtil.mapTransferSecretResponseToTransferKeyResponse(mockTransferSecretResponse, mockTransferKeyRequest)).thenReturn(mockTransferKeyResponse);
         PowerMockito.when(BarbicanApiUtil.mapRegisterSecretResponseToRegisterKeyResponse(mockRegisterSecretResponse, mockRegisterKeyRequest)).thenReturn(mockRegisterKeyResponse);
         PowerMockito.when(BarbicanApiUtil.mapRegisterKeyRequestToRegisterSecretRequest(mockRegisterKeyRequest)).thenReturn(mockRegisterSecretRequest);
         PowerMockito.when(BarbicanApiUtil.mapDeleteSecretResponseToDeleteKeyResponse(mockDeleteSecretResponse)).thenReturn(mockDeleteKeyResponse);

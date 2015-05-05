@@ -169,12 +169,21 @@ public class BarbicanKeyManager implements KeyManager {
         }
 
         try {
-
-            CipherKeyAttributes content = request.getDescriptor().getContent();
             TransferKeyResponse transferKeyResponse = new TransferKeyResponse();
             transferKeyResponse.setKey(request.getKey());
+            CipherKeyAttributes content = null;
+            if (request.getDescriptor() == null) {
+                KeyDescriptor descriptor = new KeyDescriptor();
+                content = new CipherKeyAttributes();
+                content.setAlgorithm("AES");
+                content.setKeyLength(128);
+                content.setMode("CBC");
+                descriptor.setContent(content);
+                request.setDescriptor(descriptor);
+            } else {
+                content = request.getDescriptor().getContent();
+            }
             transferKeyResponse.setDescriptor(request.getDescriptor());
-
             response = generateKeyFromBarbicanKeyAndRegister(transferKeyResponse, content.getAlgorithm(), content.getKeyLength());
 
             //Check if the above process was successful
@@ -199,6 +208,10 @@ public class BarbicanKeyManager implements KeyManager {
             response.getFaults().addAll(faults);
             return response;
         }
+
+        //Get the Barbican key id stored in local DB
+        CipherKey cipherKey = repository.retrieve(request.getKeyId());
+        request = new DeleteKeyRequest(cipherKey.get(BARBICAN_KEY).toString());
 
         try {
             response = BarbicanHttpClient.getBarbicanHttpClient(configuration).deleteSecret(request);
@@ -237,8 +250,8 @@ public class BarbicanKeyManager implements KeyManager {
 
             //Unwrap the key using the storage key
             byte[] unwrapKey = unwrapKey(response, cipherKey);
-            response.setKey(unwrapKey);        
-        } catch (BarbicanClientException| InvalidKeyException | InvalidAlgorithmParameterException | BadPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | NoSuchPaddingException ex) {
+            response.setKey(unwrapKey);
+        } catch (BarbicanClientException | InvalidKeyException | InvalidAlgorithmParameterException | BadPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | NoSuchPaddingException ex) {
             faults.add(new Fault(ex, "Error occurred while retrieving key in barbican"));
             response.getFaults().addAll(faults);
         }
@@ -296,8 +309,8 @@ public class BarbicanKeyManager implements KeyManager {
         RegisterKeyRequest registerKeyRequest = new RegisterKeyRequest();
         registerKeyRequest.setKey(transferKeyResponse.getKey());
         registerKeyRequest.setDescriptor(transferKeyResponse.getDescriptor());
-        
-//Call barbican api to register the secret
+
+        //Call barbican api to register the secret
         RegisterSecretRequest registerSecretRequest = BarbicanApiUtil.mapRegisterKeyRequestToRegisterSecretRequest(registerKeyRequest);
         registerKeyResponse = BarbicanHttpClient.getBarbicanHttpClient(configuration).registerSecret(registerKeyRequest);
 
@@ -311,7 +324,7 @@ public class BarbicanKeyManager implements KeyManager {
         created.set(KEY_DESCRIPTOR, transferKeyResponse.getDescriptor());
         repository.store(created.getKeyId(), created);
         ka.setKeyId(created.getKeyId());
-        
+
         return registerKeyResponse;
     }
 

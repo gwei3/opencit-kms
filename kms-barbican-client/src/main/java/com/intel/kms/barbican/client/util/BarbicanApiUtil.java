@@ -73,6 +73,7 @@ public class BarbicanApiUtil {
      * Map the Barbican Transfer object to the generic transfer object
      *
      * @param transferSecretResponse
+     * @param transferKeyRequest
      * @return TransferKeyResponse
      * @throws BarbicanClientException
      */

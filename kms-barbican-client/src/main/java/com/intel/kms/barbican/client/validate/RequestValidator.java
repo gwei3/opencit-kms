@@ -66,8 +66,12 @@ public class RequestValidator {
         return faults;
     }
 
-    public static Collection<? extends Fault> validateDeleteKey(DeleteKeyRequest request) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public static List<Fault> validateDeleteKey(DeleteKeyRequest deleteKeyRequest) {
+        List<Fault> faults = new ArrayList<>();
+        if (StringUtils.isEmpty(deleteKeyRequest.getKeyId())) {
+            faults.add(new MissingRequiredParameter("keyId"));
+        }
+        return faults;
     }
 
 }
