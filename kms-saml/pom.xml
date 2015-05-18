@@ -69,12 +69,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.intel.mtwilson.services</groupId>
-            <artifactId>mtwilson-privacyca-niarl</artifactId>
-            <version>${mtwilson.version}</version>
-        </dependency>
-                
-        <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-archive</artifactId>
         </dependency>
