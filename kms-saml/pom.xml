@@ -68,11 +68,13 @@
             <artifactId>mtwilson-util-tpm12</artifactId>
         </dependency>
 
+        <!--
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-privacyca-niarl</artifactId>
             <version>${mtwilson.version}</version>
         </dependency>
+        -->
                 
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>

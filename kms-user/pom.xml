@@ -36,8 +36,12 @@
             <artifactId>mtwilson-configuration</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-launcher-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
-            <artifactId>mtwilson-setup</artifactId>
+            <artifactId>mtwilson-setup-ext</artifactId>
         </dependency>
 		<!--
         <dependency>
@@ -64,6 +68,15 @@
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-crypto-key</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-jaxrs2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-jaxrs2-server</artifactId>
+            <version>3.0-SNAPSHOT</version>
         </dependency>
 		<!--
         <dependency>
@@ -115,6 +128,12 @@
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
             <version>1.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
         </dependency>
         
     <!--
