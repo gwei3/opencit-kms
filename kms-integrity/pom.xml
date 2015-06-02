@@ -25,7 +25,7 @@
         </dependency>-->
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
-            <artifactId>mtwilson-setup</artifactId>
+            <artifactId>mtwilson-setup-ext</artifactId>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>

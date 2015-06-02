@@ -244,17 +244,25 @@ function ResourceLoader() {
             }
         }
     };
-    // returns longest common prefix for all elements in the given array, or empty string if no common prefix  or if array is empty
+    // returns longest common prefix for all elements in the given array, or empty string if no common prefix  or if array is empty or has just one element, or if after all "null" and "undefined" elements are removed the has zero or one string elements
     // usage:   findPrefix(["str1x", "str2y"])  ==> "str"
+    // example: first: https://localhost/js/uuid.js,  last: https://localhost/   result: https://localhost/
     self.findPrefix = function(strs) {
-        if (!strs.length) {
+        if (!strs.length || strs.length<2) {
+            return "";
+        }
+        // remove all undefined and null elements to avoid errors below, then do the length check
+        strs = strs.filter(function(item){ return typeof item !== "undefined" && item !== null; });
+        console.log("findPrefix: after filter, args length is: %d", strs.length);
+        // if there are no strings or just one string, then a common prefix cannot be defined so we return empty string
+        if (strs.length<2) {
             return "";
         }
         // without sorting entire array, just find what would be the first and last elements in the sorted array
         var first = strs[0];
         var last = strs[strs.length - 1];
         var i;
-        //console.log("first: %s,  last: %s", first, last);// for example: first: https://localhost/js/uuid.js,  last: https://localhost/
+        //console.log("first: %s,  last: %s", first, last);// for example: 
         for (i = 0; i < strs.length; i++) {
             if (strs[i] < first) {
                 first = strs[i];
@@ -263,6 +271,10 @@ function ResourceLoader() {
                 last = strs[i];
             }
         }
+        console.log("findPrefix: first=%s", first);
+        console.log("findPrefix: first.length=%d", first.length);
+        console.log("findPrefix: last=%s", last);
+        console.log("findPrefix: last.length=%d", last.length);
         var limit = Math.min(first.length, last.length);
         i = 0;
         while (i < limit && first[i] === last[i]) {

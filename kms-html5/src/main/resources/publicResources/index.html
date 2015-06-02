@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="author" content="jbuhacoff">
         <meta name="description" content="User interface to the trust-enabled key server">
-        <title>Key Management Server</title>
+        <title>Key Server - Intel&reg; Cloud Integrity Technology</title>
         <link rel="stylesheet" href="css/bootstrap.css" type="text/css">
         <link rel="stylesheet" href="css/dashboard.css" type="text/css">
         <link rel="stylesheet" href="css/intel.css" type="text/css">
@@ -28,7 +28,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="#">Mt Wilson Key Server</a>
+                    <a class="navbar-brand" href="#">Key Server - <span title="Intel and the Intel logo are trademarks of Intel Corporation in the U.S. and/or other countries.">Intel&reg; Cloud Integrity Technology</span></a>
                 </div>
                 <!-- the navbar contents are loaded dynamically and inserted into this div after login -->
                 <div id="navbar">
@@ -49,7 +49,8 @@
             </div>
         </div>
 
-
+        <!-- polyfills -->
+        <script src="js/array_filter.js"></script>        
         <!-- Placed at the end of the document so the pages load faster -->
         <!-- infrastructure -->
         <script src="js/kms_resource_loader.js"></script>
@@ -73,7 +74,7 @@
 
 
         <script type="text/javascript">
-            console.log("Window.location: %O", window.location);
+            //console.log("Window.location: %O", window.location); // works on Chrome (displays "Location" object in log), does not work on Windows (displays "%Ohttps://10.1.68.32/v1/resources/index.html# in log)
             console.log("Window location href %s", window.location.href);
             console.log("Window location hash %s", window.location.hash);
             console.log("Window location pathname %s", window.location.pathname);

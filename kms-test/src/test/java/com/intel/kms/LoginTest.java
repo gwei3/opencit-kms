@@ -31,7 +31,7 @@ public class LoginTest {
     private Properties getEndpointProperties() {
         Properties properties = new Properties();
         properties.setProperty("endpoint.url", "https://10.1.68.32");
-        properties.setProperty("tls.policy.certificate.sha1", "bc3847d80f2147b881c2be1f8f1dbcbbd29b06fe");
+        properties.setProperty("tls.policy.certificate.sha1", "e61c08586654a335c1136796c870f8de5ae5c0fc");
         properties.setProperty("login.basic.username", "jonathan");
         properties.setProperty("login.basic.password", "jonathan");
         return properties;

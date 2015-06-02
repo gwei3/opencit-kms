@@ -79,14 +79,18 @@ public class UserRepository implements DocumentRepository<User, UserCollection, 
     @Override
     @RequiresPermissions("users:search")
     public UserCollection search(UserFilterCriteria criteria) {
-        log.debug("User:Search - User:Got request to search for the Users.");
+        log.debug("User:Search");
         UserCollection userCollection = new UserCollection();
         try {
+            log.debug("user search criteria: {}", mapper.writeValueAsString(criteria));
             List<UUID> list = listUserIds();
             for (UUID userId : list) {
                 // read profile 
                 User user = readUserProfile(userId);
                 // apply filter criteria
+                if( criteria.id != null && !(criteria.id.equals(user.getId()))) {
+                    continue;
+                }
                 if (criteria.usernameEqualTo != null && !(criteria.usernameEqualTo.equals(user.getUsername()))) {
                     continue;
                 }

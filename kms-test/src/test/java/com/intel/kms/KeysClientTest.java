@@ -5,7 +5,9 @@
 package com.intel.kms;
 
 import com.intel.dcsg.cpg.crypto.RsaUtil;
+import com.intel.dcsg.cpg.crypto.file.RsaPublicKeyProtectedPemKeyEnvelopeOpener;
 import com.intel.dcsg.cpg.extensions.Extensions;
+import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.kms.api.CreateKeyRequest;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.client.jaxrs2.Keys;
@@ -25,6 +27,7 @@ public class KeysClientTest {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KeysClientTest.class);
     private Key lastCreatedKey = null;
+    private KeyPair envelope = null;
 
     @BeforeClass
     public static void init() {
@@ -34,7 +37,7 @@ public class KeysClientTest {
     private Properties getEndpointProperties() {
         Properties properties = new Properties();
         properties.setProperty("endpoint.url", "https://10.1.68.32");
-        properties.setProperty("tls.policy.certificate.sha1", "bc3847d80f2147b881c2be1f8f1dbcbbd29b06fe");
+        properties.setProperty("tls.policy.certificate.sha1", "e61c08586654a335c1136796c870f8de5ae5c0fc");
         properties.setProperty("login.basic.username", "jonathan");
         properties.setProperty("login.basic.password", "jonathan");
         return properties;
@@ -71,8 +74,8 @@ public class KeysClientTest {
     @Test
     public void testRegisterEnvelopeKey() throws Exception {
         Users users = new Users(getEndpointProperties());
-        KeyPair userkey = RsaUtil.generateRsaKeyPair(RsaUtil.MINIMUM_RSA_KEY_SIZE);
-        users.editTransferKey(getEndpointProperties().getProperty("login.basic.username"), userkey.getPublic());
+        envelope = RsaUtil.generateRsaKeyPair(RsaUtil.MINIMUM_RSA_KEY_SIZE);
+        users.editTransferKey(getEndpointProperties().getProperty("login.basic.username"), envelope.getPublic());
 //        Keys keys = new Keys(getEndpointProperties());
     }
 
@@ -157,9 +160,13 @@ public class KeysClientTest {
      */
     @Test
     public void testTransferKey() throws Exception {
+        testRegisterEnvelopeKey();
         testCreateAesKey(); // will set lastCreatedKey
         Keys keys = new Keys(getEndpointProperties());
         String wrappedKeyPem = keys.transferKey(lastCreatedKey.getId().toString());
         log.debug("Transferred key {}", wrappedKeyPem);
+        RsaPublicKeyProtectedPemKeyEnvelopeOpener opener = new RsaPublicKeyProtectedPemKeyEnvelopeOpener(envelope.getPrivate(), getEndpointProperties().getProperty("login.basic.username"));
+        java.security.Key unwrapped = opener.unseal(Pem.valueOf(wrappedKeyPem));
+        log.debug("Unwrapped key");
     }
 }

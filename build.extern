@@ -1,0 +1,2 @@
+# building kms depends on building the external dependencies first
+dev-1.x: dcg_security-mtwilson/dev-3.x

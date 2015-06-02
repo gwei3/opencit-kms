@@ -97,7 +97,7 @@ public class Keys extends AbstractJsonapiResource<Key, KeyCollection, KeyFilterC
     @Path("/{keyId: [0-9a-zA-Z_-]+}/transfer")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @RequiresPermissions("keys:transfer") // ignored due to "anon" filter in shiro.ini
+    @RequiresPermissions("keys:transfer")
     public TransferKeyResponse transferKey(@PathParam("keyId") String keyId, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse /*, TransferKeyRequest keyRequest*/) {
         log.debug("transferKey");
         TransferKeyRequest keyRequest = new TransferKeyRequest();
@@ -110,7 +110,7 @@ public class Keys extends AbstractJsonapiResource<Key, KeyCollection, KeyFilterC
     @Path("/{keyId: [0-9a-zA-Z_-]+}/transfer")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(CryptoMediaType.APPLICATION_X_PEM_FILE)
-    @RequiresPermissions("keys:transfer") // ignored due to "anon" filter in shiro.ini
+    @RequiresPermissions("keys:transfer")
     public String transferKeyPEM(@PathParam("keyId") String keyId, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse /*, TransferKeyRequest keyRequest*/) {
         log.debug("transferKeyPEM");
         TransferKeyRequest transferKeyRequest = new TransferKeyRequest();
@@ -121,7 +121,7 @@ public class Keys extends AbstractJsonapiResource<Key, KeyCollection, KeyFilterC
         return pem.toString();
     }
 
-    protected String getLoginUsername(HttpServletRequest httpServletRequest) {
+    protected String getLoginUsername(HttpServletRequest httpServletRequest) {        
         String header = httpServletRequest.getHeader(AUTHORIZATION_HEADER); // Authorization: Basic am9uYXRoYW46am9uYXRoYW4=
         log.debug("Authorization: {}", header); // debug only, XXX TODO MUST DELETE
         if (header == null || header.isEmpty()) {
