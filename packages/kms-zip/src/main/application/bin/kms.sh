@@ -40,8 +40,11 @@ kms_load_env() {
   done  
 }
 
-if [ -z "$KMS_USERNAME" ]; then
-  kms_load_env $KMS_HOME/env/kms-username
+# load environment variables; these override any existing environment variables.
+# the idea is that if someone wants to override these, they must have write
+# access to the environment files that we load here. 
+if [ -d $KMS_ENV ]; then
+  kms_load_env $(ls -1 $KMS_ENV/*)
 fi
 
 ###################################################################################################
@@ -49,18 +52,12 @@ fi
 # if non-root execution is specified, and we are currently root, start over; the KMS_SUDO variable limits this to one attempt
 # we make an exception for the uninstall command, which may require root access to delete users and certain directories
 if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$KMS_SUDO" ] && [ "$1" != "uninstall" ]; then
-  sudo -u $KMS_USERNAME KMS_USERNAME=$KMS_USERNAME KMS_HOME=$KMS_HOME KMS_PASSWORD=$KMS_PASSWORD KMS_SUDO=true kms $*
+  export KMS_SUDO=true
+  sudo -u $KMS_USERNAME -H -E kms $*
   exit $?
 fi
 
 ###################################################################################################
-
-# load environment variables; these may override the defaults set above and 
-# also note that kms-username file is loaded twice, once before sudo and once
-# here after sudo.
-if [ -d $KMS_ENV ]; then
-  kms_load_env $(ls -1 $KMS_ENV/*)
-fi
 
 # default directory layout follows the 'home' style
 export KMS_CONFIGURATION=${KMS_CONFIGURATION:-${KMS_CONF:-$KMS_HOME/configuration}}
@@ -153,7 +150,7 @@ kms_start() {
 
     # check if we need to use authbind or if we can start java directly
     prog="$JAVA_CMD"
-    if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n $(which authbind) ]; then
+    if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n "$(which authbind 2>/dev/null)" ]; then
       prog="authbind $JAVA_CMD"
       JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true"
     fi

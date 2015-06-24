@@ -79,7 +79,7 @@ else
   fi
 fi
 
-# if an existing kms is already running, stop it while we install
+# if kms is already installed, stop it while we upgrade/reinstall
 if which kms; then
   kms stop
 fi
@@ -104,28 +104,14 @@ export KMS_ENV=$KMS_HOME/env
 kms_backup_configuration() {
   if [ -n "$KMS_CONFIGURATION" ] && [ -d "$KMS_CONFIGURATION" ]; then
     datestr=`date +%Y%m%d.%H%M`
-    backupdir=/var/backup/kms.configuration.$datestr
-    cp -r $KMS_CONFIGURATION $backupdir
+    backupdir=$KMS_REPOSITORY/backup/kms.configuration.$datestr
+    mkdir -p $backupdir
+    cp -r $KMS_CONFIGURATION/* $backupdir/
   fi
 }
 
-kms_backup_repository() {
-  if [ -n "$KMS_REPOSITORY" ] && [ -d "$KMS_REPOSITORY" ]; then
-    datestr=`date +%Y%m%d.%H%M`
-    backupdir=/var/backup/kms.repository.$datestr
-    cp -r $KMS_REPOSITORY $backupdir
-  fi
-}
-
-# backup current configuration and data, if they exist
+# backup current configuration, if they exist
 kms_backup_configuration
-kms_backup_repository
-
-if [ -d $KMS_CONFIGURATION ]; then
-  backup_conf_dir=$KMS_REPOSITORY/backup/configuration.$(date +"%Y%m%d.%H%M")
-  mkdir -p $backup_conf_dir
-  cp -R $KMS_CONFIGURATION/* $backup_conf_dir
-fi
 
 # create application directories (chown will be repeated near end of this script, after setup)
 for directory in $KMS_HOME $KMS_CONFIGURATION $KMS_ENV $KMS_REPOSITORY $KMS_LOGS; do
@@ -154,7 +140,7 @@ if [ -n "$KMS_LOG_LEVEL" ]; then
   echo "export KMS_LOG_LEVEL=$KMS_LOG_LEVEL" >> $KMS_ENV/kms-logging
 fi
 
-# store the auto-exported environment variables in env file
+# store the auto-exported environment variables in temporary env file
 # to make them available after the script uses sudo to switch users;
 # we delete that file later
 echo "# $(date)" > $KMS_ENV/kms-setup
