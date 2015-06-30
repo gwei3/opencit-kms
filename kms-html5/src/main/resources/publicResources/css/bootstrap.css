@@ -4050,7 +4050,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 }
 .navbar {
   position: relative;
-  min-height: 50px;
+  min-height: 72px; /* jbuhacoff: changed from 50px to 72px to accomodate brand image */
   margin-bottom: 20px;
   border: 1px solid transparent;
 }
@@ -4159,10 +4159,10 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 }
 .navbar-brand {
   float: left;
-  height: 50px;
+  height: 72px; /* jbuhacoff:  increase navbar brand height from 50px to 72px to accomodate brand image */
   padding: 15px 15px;
-  font-size: 18px;
-  line-height: 20px;
+  font-size: 32px; /* jbuhacoff:  increase font size from 18px to 32px to fill taller banner */
+  line-height: 40px; /* jbuhacoff: increase line height from 20px to 40px to fill taller banner */
 }
 .navbar-brand:hover,
 .navbar-brand:focus {
@@ -4475,11 +4475,11 @@ fieldset[disabled] .navbar-default .btn-link:focus {
   color: #ccc;
 }
 .navbar-inverse {
-  background-color: #0c2299; /* jbuhacoff */
+  background-color: #0071c5; /* jbuhacoff: same color as banner on intel.com */
   border-color: #080808;
 }
 .navbar-inverse .navbar-brand {
-  color: #ddd; /* jbuhacoff */
+  color: #fff; /* jbuhacoff: bold white text on intel blue background */
 }
 .navbar-inverse .navbar-brand:hover,
 .navbar-inverse .navbar-brand:focus {
@@ -4490,7 +4490,7 @@ fieldset[disabled] .navbar-default .btn-link:focus {
   color: #9d9d9d;
 }
 .navbar-inverse .navbar-nav > li > a {
-  color: #ddd; /* jbuhacoff */
+  color: #ddd; /* jbuhacoff: subdued white links on intel blue background */
 }
 .navbar-inverse .navbar-nav > li > a:hover,
 .navbar-inverse .navbar-nav > li > a:focus {
