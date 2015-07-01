@@ -12,11 +12,15 @@ import com.intel.kms.api.KeyAttributes;
 import com.intel.kms.api.KeyDescriptor;
 import com.intel.kms.api.RegisterKeyRequest;
 import com.intel.kms.api.RegisterKeyResponse;
+import com.intel.kms.api.SearchKeyAttributesRequest;
+import com.intel.kms.api.SearchKeyAttributesResponse;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
 import com.intel.kms.barbican.api.CreateOrderRequest;
-import com.intel.kms.barbican.api.DeleteSecretRequest;
 import com.intel.kms.barbican.api.DeleteSecretResponse;
+import com.intel.kms.barbican.api.GetSecretResponse;
+import com.intel.kms.barbican.api.ListSecretsRequest;
+import com.intel.kms.barbican.api.ListSecretsResponse;
 import com.intel.kms.barbican.api.RegisterSecretRequest;
 import com.intel.kms.barbican.api.RegisterSecretResponse;
 import com.intel.kms.barbican.api.TransferSecretRequest;
@@ -103,8 +107,8 @@ public class BarbicanApiUtil {
             throw new BarbicanClientException(new NullPointerException("mapDeleteSecretResponseToDeleteKeyResponse: The deleteSecretResponse is null"));
         }
         DeleteKeyResponse deleteKeyResponse = new DeleteKeyResponse();
-        
-        deleteKeyResponse.getHttpResponse().setStatusCode(200);        
+
+        deleteKeyResponse.getHttpResponse().setStatusCode(200);
         return deleteKeyResponse;
     }
 
@@ -136,7 +140,7 @@ public class BarbicanApiUtil {
         CipherKeyAttributes encryption = registerKeyRequest.getDescriptor().getEncryption();
         attributes.setAlgorithm(encryption.getAlgorithm());
         attributes.setKeyLength(encryption.getKeyLength());
-        String keyId = registerSecretResponse.secret_ref.substring(registerSecretResponse.secret_ref.lastIndexOf("/")+1);
+        String keyId = registerSecretResponse.secret_ref.substring(registerSecretResponse.secret_ref.lastIndexOf("/") + 1);
         attributes.setKeyId(keyId);
         RegisterKeyResponse registerKeyResponse = new RegisterKeyResponse(attributes);
         registerKeyResponse.getLinks().add(link);
@@ -154,14 +158,38 @@ public class BarbicanApiUtil {
 
     }
 
-
     public static CreateKeyResponse mapRegisterKeyResponseToCreateKeyResponse(RegisterKeyResponse registerKeyResponse) throws BarbicanClientException {
         if (registerKeyResponse == null) {
             throw new BarbicanClientException(new NullPointerException("mapRegisterKeyResponseToCreateKeyResponse: The registerKeyResponse is null"));
         }
-        
+
         CreateKeyResponse createKeyResponse = new CreateKeyResponse(registerKeyResponse.getData().get(0));
         return createKeyResponse;
+    }
+
+    public static ListSecretsRequest mapSearchKeyAttributesRequestToListSecretsRequest(SearchKeyAttributesRequest request) throws BarbicanClientException {
+        if (request == null) {
+            throw new BarbicanClientException(new NullPointerException("mapSearchKeyAttributesRequestToListSecretsRequest: The SearchKeyAttributesRequest is null"));
+        }
+        ListSecretsRequest listSecretsRequest = new ListSecretsRequest();
+        listSecretsRequest.limit= request.limit;
+        return listSecretsRequest;
+    }
+
+    public static SearchKeyAttributesResponse mapListSecretsResponseToSearchKeyAttributesResponse(ListSecretsResponse searchSecrets) throws BarbicanClientException {
+        if (searchSecrets == null) {
+            throw new BarbicanClientException(new NullPointerException("mapListSecretsResponseToSearchKeyAttributesResponse: The ListSecretsResponse is null"));
+        }
+        SearchKeyAttributesResponse attributesResponse = new SearchKeyAttributesResponse();
+        for(GetSecretResponse key : searchSecrets.secrets){
+            KeyAttributes keyAttributes = new KeyAttributes();
+            keyAttributes.setAlgorithm(key.algorithm);
+            keyAttributes.setKeyId(key.secret_ref);
+            keyAttributes.setKeyLength(key.bit_length);
+            keyAttributes.setMode(key.mode);
+            attributesResponse.getData().add(keyAttributes);
+        }
+        return attributesResponse;
     }
 
 }

@@ -6,6 +6,8 @@ import com.intel.kms.api.DeleteKeyRequest;
 import com.intel.kms.api.DeleteKeyResponse;
 import com.intel.kms.api.RegisterKeyRequest;
 import com.intel.kms.api.RegisterKeyResponse;
+import com.intel.kms.api.SearchKeyAttributesRequest;
+import com.intel.kms.api.SearchKeyAttributesResponse;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
 import com.intel.kms.barbican.api.CreateOrderRequest;
@@ -14,6 +16,8 @@ import com.intel.kms.barbican.api.DeleteSecretRequest;
 import com.intel.kms.barbican.api.DeleteSecretResponse;
 import com.intel.kms.barbican.api.GetOrderRequest;
 import com.intel.kms.barbican.api.GetOrderResponse;
+import com.intel.kms.barbican.api.ListSecretsRequest;
+import com.intel.kms.barbican.api.ListSecretsResponse;
 import com.intel.kms.barbican.api.RegisterSecretRequest;
 import com.intel.kms.barbican.api.RegisterSecretResponse;
 import com.intel.kms.barbican.api.TransferSecretRequest;
@@ -107,7 +111,7 @@ public class BarbicanHttpClient {
         String orderId = createOrderResponse.order_ref.substring(createOrderResponse.order_ref.lastIndexOf("/") + 1);
         GetOrderRequest getOrderRequest = new GetOrderRequest();
         getOrderRequest.id = orderId;
-        getOrderRequest.projectId = configuration.get("PROJECT_ID");
+        getOrderRequest.projectId = configuration.get("X-Project-Id");
         GetOrderResponse getOrderResponse = ordersClient.getOrderRequest(getOrderRequest);
         String keyId = getOrderResponse.secret_ref.substring(getOrderResponse.secret_ref.lastIndexOf("/") + 1);
 
@@ -178,4 +182,12 @@ public class BarbicanHttpClient {
         return response;
     }
 
+    
+    public SearchKeyAttributesResponse searchSecrets(SearchKeyAttributesRequest request) throws BarbicanClientException {
+        SearchKeyAttributesResponse response;
+        ListSecretsRequest listSecretsRequest = BarbicanApiUtil.mapSearchKeyAttributesRequestToListSecretsRequest(request);
+        ListSecretsResponse searchSecrets = secretsClient.searchSecrets(listSecretsRequest);
+        response = BarbicanApiUtil.mapListSecretsResponseToSearchKeyAttributesResponse(searchSecrets);
+        return response;
+    }
 }

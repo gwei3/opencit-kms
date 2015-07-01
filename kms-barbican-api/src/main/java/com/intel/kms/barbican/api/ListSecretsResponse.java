@@ -11,5 +11,7 @@ import java.util.List;
  * @author jbuhacoff
  */
 public class ListSecretsResponse {
+    public Integer total;
+    public String next;
     public List<GetSecretResponse> secrets;
 }

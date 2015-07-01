@@ -43,7 +43,7 @@ public class BarbicanRsClientBuilder {
     private void url() throws MalformedURLException {
         if (url == null) {
             if (configuration != null) {
-                url = new URL(configuration.get("endpoint.url")); // example: "http://localhost:8080/";
+                url = new URL(configuration.get("barbican.endpoint.url")); // example: "http://localhost:8080/";
             }
         }
     }

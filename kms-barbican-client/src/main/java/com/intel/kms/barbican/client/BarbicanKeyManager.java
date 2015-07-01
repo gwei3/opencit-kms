@@ -45,6 +45,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -79,9 +80,18 @@ public class BarbicanKeyManager implements KeyManager {
 
     private SecretKeyStore storageKeyStore = null;
 
-    public BarbicanKeyManager() throws IOException {
+    public BarbicanKeyManager() throws IOException, KeyStoreException {
         configuration = ConfigurationFactory.getConfiguration();
+        this.configuration = configuration;
+        setupKeyStore(configuration);
         initializeKeysDirectory();
+    }
+
+    public BarbicanKeyManager(Configuration configuration) throws IOException, KeyStoreException {
+        this.configuration = configuration;
+        setupKeyStore(configuration);
+        initializeKeysDirectory();
+
     }
 
     private void initializeKeysDirectory() {
@@ -95,18 +105,18 @@ public class BarbicanKeyManager implements KeyManager {
 
     }
 
-    public BarbicanKeyManager(Configuration configuration) throws IOException, KeyStoreException {
+    private void setupKeyStore(Configuration configuration) throws IOException, KeyStoreException {
         String keystorePath = configuration.get(KMS_STORAGE_KEYSTORE_FILE_PROPERTY, Folders.configuration() + File.separator + "storage.jck");
         String keystorePasswordAlias = configuration.get(KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY, "storage_keystore");
         try (PasswordKeyStore passwordVault = PasswordVaultFactory.getPasswordKeyStore(configuration)) {
+            List<String> aliases = passwordVault.aliases();
             if (passwordVault.contains(keystorePasswordAlias)) {
                 Password keystorePassword = passwordVault.get(keystorePasswordAlias);
                 File keystoreFile = new File(keystorePath);
                 storageKeyStore = new SecretKeyStore(STORAGE_KEYSTORE_TYPE, keystoreFile, keystorePassword.toCharArray());
             }
         }
-        this.configuration = configuration;
-        initializeKeysDirectory();
+
     }
 
     /**
@@ -265,7 +275,16 @@ public class BarbicanKeyManager implements KeyManager {
 
     @Override
     public SearchKeyAttributesResponse searchKeyAttributes(SearchKeyAttributesRequest searchKeyAttributesRequest) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        SearchKeyAttributesResponse response = new SearchKeyAttributesResponse();
+        List<Fault> faults = new ArrayList<>();
+        try {
+            response = BarbicanHttpClient.getBarbicanHttpClient(configuration).searchSecrets(searchKeyAttributesRequest);
+        } catch (BarbicanClientException ex) {
+            faults.add(new Fault(ex, "Error occurred while retrieving all keys in barbican"));
+            response.getFaults().addAll(faults);
+
+        }
+        return response;
     }
 
     /**
@@ -392,15 +411,16 @@ public class BarbicanKeyManager implements KeyManager {
      */
     private CipherKey getCurrentStorageKey() throws KeyStoreException {
         if (storageKeyStore == null) {
-            return null;
+            throw new KeyStoreException("storageKeyStore not initialized");
         }
         // for now, just get the first available storage key
         List<String> aliases = storageKeyStore.aliases();
         if (aliases.isEmpty()) {
-            return null;
+            throw new KeyStoreException("storageKeyStore is empty");
         }
         String currentStorageKeyAlias = aliases.get(0);
         return getStorageKey(currentStorageKeyAlias);
+
     }
 
     /**

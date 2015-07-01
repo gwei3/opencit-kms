@@ -21,7 +21,7 @@ public class BarbicanOperation extends BarbicanRsClient {
 
     public BarbicanOperation(Configuration configuration) throws BarbicanClientException {
         super(BarbicanRsClientBuilder.factory().configuration(configuration).build());
-        xProjectID = configuration.get("X-Project-Id");
+        xProjectID = configuration.get("barbican.project.id");
 
     }
 
