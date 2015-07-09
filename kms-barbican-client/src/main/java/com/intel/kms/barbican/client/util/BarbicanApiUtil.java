@@ -184,7 +184,7 @@ public class BarbicanApiUtil {
         for(GetSecretResponse key : searchSecrets.secrets){
             KeyAttributes keyAttributes = new KeyAttributes();
             keyAttributes.setAlgorithm(key.algorithm);
-            keyAttributes.setKeyId(key.secret_ref);
+			keyAttributes.setKeyId(key.secret_ref.substring(key.secret_ref.lastIndexOf("/") + 1));
             keyAttributes.setKeyLength(key.bit_length);
             keyAttributes.setMode(key.mode);
             attributesResponse.getData().add(keyAttributes);
