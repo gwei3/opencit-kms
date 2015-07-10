@@ -283,20 +283,22 @@
                 
                 
                 // when the "add key" dialog is opened, it should start with the "create key" tab
-                    console.log("addKeyModalDialog: adding on show event handler");
+                    // console.log("addKeyModalDialog: adding on show event handler");
                 $("#addKeyModalDialog").on("shown.bs.modal", function(event) {
-                    console.log("addKeyModalDialog: on show, createKeyTab: %O", $('#createKeyModalTabs a[href="#createKeyTab"]'));
+                    // console.log("addKeyModalDialog: on show, createKeyTab: %O", $('#createKeyModalTabs a[href="#createKeyTab"]'));
                     $('#createKeyModalTabs a[href="#createKeyTab"]').tab('show');
-                    console.log("addKeyModalDialog: after calling tab show, createKeyTab[0]: %O", $('#createKeyModalTabs a[href="#createKeyTab"]')[0] );
+                    // console.log("addKeyModalDialog: after calling tab show, createKeyTab[0]: %O", $('#createKeyModalTabs a[href="#createKeyTab"]')[0] );
                 });
+                /*
                 $('#createKeyModalTabs a[href="#createKeyTab"]').on("shown.bs.tab", function(event) {
-                    console.log("createKeyModalTabs / createKeyTab on shown.bs.tab");
+                    // console.log("createKeyModalTabs / createKeyTab on shown.bs.tab");
                     //$('#createKeyModalTabs a[href="#createKeyTab"]').tab('show');
                 });
                 $('#createKeyModalTabs a[href="#createKeyTab"]').on("show.bs.tab", function(event) {
-                    console.log("createKeyModalTabs / createKeyTab on show.bs.tab");
+                    // console.log("createKeyModalTabs / createKeyTab on show.bs.tab");
                     //$('#createKeyModalTabs a[href="#createKeyTab"]').tab('show');
                 });
+                */
             });
 
 
