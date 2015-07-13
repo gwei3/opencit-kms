@@ -39,6 +39,7 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
 
 /**
  *
@@ -91,12 +92,15 @@ public class Secrets extends BarbicanOperation {
     }
 
     public ListSecretsResponse searchSecrets(ListSecretsRequest listSecretsRequest)  {
-        ListSecretsResponse listSecretsResponse = null;
+		ListSecretsResponse listSecretsResponse = null;
         LOG.debug("searchSecrets: {}", getTarget().getUri().toString());
-        
-        Response response = getTarget().path("/v1/secrets/").request().header("X-Project-Id", xProjectID).get();        
-        listSecretsResponse  = response.readEntity(ListSecretsResponse.class);
+        WebTarget path = getTarget().path("/v1/secrets");
+        path.queryParam("limit", listSecretsRequest.limit);
+        path.queryParam("offset", listSecretsRequest.offset);
+        Response response = path.request().header("X-Project-Id", xProjectID).get();
+        listSecretsResponse = response.readEntity(ListSecretsResponse.class);
 
-        return listSecretsResponse;    
+        return listSecretsResponse;
+
     }
 }
