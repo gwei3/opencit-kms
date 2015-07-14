@@ -45,7 +45,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -82,7 +81,6 @@ public class BarbicanKeyManager implements KeyManager {
 
     public BarbicanKeyManager() throws IOException, KeyStoreException {
         configuration = ConfigurationFactory.getConfiguration();
-        this.configuration = configuration;
         setupKeyStore(configuration);
         initializeKeysDirectory();
     }
@@ -127,6 +125,7 @@ public class BarbicanKeyManager implements KeyManager {
      */
     @Override
     public CreateKeyResponse createKey(CreateKeyRequest request) {
+        log.debug("Inside BarbicanKeyManager createKey ");
         CreateKeyResponse response = new CreateKeyResponse();
         List<Fault> faults = new ArrayList<>();
         try {
@@ -169,6 +168,7 @@ public class BarbicanKeyManager implements KeyManager {
      */
     @Override
     public RegisterKeyResponse registerKey(RegisterKeyRequest request) {
+        log.debug("Inside BarbicanKeyManager registerKey");
         RegisterKeyResponse response = new RegisterKeyResponse();
         // validate the input request
         List<Fault> faults = new ArrayList<>();
@@ -210,6 +210,7 @@ public class BarbicanKeyManager implements KeyManager {
 
     @Override
     public DeleteKeyResponse deleteKey(DeleteKeyRequest request) {
+        log.debug("Barbican Key Manager delete key request : " + request.getKeyId());
         DeleteKeyResponse response = new DeleteKeyResponse();
         // validate the input request
         List<Fault> faults = new ArrayList<>();
@@ -221,8 +222,11 @@ public class BarbicanKeyManager implements KeyManager {
 
         //Get the Barbican key id stored in local DB
         CipherKey cipherKey = repository.retrieve(request.getKeyId());
-        request = new DeleteKeyRequest(cipherKey.get(BARBICAN_KEY).toString());
+        String barbicanKeyId = cipherKey.get(BARBICAN_KEY).toString();
+        log.debug("Key provided by client : " + request.getKeyId() + ". Key to be deleted from Barbican : " + barbicanKeyId);
+        request = new DeleteKeyRequest(barbicanKeyId);
 
+        repository.delete(request.getKeyId());
         try {
             response = BarbicanHttpClient.getBarbicanHttpClient(configuration).deleteSecret(request);
         } catch (BarbicanClientException e) {
@@ -241,6 +245,7 @@ public class BarbicanKeyManager implements KeyManager {
      */
     @Override
     public TransferKeyResponse transferKey(TransferKeyRequest request) {
+        log.debug("Barbican Key Manager retrienve key request : " + request.getKeyId());
         TransferKeyResponse response = new TransferKeyResponse();
         List<Fault> faults = new ArrayList<>();
         faults.addAll(RequestValidator.validateTransferKey(request));
@@ -252,7 +257,10 @@ public class BarbicanKeyManager implements KeyManager {
         try {
             //Get the Barbican key id stored in local DB
             CipherKey cipherKey = repository.retrieve(request.getKeyId());
-            request.setKeyId(cipherKey.get(BARBICAN_KEY).toString());
+            String barbicanKeyId = cipherKey.get(BARBICAN_KEY).toString();
+            log.debug("Key provided by client : " + request.getKeyId() + ". Key to be retrieved from Barbican : " + barbicanKeyId);
+
+            request.setKeyId(barbicanKeyId);
 
             //Call barbican to get the Barbican Key
             response = BarbicanHttpClient.getBarbicanHttpClient(configuration).retrieveSecret(request);
@@ -270,11 +278,18 @@ public class BarbicanKeyManager implements KeyManager {
 
     @Override
     public GetKeyAttributesResponse getKeyAttributes(GetKeyAttributesRequest keyAttributesRequest) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        GetKeyAttributesResponse keyAttributesResponse = new GetKeyAttributesResponse();
+        KeyAttributes attributes = new KeyAttributes();
+        attributes.setKeyId(keyAttributesRequest.getKeyId());
+        keyAttributesResponse.setData(attributes);
+        return keyAttributesResponse;
+
     }
 
     @Override
     public SearchKeyAttributesResponse searchKeyAttributes(SearchKeyAttributesRequest searchKeyAttributesRequest) {
+        log.debug("Barbican key manager searchKeyAttributes");
+        /*
         SearchKeyAttributesResponse response = new SearchKeyAttributesResponse();
         List<Fault> faults = new ArrayList<>();
         try {
@@ -285,6 +300,16 @@ public class BarbicanKeyManager implements KeyManager {
 
         }
         return response;
+        */
+        SearchKeyAttributesResponse response = new SearchKeyAttributesResponse();
+        String[] keyIds = keysDirectory.list();
+        for (String keyId : keyIds) {
+            CipherKey key = repository.retrieve(keyId);
+            KeyAttributes keyAttributes = new KeyAttributes();
+            keyAttributes.copyFrom(key);
+            response.getData().add(keyAttributes);
+        }
+        return response;        
     }
 
     /**

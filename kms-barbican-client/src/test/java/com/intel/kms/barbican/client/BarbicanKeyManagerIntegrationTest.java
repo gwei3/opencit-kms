@@ -13,6 +13,8 @@ import com.intel.kms.api.DeleteKeyRequest;
 import com.intel.kms.api.DeleteKeyResponse;
 import com.intel.kms.api.RegisterKeyRequest;
 import com.intel.kms.api.RegisterKeyResponse;
+import com.intel.kms.api.SearchKeyAttributesRequest;
+import com.intel.kms.api.SearchKeyAttributesResponse;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
 import static com.intel.kms.barbican.client.BarbicanKeyManager.KMS_STORAGE_KEYSTORE_FILE_PROPERTY;
@@ -43,8 +45,8 @@ public class BarbicanKeyManagerIntegrationTest {
     public void setup() throws Exception {
         org.apache.commons.configuration.Configuration apacheConfig = new BaseConfiguration();
         Configuration configuration = new CommonsConfiguration(apacheConfig);
-        configuration.set("endpoint.url", "http://10.35.35.70:9311/");
-        configuration.set("X-Project-Id", "12345");
+        configuration.set("barbican.endpoint.url", "http://10.35.35.107:9311/");
+        configuration.set("barbican.project.id", "12345");
         configuration.set(KMS_STORAGE_KEYSTORE_FILE_PROPERTY, "C:\\Temp\\kms_storage.jck");
         configuration.set(KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY, "mykey");
         configuration.set(PASSWORD_VAULT_FILE_PROPERTY, "C:\\Temp\\storage.jck");
@@ -61,6 +63,8 @@ public class BarbicanKeyManagerIntegrationTest {
         testDelete(createdId);
         testRegister();
         testDelete(registerId);
+        testSearch();
+
     }
 
     public void testCreate() throws BarbicanClientException {
@@ -76,25 +80,31 @@ public class BarbicanKeyManagerIntegrationTest {
     }
 
     public void testRetrieve() {
+        //createdId = "d440ec2b-4251-42c0-8a29-bcf729e4dc91";
         TransferKeyRequest transferKeyRequest = new TransferKeyRequest(createdId);
         TransferKeyResponse transferKeyResponse = barbicanKeyManager.transferKey(transferKeyRequest);
         Assert.assertTrue(transferKeyResponse.getKey() != null);
     }
-    
-    
-    public void testDelete(String keyID){
+
+    public void testDelete(String keyID) {
         DeleteKeyRequest deleteKeyRequest = new DeleteKeyRequest(keyID);
         DeleteKeyResponse response = barbicanKeyManager.deleteKey(deleteKeyRequest);
         assertTrue(response.getHttpResponse().getStatusCode() == 200);
     }
-    
-    
-    
-    public void testRegister(){
+
+    public void testRegister() {
         RegisterKeyRequest registerKeyRequest = new RegisterKeyRequest();
         registerKeyRequest.setKey("1111111111111111".getBytes());
         RegisterKeyResponse response = barbicanKeyManager.registerKey(registerKeyRequest);
         registerId = response.getData().get(0).getKeyId();
         assertTrue(response.getData().get(0).getKeyId() != null);
+    }
+
+    private void testSearch() {
+        SearchKeyAttributesRequest searchKeyAttributesRequest = new SearchKeyAttributesRequest();
+        searchKeyAttributesRequest.limit = 10;
+        searchKeyAttributesRequest.page = 1;
+        SearchKeyAttributesResponse searchKeyAttributesResponse = barbicanKeyManager.searchKeyAttributes(searchKeyAttributesRequest);
+        assertTrue(searchKeyAttributesResponse.getData().size() >= 0);
     }
 }
