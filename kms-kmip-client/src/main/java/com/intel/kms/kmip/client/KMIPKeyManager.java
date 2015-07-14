@@ -305,18 +305,12 @@ public class KMIPKeyManager implements KeyManager {
 	}
 
 	@Override
-	public GetKeyAttributesResponse getKeyAttributes(
-			GetKeyAttributesRequest keyAttributesRequest) {
-		throw new UnsupportedOperationException("Not supported yet."); // To
-		// change
-		// body
-		// of
-		// generated
-		// methods,
-		// choose
-		// Tools
-		// |
-		// Templates.
+	public GetKeyAttributesResponse getKeyAttributes(GetKeyAttributesRequest keyAttributesRequest) {
+        GetKeyAttributesResponse keyAttributesResponse = new GetKeyAttributesResponse();
+        KeyAttributes attributes = new KeyAttributes();
+        attributes.setKeyId(keyAttributesRequest.getKeyId());
+        keyAttributesResponse.setData(attributes);
+        return keyAttributesResponse;
 	}
 
 	@Override
@@ -370,6 +364,7 @@ public class KMIPKeyManager implements KeyManager {
 
 		try {
 			transferKeyResponse = wrapKey(derivedKey, storageKey);
+			transferKeyResponse.getDescriptor().getEncryption().setKeyLength(keyLength);
 		} catch (NoSuchAlgorithmException | BadPaddingException
 				| IllegalBlockSizeException | InvalidKeyException
 				| NoSuchPaddingException ex) {
