@@ -221,12 +221,13 @@ public class BarbicanKeyManager implements KeyManager {
         }
 
         //Get the Barbican key id stored in local DB
-        CipherKey cipherKey = repository.retrieve(request.getKeyId());
+		String repoKeyId = request.getKeyId();
+        CipherKey cipherKey = repository.retrieve(repoKeyId);
         String barbicanKeyId = cipherKey.get(BARBICAN_KEY).toString();
         log.debug("Key provided by client : " + request.getKeyId() + ". Key to be deleted from Barbican : " + barbicanKeyId);
         request = new DeleteKeyRequest(barbicanKeyId);
 
-        repository.delete(request.getKeyId());
+        repository.delete(repoKeyId);
         try {
             response = BarbicanHttpClient.getBarbicanHttpClient(configuration).deleteSecret(request);
         } catch (BarbicanClientException e) {
