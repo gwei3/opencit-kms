@@ -120,6 +120,12 @@
 
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-kmip-client</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore-directory</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>

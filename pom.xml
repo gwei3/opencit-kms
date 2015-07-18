@@ -39,6 +39,7 @@
 	<module>kms-user-api</module>
 	<module>kms-version</module>
 	<module>kmsproxy-saml-cache</module>
+	<module>kms-kmip-client</module>
   </modules>
 
 </project>

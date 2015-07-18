@@ -1,0 +1,167 @@
+/**
+ *Description:
+ * The Stub encapsulates the whole KMIP functionality of the
+ * client side. To process a request, it encodes the request, 
+ * sends it to the server over the transport layer, and finally 
+ * decodes and returns the response.  
+ *
+ * 
+ * 
+ */
+package com.intel.kms.kmip.stub;
+
+import java.util.ArrayList;
+
+import org.apache.log4j.Logger;
+
+import com.intel.dcsg.cpg.configuration.Configuration;
+
+import ch.ntb.inf.kmip.container.KMIPContainer;
+import ch.ntb.inf.kmip.process.decoder.KMIPDecoderInterface;
+import ch.ntb.inf.kmip.process.encoder.KMIPEncoderInterface;
+import ch.ntb.inf.kmip.stub.KMIPStubInterface;
+import ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerInterface;
+import ch.ntb.inf.kmip.test.UCStringCompare;
+import ch.ntb.inf.kmip.utils.KMIPUtils;
+import static com.intel.kms.kmip.client.KMIPKeyManager.DECODER;
+import static com.intel.kms.kmip.client.KMIPKeyManager.ENCODER;
+import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTORELOCATION;
+import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTOREPW;
+import static com.intel.kms.kmip.client.KMIPKeyManager.TARGETHOSTNAME;
+import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
+
+/**
+ * 
+ * The Stub encapsulates the whole KMIP functionality of the server side.
+ * 
+ * @author aakashmX
+ */
+public class KMIPKmsStub implements KMIPStubInterface {
+
+	private static final Logger logger = Logger.getLogger(KMIPKmsStub.class);
+
+	private KMIPEncoderInterface encoder;
+	private KMIPDecoderInterface decoder;
+	private KMIPStubTransportLayerInterface transportLayer;
+	private Configuration config;
+
+	public KMIPKmsStub(Configuration config) {
+		super();
+
+		try {
+			this.encoder = (KMIPEncoderInterface) getClass(config.get(ENCODER),
+					"ch.ntb.inf.kmip.process.encoder.KMIPEncoder")
+					.newInstance();
+			this.decoder = (KMIPDecoderInterface) getClass(config.get(DECODER),
+					"ch.ntb.inf.kmip.process.decoder.KMIPDecoder")
+					.newInstance();
+			this.transportLayer = (KMIPStubTransportLayerInterface) getClass(
+					config.get(TRANSPORTLAYER),
+					"ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerHTTP")
+					.newInstance();
+			this.transportLayer.setTargetHostname(config.get(TARGETHOSTNAME));
+			this.transportLayer.setKeyStoreLocation(config
+					.get(KEYSTORELOCATION));
+			this.transportLayer.setKeyStorePW(config.get(KEYSTOREPW));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public KMIPEncoderInterface getEncoder() {
+		return encoder;
+	}
+
+	public void setEncoder(KMIPEncoderInterface encoder) {
+		this.encoder = encoder;
+	}
+
+	public KMIPDecoderInterface getDecoder() {
+		return decoder;
+	}
+
+	public void setDecoder(KMIPDecoderInterface decoder) {
+		this.decoder = decoder;
+	}
+
+	public KMIPStubTransportLayerInterface getTransportLayer() {
+		return transportLayer;
+	}
+
+	public void setTransportLayer(KMIPStubTransportLayerInterface transportLayer) {
+		this.transportLayer = transportLayer;
+	}
+
+	public Configuration getConfig() {
+		return config;
+	}
+
+	public void setConfig(Configuration config) {
+		this.config = config;
+	}
+
+	private Class<?> getClass(String path, String defaultPath)
+			throws ClassNotFoundException {
+		return Class.forName(KMIPUtils.getClassPath(path, defaultPath));
+	}
+
+	/**
+	 * Processes a KMIP-Request-Message stored in a <code>KMIPContainer</code>
+	 * and returns a corresponding KMIP-Response-Message.
+	 * 
+	 * @param c
+	 *            : the <code>KMIPContainer</code> to be encoded and sent.
+	 * @return <code>KMIPContainer</code> with the response objects.
+	 */
+	public KMIPContainer processRequest(KMIPContainer c) {
+		ArrayList<Byte> ttlv = encoder.encodeRequest(c);
+		ArrayList<Byte> responseFromServer = transportLayer.send(ttlv);
+		return decodeResponse(responseFromServer);
+	}
+
+	/**
+	 * Processes a KMIP-Request-Message stored in a <code>KMIPContainer</code>
+	 * and returns a corresponding KMIP-Response-Message. For test cases, there
+	 * are two additional parameters that may be set by the caller. The idea is,
+	 * that the generated TTLV-Strings can be compared to the expected
+	 * TTLV-Strings.
+	 * 
+	 * @param c
+	 *            : the <code>KMIPContainer</code> to be encoded and sent.
+	 * @param expectedTTLVRequest
+	 *            : the <code>String</code> to be compared to the encoded
+	 *            request message.
+	 * @param expectedTTLVResponse
+	 *            : the <code>String</code> to be compared to the decoded
+	 *            response message.
+	 * @return <code>KMIPContainer</code> with the response objects.
+	 */
+	public KMIPContainer processRequest(KMIPContainer c,
+			String expectedTTLVRequest, String expectedTTLVResponse) {
+		// encode Request
+		ArrayList<Byte> ttlv = encoder.encodeRequest(c);
+		logger.info("Encoded Request from Client: (actual/expected)");
+		KMIPUtils.printArrayListAsHexString(ttlv);
+		logger.debug(expectedTTLVRequest);
+		UCStringCompare.checkRequest(ttlv, expectedTTLVRequest);
+
+		// send Request and check Response
+		ArrayList<Byte> responseFromServer = transportLayer.send(ttlv);
+		logger.info("Encoded Response from Server: (actual/expected)");
+		KMIPUtils.printArrayListAsHexString(responseFromServer);
+		logger.debug(expectedTTLVResponse);
+		UCStringCompare.checkResponse(responseFromServer, expectedTTLVResponse);
+		return decodeResponse(responseFromServer);
+	}
+
+	private KMIPContainer decodeResponse(ArrayList<Byte> responseFromServer) {
+		try {
+			return decoder.decodeResponse(responseFromServer);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+}
