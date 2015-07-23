@@ -7,9 +7,10 @@ package com.intel.kms.ws.v2;
 import com.intel.kms.api.util.PemKeyEncryptionKeyDescriptor;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.crypto.file.PemKeyEncryption;
 import com.intel.dcsg.cpg.crypto.file.PemKeyEncryptionUtil;
-import com.intel.dcsg.cpg.extensions.Extensions;
+import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.kms.api.CreateKeyRequest;
@@ -28,6 +29,7 @@ import com.intel.kms.api.SearchKeyAttributesResponse;
 import com.intel.kms.ws.v2.api.Key;
 import com.intel.kms.ws.v2.api.KeyCollection;
 import com.intel.kms.ws.v2.api.KeyFilterCriteria;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.jaxrs2.server.resource.DocumentRepository;
 import com.intel.mtwilson.repository.RepositoryCreateException;
 import com.intel.mtwilson.repository.RepositoryDeleteException;
@@ -35,6 +37,7 @@ import com.intel.mtwilson.repository.RepositoryException;
 import com.intel.mtwilson.repository.RepositoryRetrieveException;
 import com.intel.mtwilson.repository.RepositorySearchException;
 import com.intel.mtwilson.repository.RepositoryStoreException;
+import java.io.IOException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 /**
@@ -46,16 +49,20 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KeyRepository.class);
     private ObjectMapper mapper;
     private static KeyManager keyManager;
+    private static Configuration configuration;
 
-    public static KeyManager getKeyManager() {
+    public static KeyManager getKeyManager() throws IOException {
+        if( configuration == null ) {
+            configuration = ConfigurationFactory.getConfiguration();
+        }
         if (keyManager == null) {
             /**
              * get the key repository "driver" since there can be only one
              * configured key repository: local directory, kmip, or barbican.
              * it's a global setting.
              */
-            keyManager = Extensions.require(KeyManager.class);
-
+            //keyManager = Extensions.require(KeyManager.class);
+            keyManager = Plugins.findByAttribute(KeyManager.class, "class.name", configuration.get("key.manager.provider"));
         }
         return keyManager;
     }
