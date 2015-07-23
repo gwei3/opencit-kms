@@ -16,7 +16,9 @@ import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import com.intel.mtwilson.jaxrs2.server.resource.AbstractJsonapiResource;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.shiro.Username;
+import com.intel.mtwilson.util.validation.faults.Thrown;
 import com.thoughtworks.xstream.XStream;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import javax.servlet.http.HttpServletRequest;
@@ -103,7 +105,14 @@ public class Keys extends AbstractJsonapiResource<Key, KeyCollection, KeyFilterC
         TransferKeyRequest keyRequest = new TransferKeyRequest();
         keyRequest.setKeyId(keyId);
         keyRequest.setUsername(getLoginUsername(httpServletRequest));
+        try {
         return KeyRepository.getKeyManager().transferKey(keyRequest);
+        }
+        catch(Exception e) {
+            TransferKeyResponse response = new TransferKeyResponse();
+            response.getFaults().add(new Thrown(e));
+            return response;
+        }
     }
 
     @POST
@@ -111,7 +120,7 @@ public class Keys extends AbstractJsonapiResource<Key, KeyCollection, KeyFilterC
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(CryptoMediaType.APPLICATION_X_PEM_FILE)
     @RequiresPermissions("keys:transfer")
-    public String transferKeyPEM(@PathParam("keyId") String keyId, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse /*, TransferKeyRequest keyRequest*/) {
+    public String transferKeyPEM(@PathParam("keyId") String keyId, @Context HttpServletRequest httpServletRequest, @Context HttpServletResponse httpServletResponse /*, TransferKeyRequest keyRequest*/) throws IOException {
         log.debug("transferKeyPEM");
         TransferKeyRequest transferKeyRequest = new TransferKeyRequest();
         transferKeyRequest.setKeyId(keyId);
