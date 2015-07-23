@@ -274,6 +274,7 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
         RegisterKeyRequest registerKeyRequest = new RegisterKeyRequest();
         registerKeyRequest.setKey(pem.getContent());
         registerKeyRequest.setDescriptor(descriptor);
+        try {
         RegisterKeyResponse registerKeyResponse = KeyRepository.getKeyManager().registerKey(registerKeyRequest);
 
         KeyCollection keyCollection = new KeyCollection();
@@ -283,5 +284,10 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
             keyCollection.getKeys().add(key);
         }
         return keyCollection;
+        }
+        catch(IOException e) {
+            throw new RepositoryStoreException(e);
+        }
+
     }
 }
