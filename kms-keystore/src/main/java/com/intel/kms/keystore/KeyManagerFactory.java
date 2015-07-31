@@ -30,7 +30,7 @@ public class KeyManagerFactory {
              * it's a global setting.
              */
             //keyManager = Extensions.require(KeyManager.class);
-            KeyManager delegate = Plugins.findByAttribute(KeyManager.class, "class.name", configuration.get("key.manager.provider"));
+            KeyManager delegate = Plugins.findByAttribute(KeyManager.class, "class.name", configuration.get("key.manager.provider", "com.intel.kms.keystore.directory.DirectoryKeyManager"));
             log.debug("KeyManager class: {}", delegate.getClass().getName());
             // wrap the key manager with a RemoteKeyManager which will properly wrap the key for TransferKeyResponse
             keyManager = new RemoteKeyManager(delegate);
