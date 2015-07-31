@@ -26,6 +26,7 @@ import com.intel.kms.api.RegisterKeyRequest;
 import com.intel.kms.api.RegisterKeyResponse;
 import com.intel.kms.api.SearchKeyAttributesRequest;
 import com.intel.kms.api.SearchKeyAttributesResponse;
+import com.intel.kms.keystore.RemoteKeyManager;
 import com.intel.kms.ws.v2.api.Key;
 import com.intel.kms.ws.v2.api.KeyCollection;
 import com.intel.kms.ws.v2.api.KeyFilterCriteria;
@@ -62,7 +63,10 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
              * it's a global setting.
              */
             //keyManager = Extensions.require(KeyManager.class);
-            keyManager = Plugins.findByAttribute(KeyManager.class, "class.name", configuration.get("key.manager.provider"));
+            KeyManager delegate = Plugins.findByAttribute(KeyManager.class, "class.name", configuration.get("key.manager.provider"));
+            log.debug("KeyManager class: {}", delegate.getClass().getName());
+            // wrap the key manager with a RemoteKeyManager which will properly wrap the key for TransferKeyResponse
+            keyManager = new RemoteKeyManager(delegate);
         }
         return keyManager;
     }
