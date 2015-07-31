@@ -19,6 +19,7 @@ import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.mtwilson.util.archive.TarGzipBuilder;
 import com.intel.kms.api.KeyManager;
+import com.intel.kms.keystore.KeyManagerFactory;
 import com.intel.kms.keystore.RemoteKeyManager;
 import com.intel.kms.saml.api.fault.NotTrusted;
 import com.intel.kms.tpm.identity.jaxrs.TpmIdentityCertificateRepository;
@@ -65,24 +66,11 @@ import javax.ws.rs.core.Response;
 public class TransferKeyWithSAML {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransferKeyWithSAML.class);
-    private static KeyManager keyManager;
-    private static Configuration configuration;
+    private KeyManager keyManager;
 
-    public static KeyManager getKeyManager() throws IOException {
-        if( configuration == null ) {
-            configuration = ConfigurationFactory.getConfiguration();
-        }
-        if (keyManager == null) {
-            /**
-             * get the key repository "driver" since there can be only one
-             * configured key repository: local directory, kmip, or barbican.
-             * it's a global setting.
-             */
-            //keyManager = Extensions.require(KeyManager.class);
-            KeyManager delegate = Plugins.findByAttribute(KeyManager.class, "class.name", configuration.get("key.manager.provider"));
-            log.debug("KeyManager class: {}", delegate.getClass().getName());
-            // wrap the key manager with a RemoteKeyManager which will properly wrap the key for TransferKeyResponse
-            keyManager = new RemoteKeyManager(delegate);
+    public KeyManager getKeyManager() throws IOException {
+        if( keyManager == null ) {
+            keyManager = KeyManagerFactory.getKeyManager();
         }
         return keyManager;
     }
