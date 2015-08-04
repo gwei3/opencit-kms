@@ -13,6 +13,7 @@ import com.intel.dcsg.cpg.crypto.file.PemKeyEncryptionUtil;
 import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.io.pem.Pem;
+import com.intel.dcsg.cpg.validation.ValidationException;
 import com.intel.kms.api.CreateKeyRequest;
 import com.intel.kms.api.CreateKeyResponse;
 import com.intel.kms.api.DeleteKeyRequest;
@@ -167,9 +168,14 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
             CreateKeyRequest createKeyRequest = new CreateKeyRequest();
             copy(item, createKeyRequest);
             CreateKeyResponse createKeyResponse = getKeyManager().createKey(createKeyRequest);
-            copy(createKeyResponse.getData().get(0), item);
-            log.debug("createKey response: {}", mapper.writeValueAsString(createKeyResponse));
-            log.debug("Key:Create - Created the Key {} successfully.", item.getId().toString());
+            if( !createKeyResponse.getFaults().isEmpty() ) {
+                throw new ValidationException(createKeyResponse.getFaults());
+            }
+            if( createKeyResponse.getData().size() > 0 ) {
+                copy(createKeyResponse.getData().get(0), item);
+                log.debug("createKey response: {}", mapper.writeValueAsString(createKeyResponse));
+                log.debug("Key:Create - Created the Key {} successfully.", item.getId().toString());
+            }
         } catch (Exception ex) {
             log.error("Key:Create - Error during key creation.", ex);
             throw new RepositoryCreateException(ex, locator);
