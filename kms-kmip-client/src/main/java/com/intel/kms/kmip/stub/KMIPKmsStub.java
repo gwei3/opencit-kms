@@ -12,12 +12,15 @@ package com.intel.kms.kmip.stub;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
-
 import com.intel.dcsg.cpg.configuration.Configuration;
 
 import ch.ntb.inf.kmip.container.KMIPContainer;
 import ch.ntb.inf.kmip.process.decoder.KMIPDecoderInterface;
+import ch.ntb.inf.kmip.process.decoder.KMIPPaddingExpectedException;
+import ch.ntb.inf.kmip.process.decoder.KMIPProtocolVersionException;
+import ch.ntb.inf.kmip.process.decoder.KMIPUnexpectedAttributeNameException;
+import ch.ntb.inf.kmip.process.decoder.KMIPUnexpectedTagException;
+import ch.ntb.inf.kmip.process.decoder.KMIPUnexpectedTypeException;
 import ch.ntb.inf.kmip.process.encoder.KMIPEncoderInterface;
 import ch.ntb.inf.kmip.stub.KMIPStubInterface;
 import ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerInterface;
@@ -29,6 +32,8 @@ import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTORELOCATION;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTOREPW;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TARGETHOSTNAME;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
+import com.intel.kms.kmip.client.exception.KMIPClientException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * 
@@ -38,35 +43,34 @@ import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
  */
 public class KMIPKmsStub implements KMIPStubInterface {
 
-	private static final Logger logger = Logger.getLogger(KMIPKmsStub.class);
-
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KMIPKmsStub.class);
 	private KMIPEncoderInterface encoder;
 	private KMIPDecoderInterface decoder;
 	private KMIPStubTransportLayerInterface transportLayer;
 	private Configuration config;
 
-	public KMIPKmsStub(Configuration config) {
+	public KMIPKmsStub(Configuration config) throws KMIPClientException {
 		super();
 
-		try {
-			this.encoder = (KMIPEncoderInterface) getClass(config.get(ENCODER),
-					"ch.ntb.inf.kmip.process.encoder.KMIPEncoder")
-					.newInstance();
-			this.decoder = (KMIPDecoderInterface) getClass(config.get(DECODER),
-					"ch.ntb.inf.kmip.process.decoder.KMIPDecoder")
-					.newInstance();
-			this.transportLayer = (KMIPStubTransportLayerInterface) getClass(
-					config.get(TRANSPORTLAYER),
-					"ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerHTTP")
-					.newInstance();
-			this.transportLayer.setTargetHostname(config.get(TARGETHOSTNAME));
-			this.transportLayer.setKeyStoreLocation(config
-					.get(KEYSTORELOCATION));
-			this.transportLayer.setKeyStorePW(config.get(KEYSTOREPW));
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+        try {
+            this.encoder = (KMIPEncoderInterface) getClass(config.get(ENCODER),
+                    "ch.ntb.inf.kmip.process.encoder.KMIPEncoder")
+                    .newInstance();
+            this.decoder = (KMIPDecoderInterface) getClass(config.get(DECODER),
+                    "ch.ntb.inf.kmip.process.decoder.KMIPDecoder")
+                    .newInstance();
+            this.transportLayer = (KMIPStubTransportLayerInterface) getClass(
+                    config.get(TRANSPORTLAYER),
+                    "ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerHTTP")
+                    .newInstance();
+            this.transportLayer.setTargetHostname(config.get(TARGETHOSTNAME));
+            this.transportLayer.setKeyStoreLocation(config
+                    .get(KEYSTORELOCATION));
+            this.transportLayer.setKeyStorePW(config.get(KEYSTOREPW));
+        }
+        catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw new KMIPClientException("Configuration error", e);
+        }
 	}
 
 	public KMIPEncoderInterface getEncoder() {
@@ -114,7 +118,8 @@ public class KMIPKmsStub implements KMIPStubInterface {
 	 *            : the <code>KMIPContainer</code> to be encoded and sent.
 	 * @return <code>KMIPContainer</code> with the response objects.
 	 */
-	public KMIPContainer processRequest(KMIPContainer c) {
+    @Override
+	public KMIPContainer processRequest(KMIPContainer c) throws KMIPClientException {
 		ArrayList<Byte> ttlv = encoder.encodeRequest(c);
 		ArrayList<Byte> responseFromServer = transportLayer.send(ttlv);
 		return decodeResponse(responseFromServer);
@@ -137,30 +142,30 @@ public class KMIPKmsStub implements KMIPStubInterface {
 	 *            response message.
 	 * @return <code>KMIPContainer</code> with the response objects.
 	 */
+    @Override
 	public KMIPContainer processRequest(KMIPContainer c,
-			String expectedTTLVRequest, String expectedTTLVResponse) {
+			String expectedTTLVRequest, String expectedTTLVResponse) throws KMIPClientException {
 		// encode Request
 		ArrayList<Byte> ttlv = encoder.encodeRequest(c);
-		logger.info("Encoded Request from Client: (actual/expected)");
+		log.debug("Encoded Request from Client: (actual/expected)");
 		KMIPUtils.printArrayListAsHexString(ttlv);
-		logger.debug(expectedTTLVRequest);
+		log.debug("Expected TTLV request: {}", expectedTTLVRequest);
 		UCStringCompare.checkRequest(ttlv, expectedTTLVRequest);
 
 		// send Request and check Response
 		ArrayList<Byte> responseFromServer = transportLayer.send(ttlv);
-		logger.info("Encoded Response from Server: (actual/expected)");
+		log.debug("Encoded Response from Server: (actual/expected)");
 		KMIPUtils.printArrayListAsHexString(responseFromServer);
-		logger.debug(expectedTTLVResponse);
+		log.debug("Expected TTLV request: {}", expectedTTLVResponse);
 		UCStringCompare.checkResponse(responseFromServer, expectedTTLVResponse);
 		return decodeResponse(responseFromServer);
 	}
 
-	private KMIPContainer decodeResponse(ArrayList<Byte> responseFromServer) {
+	private KMIPContainer decodeResponse(ArrayList<Byte> responseFromServer) throws KMIPClientException {
 		try {
 			return decoder.decodeResponse(responseFromServer);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+		} catch (KMIPUnexpectedTypeException | KMIPUnexpectedTagException | KMIPPaddingExpectedException | KMIPProtocolVersionException | UnsupportedEncodingException | KMIPUnexpectedAttributeNameException e) {
+            throw new KMIPClientException("Cannot decode server response", e);
 		}
 	}
 

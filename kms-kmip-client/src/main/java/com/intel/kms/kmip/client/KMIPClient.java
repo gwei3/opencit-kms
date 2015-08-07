@@ -1,6 +1,5 @@
 package com.intel.kms.kmip.client;
 
-import org.apache.log4j.Logger;
 
 import ch.ntb.inf.kmip.container.KMIPContainer;
 import ch.ntb.inf.kmip.stub.KMIPStubInterface;
@@ -26,9 +25,9 @@ import com.intel.kms.kmip.stub.KMIPKmsStub;
  */
 public class KMIPClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KMIPClient.class);
 	private static KMIPStubInterface stub;
 	private static KMIPClient kmipClient;
-	private static final Logger logger = Logger.getLogger(KMIPClient.class);
 
 	public KMIPClient() {
 	}
@@ -62,8 +61,7 @@ public class KMIPClient {
 					"createSecret: The createrResponse is null"));
 		}
 
-		logger.debug(" \n----------------------------\nCreate operation response:"
-				+ response);
+		log.debug("Create operation response: {}",response);
 		if (KMIPApiUtil.checkStatus(response)) {
 
 			String uid = KMIPApiUtil.fetchUid(response);
@@ -92,8 +90,7 @@ public class KMIPClient {
 		KMIPContainer getRequest = OperationRequestGenerator
 				.getKMIPRequest(uid);
 		KMIPContainer getResponse = stub.processRequest(getRequest);
-		logger.debug(" \n-----------------------------------\nGet Operation Response:-"
-				+ getResponse.toString());
+		log.debug("Get Operation Response: {}", getResponse.toString());
 
 		if (KMIPApiUtil.checkStatus(getResponse)) {
 			TransferKeyResponse transferKeyResponse = KMIPApiUtil
@@ -126,8 +123,7 @@ public class KMIPClient {
 			throw new KMIPClientException(new NullPointerException(
 					"registerSecret: The registerResponse is null"));
 		}
-		logger.debug("------------------------\nRegister Operation Response::"
-				+ registerResponse.toString());
+		log.debug("Register Operation Response: {}", registerResponse.toString());
 		if (KMIPApiUtil.checkStatus(registerResponse)) {
 
 			RegisterKeyResponse registerKeyResponse = KMIPApiUtil
@@ -159,8 +155,7 @@ public class KMIPClient {
 				.deleteKMIPRequest(uid);
 
 		KMIPContainer deleteResponse = stub.processRequest(deleteRequest);
-		logger.debug("\n-----------------------------------\nDelete Operation Response:-"
-				+ deleteResponse.toString());
+		log.debug("Delete Operation Response: {}", deleteResponse.toString());
 
 		if (KMIPApiUtil.checkStatus(deleteResponse)) {
 			response = KMIPApiUtil

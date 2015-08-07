@@ -4,7 +4,7 @@ package com.intel.kms.kmip.client.exception;
  * @author aakashmX
  *
  */
-public class KMIPClientException extends Exception {
+public class KMIPClientException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 

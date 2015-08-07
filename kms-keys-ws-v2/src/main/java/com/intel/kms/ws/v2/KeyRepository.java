@@ -169,6 +169,7 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
             copy(item, createKeyRequest);
             CreateKeyResponse createKeyResponse = getKeyManager().createKey(createKeyRequest);
             if( !createKeyResponse.getFaults().isEmpty() ) {
+                log.debug("createKeyResponse: {}", mapper.writeValueAsString(createKeyResponse));
                 throw new ValidationException(createKeyResponse.getFaults());
             }
             if( createKeyResponse.getData().size() > 0 ) {
