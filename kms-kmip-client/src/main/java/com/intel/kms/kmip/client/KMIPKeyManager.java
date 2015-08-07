@@ -159,6 +159,11 @@ public class KMIPKeyManager implements KeyManager {
 			KMIPClient kmipClient = KMIPClient.getKMIPClient(configuration);
 			TransferKeyResponse transferKeyResponse = kmipClient
 					.createSecret(request);
+			// Check if the above process was successful
+			if (!transferKeyResponse.getFaults().isEmpty()) {
+				response.getFaults().addAll(transferKeyResponse.getFaults());
+				return response;
+			}
 
 			// Encrypt the returned kmip key with the storage key
 			RegisterKeyResponse registerKeyResponse = generateKeyFromKMIPKeyAndRegister(

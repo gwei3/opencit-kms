@@ -16,6 +16,7 @@ import com.intel.kms.kmip.client.exception.KMIPClientException;
 import com.intel.kms.kmip.client.operation.OperationRequestGenerator;
 import com.intel.kms.kmip.client.util.KMIPApiUtil;
 import com.intel.kms.kmip.stub.KMIPKmsStub;
+import java.io.IOException;
 
 /**
  * KMIPClient connects to server using stub and perform create,get,register and
@@ -57,7 +58,7 @@ public class KMIPClient {
 
 		KMIPContainer response = stub.processRequest(createRequest);
 		if (response == null) {
-			throw new KMIPClientException(new NullPointerException(
+			throw new KMIPClientException(new IOException(
 					"createSecret: The createrResponse is null"));
 		}
 
@@ -120,7 +121,7 @@ public class KMIPClient {
 
 		KMIPContainer registerResponse = stub.processRequest(registerRequest);
 		if (registerResponse == null) {
-			throw new KMIPClientException(new NullPointerException(
+			throw new KMIPClientException(new IOException(
 					"registerSecret: The registerResponse is null"));
 		}
 		log.debug("Register Operation Response: {}", registerResponse.toString());

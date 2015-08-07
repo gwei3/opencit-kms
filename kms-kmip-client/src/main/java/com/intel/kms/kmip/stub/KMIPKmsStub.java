@@ -34,6 +34,8 @@ import static com.intel.kms.kmip.client.KMIPKeyManager.TARGETHOSTNAME;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
 import com.intel.kms.kmip.client.exception.KMIPClientException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
+import org.apache.commons.codec.binary.Hex;
 
 /**
  * 
@@ -122,6 +124,11 @@ public class KMIPKmsStub implements KMIPStubInterface {
 	public KMIPContainer processRequest(KMIPContainer c) throws KMIPClientException {
 		ArrayList<Byte> ttlv = encoder.encodeRequest(c);
 		ArrayList<Byte> responseFromServer = transportLayer.send(ttlv);
+        if(responseFromServer == null ) {
+            log.error("Received null response from server");
+            return null;
+        }
+		log.debug("Encoded Response from Server: {}", Hex.encodeHexString(toByteArray(responseFromServer)));
 		return decodeResponse(responseFromServer);
 	}
 
@@ -147,15 +154,19 @@ public class KMIPKmsStub implements KMIPStubInterface {
 			String expectedTTLVRequest, String expectedTTLVResponse) throws KMIPClientException {
 		// encode Request
 		ArrayList<Byte> ttlv = encoder.encodeRequest(c);
-		log.debug("Encoded Request from Client: (actual/expected)");
-		KMIPUtils.printArrayListAsHexString(ttlv);
+		log.debug("Encoded Request from Client: {}", Hex.encodeHexString(toByteArray(ttlv)));
+//		KMIPUtils.printArrayListAsHexString(ttlv);
 		log.debug("Expected TTLV request: {}", expectedTTLVRequest);
 		UCStringCompare.checkRequest(ttlv, expectedTTLVRequest);
 
 		// send Request and check Response
 		ArrayList<Byte> responseFromServer = transportLayer.send(ttlv);
-		log.debug("Encoded Response from Server: (actual/expected)");
-		KMIPUtils.printArrayListAsHexString(responseFromServer);
+        if(responseFromServer == null ) {
+            log.error("Received null response from server");
+            return null;
+        }
+		log.debug("Encoded Response from Server: {}", Hex.encodeHexString(toByteArray(responseFromServer)));
+//		KMIPUtils.printArrayListAsHexString(responseFromServer);
 		log.debug("Expected TTLV request: {}", expectedTTLVResponse);
 		UCStringCompare.checkResponse(responseFromServer, expectedTTLVResponse);
 		return decodeResponse(responseFromServer);
@@ -164,9 +175,17 @@ public class KMIPKmsStub implements KMIPStubInterface {
 	private KMIPContainer decodeResponse(ArrayList<Byte> responseFromServer) throws KMIPClientException {
 		try {
 			return decoder.decodeResponse(responseFromServer);
-		} catch (KMIPUnexpectedTypeException | KMIPUnexpectedTagException | KMIPPaddingExpectedException | KMIPProtocolVersionException | UnsupportedEncodingException | KMIPUnexpectedAttributeNameException e) {
+		} catch (KMIPUnexpectedTypeException | KMIPUnexpectedTagException | KMIPPaddingExpectedException | KMIPProtocolVersionException | UnsupportedEncodingException | KMIPUnexpectedAttributeNameException | NullPointerException e) {
             throw new KMIPClientException("Cannot decode server response", e);
 		}
 	}
+    
+    private byte[] toByteArray(List<Byte> byteList) {
+        byte[] array = new byte[byteList.size()];
+        for(int i=0; i<array.length; i++) {
+            array[i] = byteList.get(i);
+        }
+        return array;
+    }
 
 }
