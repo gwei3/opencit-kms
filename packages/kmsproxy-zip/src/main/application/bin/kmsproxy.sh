@@ -164,7 +164,7 @@ kmsproxy_start() {
     # the last background process pid $! must be stored from the subshell.
     (
       cd $KMSPROXY_HOME
-      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main start >>$KMSPROXY_HTTP_LOG_FILE 2>&1 &
+      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main jetty-start >>$KMSPROXY_HTTP_LOG_FILE 2>&1 &
       echo $! > $KMSPROXY_PID_FILE
     )
     if kmsproxy_is_running; then
@@ -188,7 +188,7 @@ kmsproxy_is_running() {
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMSPROXY_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMSPROXY_CONFIGURATION" | awk '{ print $1 }')
+    KMSPROXY_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main jetty-start" | grep "$KMSPROXY_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # KMSPROXY is not running

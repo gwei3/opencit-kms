@@ -160,7 +160,7 @@ kms_start() {
     # the last background process pid $! must be stored from the subshell.
     (
       cd $KMS_HOME
-      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main start >>$KMS_HTTP_LOG_FILE 2>&1 &
+      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main jetty-start >>$KMS_HTTP_LOG_FILE 2>&1 &
       echo $! > $KMS_PID_FILE
     )
     if kms_is_running; then
@@ -184,7 +184,7 @@ kms_is_running() {
   fi
   if [ -z "$KMS_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMS_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMS_CONFIGURATION" | awk '{ print $1 }')
+    KMS_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main jetty-start" | grep "$KMS_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMS_PID" ]; then
     # KMS is not running

@@ -11,7 +11,7 @@ import com.intel.kms.jetty9.StartHttpServer;
  *
  * @author jbuhacoff
  */
-public class Start extends AbstractCommand {
+public class JettyStart extends AbstractCommand {
 
     @Override
     public void execute(String[] args) throws Exception {

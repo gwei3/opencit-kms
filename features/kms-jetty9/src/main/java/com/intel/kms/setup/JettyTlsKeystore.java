@@ -52,9 +52,9 @@ public class JettyTlsKeystore extends AbstractSetupTask {
     private static final String TLS_ALIAS = "jetty";
     
     // configuration keys
-    private static final String KMS_TLS_CERT_DN = "kms.tls.cert.dn";
-    private static final String KMS_TLS_CERT_IP = "kms.tls.cert.ip";
-    private static final String KMS_TLS_CERT_DNS = "kms.tls.cert.dns";
+    private static final String KMS_TLS_CERT_DN = "jetty.tls.cert.dn";
+    private static final String KMS_TLS_CERT_IP = "jetty.tls.cert.ip";
+    private static final String KMS_TLS_CERT_DNS = "jetty.tls.cert.dns";
     public static final String JAVAX_NET_SSL_KEYSTORE = "javax.net.ssl.keyStore";
     public static final String JAVAX_NET_SSL_KEYSTOREPASSWORD = "javax.net.ssl.keyStorePassword";
     public static final String ENDPOINT_URL = "endpoint.url";
