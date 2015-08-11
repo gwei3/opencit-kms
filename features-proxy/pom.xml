@@ -2,18 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.intel.mtwilson.kms</groupId>
-  <artifactId>kms-maven-build</artifactId>
+  <artifactId>kms-maven-build-kmsproxy</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <description>
-  The Key Management Server is a proxy adding trust-based key retrieval to a
-  backend key server such as OpenStack Barbican or a server with a KMIP API. 
-  </description>
-  
   <modules>
-    <module>features</module>
-    <module>features-proxy</module>
+	<module>kmsproxy-saml-cache</module>
   </modules>
 
 </project>

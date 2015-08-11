@@ -23,7 +23,7 @@
 	
 	<target name="ready" depends="init">
 		<!-- the root pom -->
-		<exec executable="${cmd.maven}" dir="kms-maven-root" resultproperty="mavenExitInstallRootPom">
+		<exec executable="${cmd.maven}" dir="maven/kms-maven-root" resultproperty="mavenExitInstallRootPom">
 			<arg value="-N"/>
 			<arg value="install"/>
 		</exec>
@@ -32,6 +32,13 @@
 		</fail>
 		<!-- the maven archetypes depend on root pom -->
 		<!-- the root pom -->
+		<exec executable="${cmd.maven}" dir="maven" resultproperty="mavenExitInstallJavaPom">
+			<arg value="install"/>
+		</exec>
+		<fail message="Cannot install kms-maven" status="${mavenExitInstallJavaPom}">
+			<condition><not><equals arg1="${mavenExitInstallJavaPom}" arg2="0"/></not></condition>
+		</fail>
+<!--
 		<exec executable="${cmd.maven}" dir="kms-maven-java" resultproperty="mavenExitInstallJavaPom">
 			<arg value="-N"/>
 			<arg value="install"/>
@@ -51,7 +58,7 @@
 		<fail message="Cannot install kms-maven-package-makeself" status="${mavenExitInstallPackageMakeselfPom}">
 			<condition><not><equals arg1="${mavenExitInstallPackageMakeselfPom}" arg2="0"/></not></condition>
 		</fail>
-		
+		-->
 	</target>
 	
 	<target name="clean" depends="init">
@@ -69,10 +76,18 @@
 		<fail message="Cannot clean project packages" status="${mavenExitCleanPackages}">
 			<condition><not><equals arg1="${mavenExitCleanPackages}" arg2="0"/></not></condition>
 		</fail>
+		<!-- the maven poms -->
+		<exec executable="${cmd.maven}" dir="maven" resultproperty="mavenExitCleanMaven">
+			<arg value="clean"/>
+		</exec>
+		<fail message="Cannot clean build files" status="${mavenExitCleanMaven}">
+			<condition><not><equals arg1="${mavenExitCleanMaven}" arg2="0"/></not></condition>
+		</fail>
+
 	</target>
 	
 	<target name="build" depends="init">
-		<!-- the root pom and all projects except packages -->	
+		<!-- the root pom and all projects except packages (has its own "packages" target) and maven (was built by "ready" target) -->	
 		<exec executable="${cmd.maven}"  resultproperty="mavenExitInstall">
 			<arg value="-DskipTests=true"/>
 			<arg value="install"/>
