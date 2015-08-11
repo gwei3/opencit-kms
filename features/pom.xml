@@ -13,7 +13,6 @@
     <module>kms-client-jaxrs2</module>
     <module>kms-html5</module>
     <module>kms-integrity</module>
-    <module>kms-jetty9</module>
     <module>kms-jsonapi</module>
     <module>kms-jsonapi-keys</module>
     <module>kms-keystore</module>
@@ -21,14 +20,11 @@
     <module>kms-keystore-directory</module>
     <module>kms-keys-ws-v2</module>
     <module>kms-keys-ws-v2-api</module>
-    <module>kms-launcher</module>
-    <module>kms-login-token</module>
 	<module>kms-saml</module>
 	<module>kms-test</module>
 	<module>kms-transfer-policy</module>
 	<module>kms-user</module>
 	<module>kms-user-api</module>
-	<module>kms-version</module>
 	<module>kms-kmip-client</module>
   </modules>
 

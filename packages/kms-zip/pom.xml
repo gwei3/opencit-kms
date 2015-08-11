@@ -83,8 +83,8 @@
         </dependency>
 		-->
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-jetty9</artifactId>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-jetty9</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
 		<!--
@@ -142,14 +142,6 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         -->
-		<!--
-        launcher properties file merged into this project, separate launcher project not needed
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-launcher</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-		-->
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-saml</artifactId>
@@ -161,8 +153,8 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-version</artifactId>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-version</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <!--

@@ -48,8 +48,8 @@
         </dependency>
 		-->
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-jetty9</artifactId>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-jetty9</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
 		<!--
