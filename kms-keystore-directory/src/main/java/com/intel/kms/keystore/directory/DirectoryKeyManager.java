@@ -134,43 +134,7 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
 //        }
     }
 
-    /**
-     *
-     * @param createKeyRequest
-     * @return a list of faults with the request, or an empty list if the
-     * request is valid
-     */
-    private List<Fault> validateCreateKey(CreateKeyRequest createKeyRequest) {
-        ArrayList<Fault> faults = new ArrayList<>();
-        if (createKeyRequest.getAlgorithm() == null) {
-            faults.add(new MissingRequiredParameter("algorithm"));
-            return faults;
-        }
-        if (!createKeyRequest.getAlgorithm().equalsIgnoreCase("AES")) {
-            faults.add(new InvalidParameter("algorithm", new UnsupportedAlgorithm(createKeyRequest.getAlgorithm())));
-            return faults;
-        }
-        // check AES specific parameters
-        if (createKeyRequest.getAlgorithm().equalsIgnoreCase("AES")) {
-            if (createKeyRequest.getKeyLength() == null) {
-                faults.add(new MissingRequiredParameter("keyLength")); // TODO: the "parameter" field of the MissingRequiredParameter class needs to be annotated so a filter can automatically convert it's VALUE from keyLength to key_length (javascript) or keep it as keyLength (xml) or KeyLength (SAML) etc.  ... that's something the jackson mapper doesn't do so we have to ipmlement a custom filter for VALUES taht represent key names.
-                return faults;
-            }
-            if (!ArrayUtils.contains(new int[]{128, 192, 256}, createKeyRequest.getKeyLength())) {
-                faults.add(new InvalidParameter("keyLength"));
-                return faults;
-            }
-        }
-        return faults;
-    }
 
-    private URL getTransferLinkForKeyId(String keyId) throws MalformedURLException {
-        String template = configuration.get("endpoint.key.transfer.url", String.format("%s/v1/keys/{keyId}/transfer", configuration.get("endpoint.url", "http://localhost")));
-        log.debug("getTransferLinkForKeyId template: {}", template);
-        String url = template.replace("{keyId}", keyId);
-        log.debug("getTransferLinkForKeyId url: {}", url);
-        return new URL(url);
-    }
     /**
      * Currently supports creating only AES keys
      *
@@ -180,22 +144,19 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
     @Override
     public CreateKeyResponse createKey(CreateKeyRequest createKeyRequest) {
         log.debug("createKey");
-        ArrayList<Fault> faults = new ArrayList<>();
-        faults.addAll(validateCreateKey(createKeyRequest));
-        if (!faults.isEmpty()) {
-            CreateKeyResponse response = new CreateKeyResponse();
-            response.getFaults().addAll(faults);
-            return response;
-        }
 //        Protection protection = ProtectionBuilder.factory().algorithm(createKeyRequest.algorithm).keyLengthBits(createKeyRequest.keyLength).mode("OFB8").build();
+        ArrayList<Fault> faults = new ArrayList<>();
         try {
             // prepare a response with all the input attributes,
             // a new key id, and the default transfer policy
             KeyAttributes created = new KeyAttributes();
             created.copyFrom(createKeyRequest);
+            /*  MOVED TO REMOTEKEYMANAGER */
+            /*
             created.setKeyId(new UUID().toString());
             created.setTransferPolicy("urn:intel:trustedcomputing:key-transfer-policy:require-trust-or-authorization");
             created.setTransferLink(getTransferLinkForKeyId(created.getKeyId()));
+            * */
             // create the key
             SecretKey skey = generateKey(createKeyRequest.getAlgorithm(), createKeyRequest.getKeyLength());
 
@@ -224,12 +185,6 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             CreateKeyResponse response = new CreateKeyResponse();
             response.getFaults().addAll(faults);
             return response;
-        } catch(MalformedURLException e) {
-            log.debug("Cannot generate transfer url", e);
-            faults.add(new InvalidParameter("endpoint.key.transfer.url")); // maybe should be a configuration fault... 
-            CreateKeyResponse response = new CreateKeyResponse();
-            response.getFaults().addAll(faults);
-            return response;
         }
     }
 
@@ -242,25 +197,12 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
         return deleteKeyResponse;
     }
 
-    // NOTE: this is a rough first draft;  should refer to NIST 800-57 part 1, table 2 "comparable strengths" for more detailed recommendation on key lengths
-    private boolean isProtectionAdequate(TransferKeyResponse response, CipherKeyAttributes subject, CipherKeyAttributes encryption) {
-        // first, we allow protection using a key of the same algorithm of equal or greater length ( AES-128,192,256 can wrap AES-128,  RSA 1024,2048,4096 can wrap RSA 1024, etc.)
-        if (subject.getAlgorithm().equals(encryption.getAlgorithm()) && subject.getKeyLength() <= encryption.getKeyLength()) {
-            log.debug("Requested key algorithm {} same as encryption algorithm {} and key lengths ok subject {} <= encryption {}", subject.getAlgorithm(), encryption.getAlgorithm(), subject.getKeyLength(), encryption.getKeyLength());
-            return true;
-        }
-        // check equivalent protection for other algorithm combinations; for now assume RSA 2048 is adequate to protect AES 128, 192, and 256
-        // XXX TODO  NIST 800-57 table 2 recommends RSA 3072 or greater to provide 128 bits of security (to protect AES-128 keys) ... this may be an issue with RSA key sizes in TPM
-        if (subject.getAlgorithm().equals("AES") && encryption.getAlgorithm().startsWith("RSA") && encryption.getKeyLength() >= 2048) {
-            log.debug("Requested key algorithm {} different from encryption algorithm {} and key lengths ok subject {} <= encryption {}", subject.getAlgorithm(), encryption.getAlgorithm(), subject.getKeyLength(), encryption.getKeyLength());
-            return true;
-        }
-        log.debug("Requested key algorithm {} encryption algorithm {} and key lengths subject {} <= encryption {} does not meet policy", subject.getAlgorithm(), encryption.getAlgorithm(), subject.getKeyLength(), encryption.getKeyLength());
-        response.getFaults().add(new KeyTransferProtectionNotAcceptable(encryption.getAlgorithm(), encryption.getKeyLength()));
-        // for now reject anything else
-        return false;
-    }
-
+    /** 
+     * NOTE:  RETURNS PLAINTEXT KEY - CALLER MUST WRAP IT AS APPROPRIATE FOR
+     * THE CURRENT CONTEXT.
+     * @param keyRequest
+     * @return 
+     */
     @Override
     public TransferKeyResponse transferKey(TransferKeyRequest keyRequest) {
         log.debug("transferKey");
@@ -279,166 +221,14 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             log.error("transferKey loaded key but cannot serialize", e);
         }
 
-        CipherKeyAttributes recipientPublicKeyAttributes;
-        RSAPublicKey recipientPublicKey;
+        CipherKeyAttributes keyAttributes = new CipherKeyAttributes();
+        keyAttributes.copyFrom(cipherKey);
+        
+        response.setKey(cipherKey.getEncoded());
         response.setDescriptor(new KeyDescriptor());
-
-        // is the request for an authorized user or a trust-based key transfer?
-        if (keyRequest.getUsername() == null) {
-            log.debug("transferKey request for trust-based key transfer");
-            // no username, so attempt trust-based
-            // XXX the saml policy enforcement should be coming from a plugin, either kms-saml or another one, which will look for the "saml" attribute (extension) in the request object
-            // the trust-based request must  include a SAML document; the kms-saml plugin stores it in the "saml" extended attribute
-            log.debug("SAML: {}", keyRequest.get("saml"));
-
-            try {
-                // the kms-saml plugin puts these attributes here based on the SAML - but maybe this should be happening on "this side" but also via a plugin:
-                recipientPublicKeyAttributes = (CipherKeyAttributes) keyRequest.get("recipientPublicKeyAttributes");
-                try {
-                    log.debug("transferKey recipient public key attributes: {}", mapper.writeValueAsString(recipientPublicKeyAttributes));
-                } catch (Exception e) {
-                    log.error("transferKey loaded recipient public key attributes but cannot serialize", e);
-                }
-                recipientPublicKey = (RSAPublicKey) keyRequest.get("recipientPublicKey");
-                // the encrpytion attributes describe how the key is encrypted so that only the client can decrypt it
-                CipherKeyAttributes tpmBindKeyAttributes = new CipherKeyAttributes();
-                tpmBindKeyAttributes.setKeyId(Sha256Digest.digestOf(recipientPublicKey.getEncoded()).toHexString());
-                tpmBindKeyAttributes.setAlgorithm("RSA");
-                tpmBindKeyAttributes.setKeyLength(recipientPublicKey.getModulus().bitLength());
-                tpmBindKeyAttributes.setMode("ECB");
-                tpmBindKeyAttributes.setPaddingMode("OAEP-TCPA"); // OAEP with the 4 byte literal 'TCPA' as the padding parameter.
-
-                // wrap the key; this is the content of cipher.key
-                response.setKey(DataBind.bind(cipherKey.getEncoded(), recipientPublicKey));
-                response.getDescriptor().setEncryption(tpmBindKeyAttributes);
-            } catch (Exception e) {
-                log.error("Cannot bind requested key", e);
-                response.getFaults().add(new KeyNotFound(keyRequest.getKeyId()));
-                return response;
-            }
-        } else {
-            log.debug("transferKey request for authorized user key transfer");
-            // attempt by authorized user
-            log.debug("Username: {}", keyRequest.getUsername());
-            // do we have a registered public key for the user?
-            UserRepository userRepository = new UserRepository();
-            UserFilterCriteria criteria = new UserFilterCriteria();
-            criteria.usernameEqualTo = keyRequest.getUsername();
-            UserCollection userCollection = userRepository.search(criteria);
-            if (userCollection.getUsers().isEmpty()) {
-                // it is an error to request a transfer for a user that isn't registered; we log the specifics but we return simply "key not found" so that attackers cannot use this to discover registered usernames
-                log.error("Username not found: {}", keyRequest.getUsername());
-                response.getFaults().add(new KeyNotFound(keyRequest.getKeyId()));
-                return response;
-            }
-            if (userCollection.getUsers().size() > 1) {
-                // it is an error to have multiple users registered under the same username
-                log.error("Multiple users found for username: {}", keyRequest.getUsername());
-                response.getFaults().add(new KeyNotFound(keyRequest.getKeyId()));
-                return response;
-            }
-            User user = userCollection.getUsers().get(0);
-            try {
-                if (user.getTransferKey() == null) {
-                    // user does not have a transfer key registered, so policy must allow "plaintext" transfers to authorized user or else we deny the request
-                    // XXX TODO
-                    log.error("User does not have transfer key");
-                    response.getFaults().add(new KeyNotFound(keyRequest.getKeyId()));
-                    return response;
-                } else {
-                    recipientPublicKey = (RSAPublicKey) user.getTransferKey();
-                    recipientPublicKeyAttributes = new CipherKeyAttributes();
-//                    recipientPublicKeyAttributes.setAlgorithm(recipientPublicKey.getAlgorithm()); // this would be "RSA", but see below where we set it to the factory's algorithm "RSA/ECB/OAEP...."
-                    recipientPublicKeyAttributes.setKeyId(keyRequest.getUsername());// XXX TODO  user's public key still needs an id...  we should be treating it like any other key.
-                    recipientPublicKeyAttributes.setKeyLength(recipientPublicKey.getModulus().bitLength()); // we should just have this in metadata
-//                    recipientPublicKeyAttributes.setKeyLength(envelope.geten);
-                    /*
-                     recipientPublicKeyAttributes.setAlgorithm(recipientPublicKey.getAlgorithm()); // "RSA"
-                     recipientPublicKeyAttributes.setKeyLength(recipientPublicKey.getModulus().bitLength()); // for example, 2048
-                     recipientPublicKeyAttributes.setMode("ECB"); // standard for wrapping a key with a public key since it's only one block
-                     recipientPublicKeyAttributes.setPaddingMode("OAEPWithSHA-256AndMGF1Padding"); // see RsaPublicKeyProtectedPemKeyEnvelopeFactory
-                     */
-
-                    RsaPublicKeyProtectedPemKeyEnvelopeFactory factory = new RsaPublicKeyProtectedPemKeyEnvelopeFactory(recipientPublicKey, recipientPublicKeyAttributes.getKeyId()); 
-                    SecretKey key = new SecretKeySpec(cipherKey.getEncoded(), cipherKey.getAlgorithm()); // algorithm like "AES"
-                    PemKeyEncryption envelope = factory.seal(key);
-                    
-                    recipientPublicKeyAttributes.setAlgorithm(factory.getAlgorithm()); // "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"   or we could split it up and set algorithm, mode, and paddingmode separately on the encryption attributes
-                    
-                    response.setKey(envelope.getDocument().getContent());
-                    response.getDescriptor().setEncryption(recipientPublicKeyAttributes);
-                }
-            } catch (CryptographyException | CertificateException e) {
-                log.error("Cannot load transfer key for user: {}", keyRequest.getUsername(), e);
-                response.getFaults().add(new KeyNotFound(keyRequest.getKeyId()));
-                return response;
-            }
-        }
-
-        // enforce policy: cannot wrap key with weaker key
-        if (!isProtectionAdequate(response, cipherKey, recipientPublicKeyAttributes)) {
-            //throw new IllegalArgumentException("Recipient key not adequate to protect secret key");
-            return response;
-        }
-
-
-        try {
-            // the key attributes of cipherKey but without the encoded key itself
-            CipherKeyAttributes keyAttributes = new CipherKeyAttributes();
-            keyAttributes.copyFrom(cipherKey);
-            response.getDescriptor().setContent(keyAttributes);
-
-            // integrity protection on the encrypted key and its plaintext attributes.... use HMAC-SHA256 for 128-bit security  (see NIST 800-57 table 3) 
-            // the two options are to use... 
-            // 1) the cipher key itself as the HMAC key for HMAC-SHA-256, protecting its encrypted form and metadata, or 
-            // 2) a key server private key to sign the encrypted form of the cipher key and the metadata.
-            // For Mystery Hill specifically we know the clients will not have the key server's public key on hand,
-            // so they wouldn't be able to verify the integrity using method #2. therefore we use the key itself with HMAC-SHA-256,
-            // even though the key length recommendations for HMAC-SHA-256 is a 256-bit key (twice the size of the cipher key
-            // which is likely to be 128 bits;  and if it was 256 bits then it would need HMAC-SHA-512 to protect and again it would
-            // be half the appropriate length).
-            // On the other hand, using the same key for integrity protection means an attacker could replace the entire package 
-            // (encrypted secret key and its metadata and integrity signature) but unlikely that an attacker can tamper with just the metadata.
-            IntegrityKeyAttributes integrityKeyAttributes = new IntegrityKeyAttributes();
-            integrityKeyAttributes.setAlgorithm("HMAC-SHA256");
-            integrityKeyAttributes.setKeyId(keyRequest.getKeyId()); // indicate we're using the same cipher key to generate the HMAC
-            integrityKeyAttributes.setKeyLength(cipherKey.getKeyLength());
-            integrityKeyAttributes.setManifest(Arrays.asList("cipher.key", "cipher.json"));
-            integrityKeyAttributes.set("signature", "integrity.sig"); // indicates in which file we are storing the HMAC signature;  we need to put it either here or in the links
-            response.getDescriptor().setIntegrity(integrityKeyAttributes);
-
-            // add links in the descriptor to the other content
-            ArrayList<Link> links = new ArrayList<>();
-            links.add(Link.build().rel("content").href("cipher.key").type("application/octet-stream"));
-            links.add(Link.build().rel("content-descriptor").href("cipher.json").type("application/json"));
-            links.add(Link.build().rel("signature").href("integrity.sig").type("application/octet-stream"));
-            response.getDescriptor().set("links", links);
-
-            // create cipher.json
-            String cipherJson = mapper.writeValueAsString(response.getDescriptor()); // describes the cipher key and its encryption/integrity information but does not include the cipher key itself 
-
-            // create integrity.sig
-            byte[] document = ByteArray.concat(cipherKey.getEncoded(), cipherJson.getBytes(Charset.forName("UTF-8"))); // this is what we're signing: the encrypted key + the metadata
-            byte[] signature = hmacSha256(cipherKey.getEncoded(), document);
-
-            // add the serialized json because that's what was actually signed; this prevents any issue with slightly different serialization by the caller
-            response.getExtensions().set("cipher.key", response.getKey());
-            response.getExtensions().set("cipher.json", cipherJson);
-            response.getExtensions().set("integrity.sig", signature);
-
-            log.info(KeyLogMarkers.TRANSFER_KEY, "Transferred key id: {}", keyRequest.getKeyId());
-            return response;
-        } catch (IOException | GeneralSecurityException e) {
-            throw new IllegalArgumentException("Unable to bind key", e);
-        }
-    }
-
-    private byte[] hmacSha256(byte[] key, byte[] document) throws NoSuchAlgorithmException, InvalidKeyException {
-        SecretKeySpec keySpec = new SecretKeySpec(key, "HmacSHA256");
-        Mac mac = Mac.getInstance("HmacSHA256"); // throws NoSuchAlgorithmException
-        mac.init(keySpec); // throws InvalidKeyException
-        return mac.doFinal(document);
-
+        response.getDescriptor().setContent(keyAttributes);
+        return response;
+        
     }
 
 //    @Override
@@ -527,7 +317,7 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
     @Override
     public RegisterKeyResponse registerKey(RegisterKeyRequest registerKeyRequest) {
         log.debug("registerKey");
-
+        
         KeyDescriptor descriptor = registerKeyRequest.getDescriptor();
         CipherKey cipherKey = new CipherKey();
         if (descriptor != null && descriptor.getContent() != null) {
@@ -536,22 +326,13 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             cipherKey.setKeyLength(descriptor.getContent().getKeyLength());
             cipherKey.setMode(descriptor.getContent().getMode());
             cipherKey.setPaddingMode(descriptor.getContent().getPaddingMode());
+            cipherKey.set("transferPolicy", descriptor.getContent().get("transferPolicy"));
+            cipherKey.set("transferLink", descriptor.getContent().get("transferLink"));
         }
 
         if (cipherKey.getKeyId() == null) {
             cipherKey.setKeyId(new UUID().toString());
         }
-        
-        if( cipherKey.get("transferPolicy") == null ) {
-            cipherKey.set("transferPolicy", "urn:intel:trustedcomputing:key-transfer-policy:require-trust-or-authorization");
-        }
-        try {
-        cipherKey.set("transferLink", getTransferLinkForKeyId(cipherKey.getKeyId()));
-        }
-        catch(MalformedURLException e) {
-            log.error("Caannot set transfer link for key", e);
-        }
-        
 
         if (descriptor != null && descriptor.getEncryption() != null) {
             // key is encrypted

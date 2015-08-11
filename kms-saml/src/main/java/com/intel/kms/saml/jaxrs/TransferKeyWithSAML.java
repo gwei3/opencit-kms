@@ -5,6 +5,7 @@
 package com.intel.kms.saml.jaxrs;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
 import com.intel.mtwilson.TrustAssertion;
@@ -14,14 +15,18 @@ import javax.ws.rs.Produces;
 import com.intel.dcsg.cpg.crypto.CryptographyException;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.extensions.Extensions;
+import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.mtwilson.util.archive.TarGzipBuilder;
 import com.intel.kms.api.KeyManager;
+import com.intel.kms.keystore.KeyManagerFactory;
+import com.intel.kms.keystore.RemoteKeyManager;
 import com.intel.kms.saml.api.fault.NotTrusted;
 import com.intel.kms.tpm.identity.jaxrs.TpmIdentityCertificateRepository;
 import com.intel.mtwilson.jaxrs2.Link;
 import com.intel.mtwilson.api.ApiException;
 import com.intel.mtwilson.api.ClientException;
+import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
@@ -61,19 +66,13 @@ import javax.ws.rs.core.Response;
 public class TransferKeyWithSAML {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransferKeyWithSAML.class);
-    private KeyManager keyRepository;
+    private KeyManager keyManager;
 
-    public TransferKeyWithSAML() {
-        /**
-         * get the key repository "driver" since there can be only one
-         * configured key repository: local directory, kmip, or barbican. it's a
-         * global setting.
-         */
-        keyRepository = Extensions.require(KeyManager.class);
-    }
-
-    public KeyManager getKeyRepository() {
-        return keyRepository;
+    public KeyManager getKeyManager() throws IOException {
+        if( keyManager == null ) {
+            keyManager = KeyManagerFactory.getKeyManager();
+        }
+        return keyManager;
     }
 
     /**
@@ -231,7 +230,7 @@ public class TransferKeyWithSAML {
                 wrappingKeyAttributes.setPaddingMode("OAEP-TCPA"); // indicates use of OAEP with 'TCPA' as the padding parameter
                 transferKeyRequest.set("recipientPublicKeyAttributes", wrappingKeyAttributes);
 
-                TransferKeyResponse transferKeyResponse = getKeyRepository().transferKey(transferKeyRequest);
+                TransferKeyResponse transferKeyResponse = getKeyManager().transferKey(transferKeyRequest);
 
                 return transferKeyResponse;
             } else {

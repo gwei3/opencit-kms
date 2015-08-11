@@ -106,7 +106,7 @@ public class Keys extends AbstractJsonapiResource<Key, KeyCollection, KeyFilterC
         keyRequest.setKeyId(keyId);
         keyRequest.setUsername(getLoginUsername(httpServletRequest));
         try {
-        return KeyRepository.getKeyManager().transferKey(keyRequest);
+        return getRepository().getKeyManager().transferKey(keyRequest);
         }
         catch(Exception e) {
             TransferKeyResponse response = new TransferKeyResponse();
@@ -125,7 +125,7 @@ public class Keys extends AbstractJsonapiResource<Key, KeyCollection, KeyFilterC
         TransferKeyRequest transferKeyRequest = new TransferKeyRequest();
         transferKeyRequest.setKeyId(keyId);
         transferKeyRequest.setUsername(getLoginUsername(httpServletRequest));
-        TransferKeyResponse transferKeyResponse = KeyRepository.getKeyManager().transferKey(transferKeyRequest);
+        TransferKeyResponse transferKeyResponse = getRepository().getKeyManager().transferKey(transferKeyRequest);
         Pem pem = PemUtils.fromTransferKeyResponse(transferKeyResponse.getKey(), transferKeyResponse.getDescriptor());
         return pem.toString();
     }

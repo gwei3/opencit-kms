@@ -13,6 +13,7 @@ import com.intel.dcsg.cpg.crypto.file.PemKeyEncryptionUtil;
 import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.io.pem.Pem;
+import com.intel.dcsg.cpg.validation.ValidationException;
 import com.intel.kms.api.CreateKeyRequest;
 import com.intel.kms.api.CreateKeyResponse;
 import com.intel.kms.api.DeleteKeyRequest;
@@ -26,6 +27,8 @@ import com.intel.kms.api.RegisterKeyRequest;
 import com.intel.kms.api.RegisterKeyResponse;
 import com.intel.kms.api.SearchKeyAttributesRequest;
 import com.intel.kms.api.SearchKeyAttributesResponse;
+import com.intel.kms.keystore.KeyManagerFactory;
+import com.intel.kms.keystore.RemoteKeyManager;
 import com.intel.kms.ws.v2.api.Key;
 import com.intel.kms.ws.v2.api.KeyCollection;
 import com.intel.kms.ws.v2.api.KeyFilterCriteria;
@@ -48,29 +51,20 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KeyRepository.class);
     private ObjectMapper mapper;
-    private static KeyManager keyManager;
-    private static Configuration configuration;
+    private KeyManager keyManager;
 
-    public static KeyManager getKeyManager() throws IOException {
-        if( configuration == null ) {
-            configuration = ConfigurationFactory.getConfiguration();
-        }
-        if (keyManager == null) {
-            /**
-             * get the key repository "driver" since there can be only one
-             * configured key repository: local directory, kmip, or barbican.
-             * it's a global setting.
-             */
-            //keyManager = Extensions.require(KeyManager.class);
-            keyManager = Plugins.findByAttribute(KeyManager.class, "class.name", configuration.get("key.manager.provider"));
-        }
-        return keyManager;
-    }
 
     public KeyRepository() {
         super();
         mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    }
+    
+    public KeyManager getKeyManager() throws IOException {
+        if( keyManager == null ) {
+            keyManager = KeyManagerFactory.getKeyManager();
+        }
+        return keyManager;
     }
 
     @Override
@@ -174,11 +168,17 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
             CreateKeyRequest createKeyRequest = new CreateKeyRequest();
             copy(item, createKeyRequest);
             CreateKeyResponse createKeyResponse = getKeyManager().createKey(createKeyRequest);
-            copy(createKeyResponse.getData().get(0), item);
-            log.debug("createKey response: {}", mapper.writeValueAsString(createKeyResponse));
-            log.debug("Key:Create - Created the Key {} successfully.", item.getId().toString());
+            if( !createKeyResponse.getFaults().isEmpty() ) {
+                log.debug("createKeyResponse: {}", mapper.writeValueAsString(createKeyResponse));
+                throw new ValidationException(createKeyResponse.getFaults());
+            }
+            if( createKeyResponse.getData().size() > 0 ) {
+                copy(createKeyResponse.getData().get(0), item);
+                log.debug("createKey response: {}", mapper.writeValueAsString(createKeyResponse));
+                log.debug("Key:Create - Created the Key {} successfully.", item.getId().toString());
+            }
         } catch (Exception ex) {
-            log.error("Key:Create - Error during role creation.", ex);
+            log.error("Key:Create - Error during key creation.", ex);
             throw new RepositoryCreateException(ex, locator);
         }
     }
@@ -275,7 +275,7 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
         registerKeyRequest.setKey(pem.getContent());
         registerKeyRequest.setDescriptor(descriptor);
         try {
-        RegisterKeyResponse registerKeyResponse = KeyRepository.getKeyManager().registerKey(registerKeyRequest);
+        RegisterKeyResponse registerKeyResponse = getKeyManager().registerKey(registerKeyRequest);
 
         KeyCollection keyCollection = new KeyCollection();
         for (KeyAttributes keyAttributes : registerKeyResponse.getData()) {

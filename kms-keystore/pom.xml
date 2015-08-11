@@ -46,6 +46,11 @@
             <artifactId>kms-keystore-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-user</artifactId>
+            <version>${project.version}</version>
+        </dependency>
       
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
@@ -78,6 +83,10 @@
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-tls-policy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-tpm12</artifactId>
         </dependency>
 	<dependency>
 		<groupId>com.intel.mtwilson.util</groupId>
