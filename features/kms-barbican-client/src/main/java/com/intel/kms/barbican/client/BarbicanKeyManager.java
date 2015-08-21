@@ -34,7 +34,7 @@ import com.intel.kms.barbican.client.util.BarbicanApiUtil;
 import com.intel.kms.keystore.directory.JacksonFileRepository;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
-import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.core.PasswordVaultFactory;
 import com.intel.mtwilson.util.crypto.key2.CipherKey;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;

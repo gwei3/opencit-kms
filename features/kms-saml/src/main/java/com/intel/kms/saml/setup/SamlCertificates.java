@@ -9,7 +9,7 @@ import com.intel.dcsg.cpg.crypto.Sha256Digest;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
 import com.intel.dcsg.cpg.io.FileResource;
 import com.intel.mtwilson.Folders;
-import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.core.PasswordVaultFactory;
 import com.intel.mtwilson.setup.AbstractSetupTask;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
 import com.intel.mtwilson.util.crypto.keystore.PublicKeyX509CertificateStore;

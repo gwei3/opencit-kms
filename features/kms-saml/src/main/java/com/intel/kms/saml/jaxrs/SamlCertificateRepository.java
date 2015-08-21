@@ -20,7 +20,7 @@ import com.intel.kms.saml.api.fault.PasswordVaultEntryNotFound;
 import com.intel.kms.saml.api.fault.PasswordVaultUnavailable;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
-import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.core.PasswordVaultFactory;
 import com.intel.mtwilson.jaxrs2.server.resource.DocumentRepository;
 import com.intel.mtwilson.pipe.Filter;
 import com.intel.mtwilson.pipe.FilterPipe;

@@ -11,7 +11,6 @@
     <module>kms-barbican-server</module>
 	<module>kms-barbican-client</module>
     <module>kms-client-jaxrs2</module>
-    <module>kms-html5</module>
     <module>kms-integrity</module>
     <module>kms-jsonapi</module>
     <module>kms-jsonapi-keys</module>

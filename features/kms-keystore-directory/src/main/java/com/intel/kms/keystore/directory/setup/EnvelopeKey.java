@@ -10,7 +10,7 @@ import com.intel.dcsg.cpg.net.NetUtils;
 import com.intel.dcsg.cpg.x509.X509Builder;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.kms.keystore.directory.EnvelopeKeyManager;
-import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.core.PasswordVaultFactory;
 import com.intel.mtwilson.Folders;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
 import com.intel.mtwilson.setup.AbstractSetupTask;

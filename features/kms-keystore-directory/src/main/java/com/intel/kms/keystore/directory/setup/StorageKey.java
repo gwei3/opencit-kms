@@ -5,7 +5,7 @@
 package com.intel.kms.keystore.directory.setup;
 
 import com.intel.dcsg.cpg.crypto.RandomUtil;
-import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.core.PasswordVaultFactory;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.setup.AbstractSetupTask;
 import java.io.File;

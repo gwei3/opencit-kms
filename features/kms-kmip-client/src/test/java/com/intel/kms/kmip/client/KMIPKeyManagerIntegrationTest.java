@@ -13,10 +13,10 @@ import static com.intel.kms.kmip.client.KMIPKeyManager.KMS_STORAGE_KEYSTORE_FILE
 import static com.intel.kms.kmip.client.KMIPKeyManager.KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TARGETHOSTNAME;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
-import static com.intel.mtwilson.configuration.PasswordVaultFactory.PASSWORD_VAULT_FILE_PROPERTY;
-import static com.intel.mtwilson.configuration.PasswordVaultFactory.PASSWORD_VAULT_KEY_PROPERTY;
-import static com.intel.mtwilson.configuration.PasswordVaultFactory.PASSWORD_VAULT_KEY_PROVIDER_PROPERTY;
-import static com.intel.mtwilson.configuration.PasswordVaultFactory.PASSWORD_VAULT_TYPE_PROPERTY;
+import static com.intel.mtwilson.core.PasswordVaultFactory.PASSWORD_VAULT_FILE_PROPERTY;
+import static com.intel.mtwilson.core.PasswordVaultFactory.PASSWORD_VAULT_KEY_PROPERTY;
+import static com.intel.mtwilson.core.PasswordVaultFactory.PASSWORD_VAULT_KEY_PROVIDER_PROPERTY;
+import static com.intel.mtwilson.core.PasswordVaultFactory.PASSWORD_VAULT_TYPE_PROPERTY;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.commons.configuration.BaseConfiguration;

@@ -44,7 +44,7 @@ import com.intel.kms.api.fault.KeyNotFound;
 import com.intel.kms.api.fault.KeyTransferProtectionNotAcceptable;
 import com.intel.kms.keystore.directory.setup.EnvelopeKey;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
-import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.core.PasswordVaultFactory;
 import com.intel.mtwilson.jaxrs2.Link;
 import com.intel.mtwilson.jaxrs2.provider.JacksonObjectMapperProvider;
 import com.intel.mtwilson.util.crypto.key2.CipherKey;
