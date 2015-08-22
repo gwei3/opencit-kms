@@ -103,8 +103,8 @@ if [ -z "$JAVA_CMD" ]; then
   fi
 fi
 
-# generated variables
-JARS=$(ls -1 $KMS_JAVA/*.jar)
+# generated variables; look for common jars and feature-specific jars
+JARS=$(ls -1 $KMS_JAVA/*.jar $KMS_HOME/features/*/java/*.jar)
 CLASSPATH=$(echo $JARS | tr ' ' ':')
 
 # the classpath is long and if we use the java -cp option we will not be

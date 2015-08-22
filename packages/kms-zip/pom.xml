@@ -140,6 +140,12 @@
             <artifactId>mtwilson-launcher</artifactId>
         </dependency>
         
+        <dependency>
+    <groupId>com.intel.mtwilson.core</groupId>
+    <artifactId>mtwilson-core-feature-inventory</artifactId>
+    <version>0.1-SNAPSHOT</version>
+        </dependency>
+        
         <!--
         also a transitive dependency from kms-keystore and kms-jetty9
         -->
