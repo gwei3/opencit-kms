@@ -16,7 +16,7 @@ import com.intel.dcsg.cpg.io.FileResource;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.dcsg.cpg.net.NetUtils;
 import com.intel.kmsproxy.MtWilsonClientConfiguration;
-import com.intel.mtwilson.configuration.PasswordVaultFactory;
+import com.intel.mtwilson.core.PasswordVaultFactory;
 import com.intel.mtwilson.setup.AbstractSetupTask;
 import com.intel.mtwilson.setup.faults.ConfigurationKeyNotSet;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;

@@ -54,6 +54,10 @@
             <artifactId>mtwilson-configuration</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.intel.mtwilson.integration</groupId>
+            <artifactId>mtwilson-password-vault</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-setup</artifactId>
         </dependency>
