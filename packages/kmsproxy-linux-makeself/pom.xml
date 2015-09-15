@@ -24,6 +24,7 @@
                 <artifactId>kmsproxy-zip</artifactId>
                 <version>0.1-SNAPSHOT</version>
                 <type>zip</type>
+				<classifier>application</classifier>
       </dependency>
     <dependency>
       <groupId>com.intel.mtwilson.linux</groupId>
