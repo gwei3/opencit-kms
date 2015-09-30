@@ -201,7 +201,7 @@ public class KeyRepository implements DocumentRepository<Key, KeyCollection, Key
         to.setAlgorithm(from.getAlgorithm());
         to.setDescription(from.getDescription());
         to.setDigestAlgorithm(from.getDigestAlgorithm());
-        to.setId(UUID.valueOf(from.getKeyId().toString()));
+        to.setId(UUID.valueOf(from.getKeyId()));
         to.setKeyLength(from.getKeyLength());
         to.setMode(from.getMode());
         to.setPaddingMode(from.getPaddingMode());
