@@ -47,7 +47,15 @@ public class MtWilsonV1Client implements SecurityAssertionProvider {
         String mtwilsonUsername = clientConfig.getEndpointUsername();
         log.debug("MtWilson Username: {}", mtwilsonUsername);
         Password mtwilsonPassword = clientConfig.getKeystorePassword();
+        if( mtwilsonPassword == null ) {
+            log.warn("MtWilson Password is not set");
+            mtwilsonPassword = new Password();
+        }
         URL mtwilsonUrl = clientConfig.getEndpointURL();
+        if( mtwilsonUrl == null ) {
+            log.warn("MtWilson URL is not set");
+            throw new IllegalArgumentException("Mt Wilson URL is required");
+        }
         log.debug("MtWilson URL: {}", mtwilsonUrl);
         String mtwilsonTlsCertSha1 = configuration.get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA1);
         /**

@@ -317,6 +317,7 @@ public class MtWilsonClient extends AbstractSetupTask {
      * @param byteArray
      * @return
      */
+    /*
     private char[] toCharArray(byte[] byteArray) {
         char[] charArray = new char[byteArray.length];
         for (int i = 0; i < byteArray.length; i++) {
@@ -324,4 +325,5 @@ public class MtWilsonClient extends AbstractSetupTask {
         }
         return charArray;
     }
+    */
 }

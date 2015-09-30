@@ -87,9 +87,11 @@ public class SamlCertificateRepository implements DocumentRepository<Certificate
         }
     }
 
+    /*
     private File getSamlCertificatesFile() {
         return keystoreFile;
     }
+    */
 
     public static class JXPathQuery<T> implements Filter<X509Certificate> {
 

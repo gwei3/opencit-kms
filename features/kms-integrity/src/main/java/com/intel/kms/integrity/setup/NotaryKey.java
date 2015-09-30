@@ -58,7 +58,7 @@ public class NotaryKey extends AbstractSetupTask {
     private String keystoreType;
     private String keystorePath;
     private File keystoreFile;
-    private PrivateKeyStore keystore;
+//    private PrivateKeyStore keystore;
     private String keystorePasswordAlias;
     private Password keystorePassword;
     private String dn;
@@ -71,7 +71,7 @@ public class NotaryKey extends AbstractSetupTask {
         keystorePath = notary.getKeystorePath();
         keystoreType = notary.getKeystoreType();
         keystorePasswordAlias = notary.getKeystorePasswordAlias();
-        keystore = notary.getKeystore(); // will be null if keystore file does not exist or password is not set or password is incorrect
+//        keystore = notary.getKeystore(); // will be null if keystore file does not exist or password is not set or password is incorrect
 
         keystoreFile = new File(keystorePath);
 
@@ -153,7 +153,7 @@ public class NotaryKey extends AbstractSetupTask {
         }
 
         try (NotaryKeyManager notaryKeyManager = new NotaryKeyManager(getConfiguration())) {
-            if (notaryKeyManager.getKeystore().isEmpty()) {
+            if (notaryKeyManager.getKeystore() != null && notaryKeyManager.getKeystore().isEmpty()) {
                 // create the keypair
                 KeyPair keypair = RsaUtil.generateRsaKeyPair(2048);
                 X509Builder builder = X509Builder.factory()
@@ -257,6 +257,7 @@ public class NotaryKey extends AbstractSetupTask {
      * @param byteArray
      * @return
      */
+    /*
     private char[] toCharArray(byte[] byteArray) {
         char[] charArray = new char[byteArray.length];
         for (int i = 0; i < byteArray.length; i++) {
@@ -264,4 +265,5 @@ public class NotaryKey extends AbstractSetupTask {
         }
         return charArray;
     }
+    */
 }

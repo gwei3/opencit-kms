@@ -68,10 +68,15 @@ public class UserRepository implements DocumentRepository<User, UserCollection, 
     public List<UUID> listUserIds() {
         ArrayList<UUID> list = new ArrayList<>();
         File[] userDirectories = directory.listFiles(new DirectoryFilter());
+        if( userDirectories == null ) {
+            log.warn("Cannot read directory");
+        }
+        else {
         for (File userDirectory : userDirectories) {
             if (UUID.isValid(userDirectory.getName())) {
                 list.add(UUID.valueOf(userDirectory.getName()));
             }
+        }
         }
         return list;
     }

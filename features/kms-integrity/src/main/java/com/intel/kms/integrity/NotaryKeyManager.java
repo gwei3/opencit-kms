@@ -57,6 +57,7 @@ public class NotaryKeyManager implements Closeable {
             }
         }
         if( keystorePassword == null ) {
+            log.warn("Notary key store not initialized because password was not set");
             this.keystore = null;
         }
         else {
