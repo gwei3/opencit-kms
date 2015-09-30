@@ -401,11 +401,16 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
         SearchKeyAttributesResponse response = new SearchKeyAttributesResponse();
         File directory = new File(Folders.repository("keys"));
         String[] keyIds = directory.list();
+        if( keyIds == null ) {
+            log.warn("Unable to read keys directory");
+        }
+        else {
         for (String keyId : keyIds) {
             CipherKey key = repository.retrieve(keyId);
             KeyAttributes keyAttributes = new KeyAttributes();
             keyAttributes.copyFrom(key);
             response.getData().add(keyAttributes);
+        }
         }
         return response;
 
@@ -428,7 +433,9 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
         return keyAttributesResponse;
     }
 
+    /*
     private Configuration getConfiguration() {
         return configuration;
     }
+    */
 }
