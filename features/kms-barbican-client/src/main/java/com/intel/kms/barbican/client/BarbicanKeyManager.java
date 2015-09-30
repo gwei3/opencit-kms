@@ -108,7 +108,7 @@ public class BarbicanKeyManager implements KeyManager {
         String keystorePath = configuration.get(KMS_STORAGE_KEYSTORE_FILE_PROPERTY, Folders.configuration() + File.separator + "storage.jck");
         String keystorePasswordAlias = configuration.get(KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY, "storage_keystore");
         try (PasswordKeyStore passwordVault = PasswordVaultFactory.getPasswordKeyStore(configuration)) {
-            List<String> aliases = passwordVault.aliases();
+//            List<String> aliases = passwordVault.aliases();
             if (passwordVault.contains(keystorePasswordAlias)) {
                 Password keystorePassword = passwordVault.get(keystorePasswordAlias);
                 File keystoreFile = new File(keystorePath);
@@ -152,6 +152,10 @@ public class BarbicanKeyManager implements KeyManager {
             //Delete the Barbican key
             DeleteKeyRequest deleteKeyRequest = new DeleteKeyRequest(transferKeyResponse.getDescriptor().getContent().getKeyId());
             DeleteKeyResponse deleteSecret = barbicanHttpClient.deleteSecret(deleteKeyRequest);
+            if( !deleteSecret.getFaults().isEmpty() ) {
+                log.error("Failed to delete original key material from barbican");
+                response.getFaults().addAll(deleteSecret.getFaults());
+            }
             response = BarbicanApiUtil.mapRegisterKeyResponseToCreateKeyResponse(registerKeyResponse);
         } catch (BarbicanClientException ex) {
             faults.add(new Fault(ex, "Error occurred while create key in Barbican"));
@@ -182,7 +186,7 @@ public class BarbicanKeyManager implements KeyManager {
         try {
             TransferKeyResponse transferKeyResponse = new TransferKeyResponse();
             transferKeyResponse.setKey(request.getKey());
-            CipherKeyAttributes content = null;
+            CipherKeyAttributes content;
             if (request.getDescriptor() == null) {
                 KeyDescriptor descriptor = new KeyDescriptor();
                 content = new CipherKeyAttributes();
@@ -306,11 +310,16 @@ public class BarbicanKeyManager implements KeyManager {
         */
         SearchKeyAttributesResponse response = new SearchKeyAttributesResponse();
         String[] keyIds = keysDirectory.list();
+        if( keyIds == null ) {
+            log.warn("Unable to read keys directory");
+        }
+        else {
         for (String keyId : keyIds) {
             CipherKey key = repository.retrieve(keyId);
             KeyAttributes keyAttributes = new KeyAttributes();
             keyAttributes.copyFrom(key);
             response.getData().add(keyAttributes);
+        }
         }
         return response;        
     }

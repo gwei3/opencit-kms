@@ -179,7 +179,11 @@ public class KMIPKeyManager implements KeyManager {
 			// Delete the kmip key
 			DeleteKeyRequest deleteKeyRequest = new DeleteKeyRequest(
 					transferKeyResponse.getDescriptor().getContent().getKeyId());
-			kmipClient.deleteSecret(deleteKeyRequest);
+			DeleteKeyResponse deleteResponse = kmipClient.deleteSecret(deleteKeyRequest);
+            if( !deleteResponse.getFaults().isEmpty() ) {
+                log.error("Failed to delete original key material from kmip");
+                response.getFaults().addAll(deleteResponse.getFaults());
+            }            
 			response = KMIPApiUtil
 					.mapRegisterKeyResponseToCreateKeyResponse(registerKeyResponse);
 		} catch (KMIPClientException ex) {
@@ -323,11 +327,17 @@ public class KMIPKeyManager implements KeyManager {
 			SearchKeyAttributesRequest searchKeyAttributesRequest) {
         SearchKeyAttributesResponse response = new SearchKeyAttributesResponse();
         String[] keyIds = keysDirectory.list();
-        for (String keyId : keyIds) {
-            CipherKey key = repository.retrieve(keyId);
-            KeyAttributes keyAttributes = new KeyAttributes();
-            keyAttributes.copyFrom(key);
-            response.getData().add(keyAttributes);
+        if( keyIds == null ) {
+            log.warn("Unable to read keys directory");
+        }
+        else {
+            for (String keyId : keyIds) {
+                CipherKey key = repository.retrieve(keyId);
+                KeyAttributes keyAttributes = new KeyAttributes();
+                keyAttributes.copyFrom(key);
+                keyAttributes.set("encoded", null); // "encoded" is from CipherKey, this avoid leaking the key material
+                response.getData().add(keyAttributes);
+            }
         }
         return response;        
 	}
@@ -361,6 +371,11 @@ public class KMIPKeyManager implements KeyManager {
 		CipherKey storageKey;
 		try {
 			storageKey = getCurrentStorageKey();
+            if( storageKey == null ) {
+                faults.add(new Fault("Storage key not available"));
+                registerKeyResponse.getFaults().addAll(faults);
+                return registerKeyResponse;
+            }
 		} catch (KeyStoreException ex) {
 			faults.add(new Fault(ex, "Unable to get the storage key "));
 			registerKeyResponse.getFaults().addAll(faults);
