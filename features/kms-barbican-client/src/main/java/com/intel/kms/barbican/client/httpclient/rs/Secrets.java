@@ -92,7 +92,7 @@ public class Secrets extends BarbicanOperation {
     }
 
     public ListSecretsResponse searchSecrets(ListSecretsRequest listSecretsRequest)  {
-		ListSecretsResponse listSecretsResponse = null;
+		ListSecretsResponse listSecretsResponse;
         LOG.debug("searchSecrets: {}", getTarget().getUri().toString());
         WebTarget path = getTarget().path("/v1/secrets");
         path.queryParam("limit", listSecretsRequest.limit);

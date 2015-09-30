@@ -29,7 +29,7 @@ public class Orders extends BarbicanOperation {
     }
 
     public CreateOrderResponse createOrderRequest(CreateOrderRequest createOrderRequest) {
-        CreateOrderResponse createOrderResponse = null;
+        CreateOrderResponse createOrderResponse;
         LOG.debug("createOrderRequest: {}", getTarget().getUri().toString());
         createOrderResponse = getTarget().path("/v1/orders").request().
                 header("X-Project-Id", xProjectID).
