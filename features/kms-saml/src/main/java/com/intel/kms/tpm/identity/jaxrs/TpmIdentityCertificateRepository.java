@@ -83,9 +83,11 @@ public class TpmIdentityCertificateRepository implements DocumentRepository<Cert
         }
     }
 
+    /*
     private File getTpmIdentityCertificatesFile() {
         return keystoreFile;
     }
+    */
 
     public static class JXPathQuery<T> implements Filter<X509Certificate> {
 
