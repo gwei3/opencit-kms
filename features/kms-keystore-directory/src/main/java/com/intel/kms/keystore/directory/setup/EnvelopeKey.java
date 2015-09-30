@@ -241,6 +241,7 @@ public class EnvelopeKey extends AbstractSetupTask {
      * @param byteArray
      * @return
      */
+    /*
     private char[] toCharArray(byte[] byteArray) {
         char[] charArray = new char[byteArray.length];
         for (int i = 0; i < byteArray.length; i++) {
@@ -248,4 +249,5 @@ public class EnvelopeKey extends AbstractSetupTask {
         }
         return charArray;
     }
+    */
 }
