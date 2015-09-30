@@ -277,14 +277,15 @@ public class TransferKeyWithSAML {
     // create index.html with entry point link to integrity.json (verify package) and cipher.json (how to decrypt cipher.key)
     // TODO: use a template language, like StringTemplate
     private String createIndexHtml(TransferKeyResponse transferKeyResponse) {
-        String html = "<!DOCTYPE html><html><head>";
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head>");
         if (transferKeyResponse.getDescriptor().get("links") != null) {
             for (Link link : (List<Link>) transferKeyResponse.getDescriptor().get("links")) {
-                html += "<link rel=\"" + link.getRel() + "\" href=\"" + link.getHref() + "\" type=\"" + link.getType() + "\">";
+                html.append(String.format("<link rel=\"%s\" href=\"%s\" type=\"%s\">", link.getRel(), link.getHref(), link.getType()));
             }
         }
-        html += "</head></html>";
-        return html;
+        html.append("</head></html>");
+        return html.toString();
     }
 
     private Pem createPemFromTransferKeyResponse(TransferKeyResponse transferKeyResponse) {
