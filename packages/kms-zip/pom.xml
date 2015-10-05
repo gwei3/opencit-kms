@@ -256,8 +256,8 @@
         </dependency>
         -->
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-login-token</artifactId>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-login-token</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         
