@@ -235,23 +235,10 @@ register_startup_script $KMS_HOME/bin/kms.sh kms
 if [ -z "$KMS_NOSETUP" ]; then
 
   # the master password is required
+  # if already user provided we assume user will also provide later for restarts
+  # otherwise, we generate and store the password
   if [ -z "$KMS_PASSWORD" ]; then
-    echo_failure "Master password required in environment variable KMS_PASSWORD"
-    echo 'To generate a new master password, run the following command:
-
-  KMS_PASSWORD=$(kms generate-password) && echo KMS_PASSWORD=$KMS_PASSWORD
-
-The master password must be stored in a safe place, and it must
-be exported in the environment for all other kms commands to work.
-
-LOSS OF MASTER PASSWORD WILL RESULT IN LOSS OF PROTECTED KEYS AND RELATED DATA
-
-After you set KMS_PASSWORD, run the following command to complete installation:
-
-  kms setup
-
-'
-    exit 1
+    kms generate-password > $KMS_HOME/.kms_password
   fi
 
   kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null

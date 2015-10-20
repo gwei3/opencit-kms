@@ -74,7 +74,13 @@ if [ -f "$KMS_HOME/bin/functions.sh" ]; then
   . $KMS_HOME/bin/functions.sh
 fi
 
+
 ###################################################################################################
+
+# stored master password
+if [ -z "$KMS_PASSWORD" ] && [ -f $KMS_HOME/.kms_password ]; then
+  export KMS_PASSWORD=$(cat $KMS_HOME/.kms_password)
+fi
 
 # all other variables with defaults
 KMS_HTTP_LOG_FILE=${KMS_HTTP_LOG_FILE:-$KMS_LOGS/http.log}

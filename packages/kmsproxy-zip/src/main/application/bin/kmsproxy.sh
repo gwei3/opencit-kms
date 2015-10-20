@@ -80,6 +80,11 @@ fi
 
 ###################################################################################################
 
+# stored master password
+if [ -z "$KMSPROXY_PASSWORD" ] && [ -f $KMSPROXY_HOME/.kmsproxy_password ]; then
+  export KMSPROXY_PASSWORD=$(cat $KMSPROXY_HOME/.kmsproxy_password)
+fi
+
 # all other variables with defaults
 KMSPROXY_HTTP_LOG_FILE=${KMSPROXY_HTTP_LOG_FILE:-$KMSPROXY_LOGS/http.log}
 JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
