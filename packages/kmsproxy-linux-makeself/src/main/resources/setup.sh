@@ -247,7 +247,7 @@ register_startup_script $KMSPROXY_HOME/bin/kmsproxy.sh kmsproxy
 if [ -z "$KMSPROXY_NOSETUP" ]; then
 
   # the master password is required
-  if [ -z "$KMSPROXY_PASSWORD" ]; then
+  if [ -z "$KMSPROXY_PASSWORD" ] && [ ! -f $KMSPROXY_HOME/.kmsproxy_password ]; then
     kmsproxy generate-password > $KMSPROXY_HOME/.kmsproxy_password
   fi
 

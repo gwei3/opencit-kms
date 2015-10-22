@@ -237,7 +237,7 @@ if [ -z "$KMS_NOSETUP" ]; then
   # the master password is required
   # if already user provided we assume user will also provide later for restarts
   # otherwise, we generate and store the password
-  if [ -z "$KMS_PASSWORD" ]; then
+  if [ -z "$KMS_PASSWORD" ] && [ ! -f $KMS_HOME/.kms_password ]; then
     kms generate-password > $KMS_HOME/.kms_password
   fi
 
