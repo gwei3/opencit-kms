@@ -224,9 +224,17 @@ kms_stop() {
 kms_uninstall() {
     remove_startup_script kms
 	rm -f /usr/local/bin/kms
-    rm -rf /opt/kms
-    groupdel kms > /dev/null 2>&1
-    userdel kms > /dev/null 2>&1
+    if [ -z "$KMS_HOME" ]; then
+      echo_failure "Cannot uninstall because KMS_HOME is not set"
+      return 1
+    fi
+    if [ "$1" == "--purge" ]; then
+      rm -rf $KMS_HOME
+    else
+      rm -rf $KMS_HOME/bin $KMS_HOME/java $KMS_HOME/features
+    fi
+    groupdel $KMS_USERNAME > /dev/null 2>&1
+    userdel $KMS_USERNAME > /dev/null 2>&1
 }
 
 print_help() {

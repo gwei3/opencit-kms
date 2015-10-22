@@ -227,9 +227,17 @@ kmsproxy_stop() {
 kmsproxy_uninstall() {
     remove_startup_script kmsproxy
 	rm -f /usr/local/bin/kmsproxy
-    rm -rf /opt/kmsproxy
-    groupdel kmsproxy > /dev/null 2>&1
-    userdel kmsproxy > /dev/null 2>&1
+    if [ -z "$KMSPROXY_HOME" ]; then
+      echo_failure "Cannot uninstall because KMSPROXY_HOME is not set"
+      return 1
+    fi
+    if [ "$1" == "--purge" ]; then
+      rm -rf $KMSPROXY_HOME
+    else
+      rm -rf $KMSPROXY_HOME/bin $KMSPROXY_HOME/java $KMSPROXY_HOME/features
+    fi
+    groupdel $KMSPROXY_USERNAME > /dev/null 2>&1
+    userdel $KMSPROXY_USERNAME > /dev/null 2>&1
 }
 
 print_help() {
