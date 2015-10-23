@@ -241,7 +241,12 @@ fi
 
 
 # register linux startup script
-register_startup_script $KMSPROXY_HOME/bin/kmsproxy.sh kmsproxy
+if [ "$KMSPROXY_USERNAME" == "root" ]; then
+  register_startup_script $KMSPROXY_HOME/bin/kmsproxy.sh kmsproxy
+else
+  echo '@reboot /opt/kmsproxy/bin/kmsproxy.sh start' > $KMSPROXY_CONFIGURATION/crontab
+  crontab -u $KMSPROXY_USERNAME -l | cat - $KMSPROXY_CONFIGURATION/crontab | crontab -u $KMSPROXY_USERNAME -
+fi
 
 # setup the kmsproxy, unless the NOSETUP variable is defined
 if [ -z "$KMSPROXY_NOSETUP" ]; then

@@ -230,7 +230,13 @@ fi
 
 
 # register linux startup script
-register_startup_script $KMS_HOME/bin/kms.sh kms
+if [ "$KMS_USERNAME" == "root" ]; then
+  register_startup_script $KMS_HOME/bin/kms.sh kms
+else
+  echo '@reboot /opt/kms/bin/kms.sh start' > $KMS_CONFIGURATION/crontab
+  crontab -u $KMS_USERNAME -l | cat - $KMS_CONFIGURATION/crontab | crontab -u $KMS_USERNAME -
+fi
+
 # setup the kms, unless the NOSETUP variable is defined
 if [ -z "$KMS_NOSETUP" ]; then
 
