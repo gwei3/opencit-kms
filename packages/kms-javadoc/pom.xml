@@ -56,28 +56,8 @@
   </build>
 
 
+		<!--  dependencies without java code are commented out because they break the javadoc plugin -->
     <dependencies>
-	<!-- following dependencies are commented out because they are not strictly part of kms and javadocs already available in mtwilson -->
-	<!--
-        <dependency>
-            <groupId>com.intel.mtwilson.integration</groupId>
-            <artifactId>mtwilson-launcher</artifactId>
-            <version>${mtwilson.version}</version>
-        </dependency>
-		-->
-		<!-- following dependencies are commented out because they don't have java code and this breaks the javadoc plugin -->
-		<!--
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-launcher</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-html5</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-        -->
 		<!--
 		also a transitive dependency from kms-keystore and kms-jetty9
 		-->
@@ -87,8 +67,8 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-jetty9</artifactId>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-jetty9</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>

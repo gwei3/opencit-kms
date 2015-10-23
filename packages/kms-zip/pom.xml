@@ -2,31 +2,33 @@
     <modelVersion>4.0.0</modelVersion>
 
 
+	<groupId>com.intel.mtwilson.kms</groupId>
     <artifactId>kms-zip</artifactId>
+	<version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>Key management server</description>
     <parent>
-		<groupId>com.intel.mtwilson.kms</groupId>
-		<artifactId>kms-maven-package-zip</artifactId>
-		<version>0.1-SNAPSHOT</version>
-		<relativePath />
+        <groupId>com.intel.mtwilson.maven</groupId>
+        <artifactId>mtwilson-core-application-zip</artifactId>
+        <version>3.0-SNAPSHOT</version>
+        <relativePath/>
     </parent>
 
-<properties>
-   <build.timestamp>${maven.build.timestamp}</build.timestamp>
-   <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss.SSSZ</maven.build.timestamp.format>
-   <!-- format examples, see http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html for complete documentation:
-"EEE, d MMM yyyy HH:mm:ss Z"	Wed, 4 Jul 2001 12:08:56 -0700
-"yyyy-MM-dd'T'HH:mm:ss.SSSZ"	2001-07-04T12:08:56.235-0700   
-   -->
-</properties>
+    <properties>
+        <build.timestamp>${maven.build.timestamp}</build.timestamp>
+        <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss.SSSZ</maven.build.timestamp.format>
+        <!-- format examples, see http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html for complete documentation:
+     "EEE, d MMM yyyy HH:mm:ss Z"	Wed, 4 Jul 2001 12:08:56 -0700
+     "yyyy-MM-dd'T'HH:mm:ss.SSSZ"	2001-07-04T12:08:56.235-0700   
+        -->
+    </properties>
 
     <build>
         <resources>
-<resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
                   
         </resources>
     </build>
@@ -34,14 +36,121 @@
 
     <dependencies>
 
+        <!--  *** no need to include jar file here if we have the feature zip *** -->
+        <!--
+        <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-version</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-configuration-settings-ws-v2</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-html5</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-barbican-client</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-kmip-client</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-keys-ws-v2</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-saml</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-user</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-version</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-configuration-settings-ws-v2</artifactId>
+            <version>${mtwilson.version}</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-html5</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-barbican-client</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-kmip-client</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-keys-ws-v2</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-saml</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-user</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
+        </dependency>
+
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-launcher</artifactId>
         </dependency>
         
-		<!--
-		also a transitive dependency from kms-keystore and kms-jetty9
-		-->
+        <dependency>
+    <groupId>com.intel.mtwilson.core</groupId>
+    <artifactId>mtwilson-core-feature-inventory</artifactId>
+    <version>0.1-SNAPSHOT</version>
+        </dependency>
+        
+        <!--
+        also a transitive dependency from kms-keystore and kms-jetty9
+        -->
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-configuration</artifactId>
@@ -49,11 +158,6 @@
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-password-vault</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.services</groupId>
-            <artifactId>mtwilson-configuration-settings-ws-v2</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
 
         <!--
@@ -68,26 +172,27 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         -->
-                        
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-html5</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
         
-		<!--
+        <!--
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-jersey2</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-		-->
+        -->
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-jetty9</artifactId>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-jetty9</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-		<!--
+
+            <dependency>
+	<groupId>com.intel.mtwilson.core</groupId>
+    <artifactId>mtwilson-core-setup</artifactId>
+        <version>3.0-SNAPSHOT</version>
+            </dependency>
+
+        <!--
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-jsonapi</artifactId>
@@ -98,73 +203,34 @@
             <artifactId>kms-jsonapi-keys</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-		-->
+        -->
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-		<!--
-		transitive dependency from kms-keystore
+        <!--
+        transitive dependency from kms-keystore
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore-api</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-		-->
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-barbican-client</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-kmip-client</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
+        -->
 
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore-directory</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-keys-ws-v2</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
         <!--
-		transitive dependency from kms-keys-ws-v2
+        transitive dependency from kms-keys-ws-v2
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keys-ws-v2-api</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         -->
-		<!--
-        launcher properties file merged into this project, separate launcher project not needed
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-launcher</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-		-->
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-saml</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-user</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-version</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
         <!--
         transitive dependency from kms-user
         <dependency>
@@ -182,13 +248,11 @@
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-http-servlets</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
                 
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-shiro-file</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
         <!-- replacing the original login api with our new one that uses tokens and in-memory database -->
         <!--
@@ -199,8 +263,8 @@
         </dependency>
         -->
         <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-login-token</artifactId>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-login-token</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         
@@ -208,17 +272,15 @@
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-extensions-cache</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
         
         
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-extensions-ws-v2</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
 
-		<!-- from kms proxy begin -->
+        <!-- from kms proxy begin -->
         <!-- for the RepeatableRequestFilter -->
         
         <dependency>
@@ -240,42 +302,42 @@
         
         <!-- jersey -->
         
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-client</artifactId>
-                <version>2.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-common</artifactId>
-                <version>2.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-server</artifactId>
-                <version>2.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.containers</groupId>
-                <artifactId>jersey-container-servlet</artifactId>
-                <version>2.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.containers</groupId>
-                <artifactId>jersey-container-servlet-core</artifactId>
-                <version>2.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>jersey-media-multipart</artifactId>
-                <version>2.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>jersey-media-json-jackson</artifactId>
-                <version>2.4.1</version>
-            </dependency>      
-<!-- from kms proxy ends -->
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>2.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+            <version>2.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>2.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+            <version>2.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <version>2.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>2.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>2.4.1</version>
+        </dependency>      
+        <!-- from kms proxy ends -->
             
         <dependency>
             <groupId>junit</groupId>

@@ -74,7 +74,13 @@ if [ -f "$KMS_HOME/bin/functions.sh" ]; then
   . $KMS_HOME/bin/functions.sh
 fi
 
+
 ###################################################################################################
+
+# stored master password
+if [ -z "$KMS_PASSWORD" ] && [ -f $KMS_HOME/.kms_password ]; then
+  export KMS_PASSWORD=$(cat $KMS_HOME/.kms_password)
+fi
 
 # all other variables with defaults
 KMS_HTTP_LOG_FILE=${KMS_HTTP_LOG_FILE:-$KMS_LOGS/http.log}
@@ -103,8 +109,8 @@ if [ -z "$JAVA_CMD" ]; then
   fi
 fi
 
-# generated variables
-JARS=$(ls -1 $KMS_JAVA/*.jar)
+# generated variables; look for common jars and feature-specific jars
+JARS=$(ls -1 $KMS_JAVA/*.jar $KMS_HOME/features/*/java/*.jar)
 CLASSPATH=$(echo $JARS | tr ' ' ':')
 
 # the classpath is long and if we use the java -cp option we will not be
@@ -160,7 +166,7 @@ kms_start() {
     # the last background process pid $! must be stored from the subshell.
     (
       cd $KMS_HOME
-      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main start >>$KMS_HTTP_LOG_FILE 2>&1 &
+      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main jetty-start >>$KMS_HTTP_LOG_FILE 2>&1 &
       echo $! > $KMS_PID_FILE
     )
     if kms_is_running; then
@@ -184,7 +190,7 @@ kms_is_running() {
   fi
   if [ -z "$KMS_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMS_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMS_CONFIGURATION" | awk '{ print $1 }')
+    KMS_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main jetty-start" | grep "$KMS_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMS_PID" ]; then
     # KMS is not running
@@ -218,9 +224,17 @@ kms_stop() {
 kms_uninstall() {
     remove_startup_script kms
 	rm -f /usr/local/bin/kms
-    rm -rf /opt/kms
-    groupdel kms > /dev/null 2>&1
-    userdel kms > /dev/null 2>&1
+    if [ -z "$KMS_HOME" ]; then
+      echo_failure "Cannot uninstall because KMS_HOME is not set"
+      return 1
+    fi
+    if [ "$1" == "--purge" ]; then
+      rm -rf $KMS_HOME
+    else
+      rm -rf $KMS_HOME/bin $KMS_HOME/java $KMS_HOME/features
+    fi
+    groupdel $KMS_USERNAME > /dev/null 2>&1
+    userdel $KMS_USERNAME > /dev/null 2>&1
 }
 
 print_help() {

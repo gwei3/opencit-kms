@@ -241,30 +241,19 @@ fi
 
 
 # register linux startup script
-register_startup_script $KMSPROXY_HOME/bin/kmsproxy.sh kmsproxy
+if [ "$KMSPROXY_USERNAME" == "root" ]; then
+  register_startup_script $KMSPROXY_HOME/bin/kmsproxy.sh kmsproxy
+else
+  echo '@reboot /opt/kmsproxy/bin/kmsproxy.sh start' > $KMSPROXY_CONFIGURATION/crontab
+  crontab -u $KMSPROXY_USERNAME -l | cat - $KMSPROXY_CONFIGURATION/crontab | crontab -u $KMSPROXY_USERNAME -
+fi
 
 # setup the kmsproxy, unless the NOSETUP variable is defined
 if [ -z "$KMSPROXY_NOSETUP" ]; then
 
   # the master password is required
-  if [ -z "$KMSPROXY_PASSWORD" ]; then
-    echo_failure "Master password required in environment variable KMSPROXY_PASSWORD"
-    echo 'To generate a new master password, run the following command:
-
-  KMSPROXY_PASSWORD=$(kmsproxy generate-password) && echo KMSPROXY_PASSWORD=$KMSPROXY_PASSWORD
-
-The master password must be stored in a safe place, and it must
-be exported in the environment for all other kmsproxy commands to work.
-
-Loss of master password will result in loss of proxy configuration and will 
-require a new Mt Wilson user registration in order to resume the proxy activity.
-
-After you set KMSPROXY_PASSWORD, run the following command to complete installation:
-
-  kmsproxy setup
-
-'
-    exit 1
+  if [ -z "$KMSPROXY_PASSWORD" ] && [ ! -f $KMSPROXY_HOME/.kmsproxy_password ]; then
+    kmsproxy generate-password > $KMSPROXY_HOME/.kmsproxy_password
   fi
 
   kmsproxy config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null

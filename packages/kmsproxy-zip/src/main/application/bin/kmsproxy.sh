@@ -80,6 +80,11 @@ fi
 
 ###################################################################################################
 
+# stored master password
+if [ -z "$KMSPROXY_PASSWORD" ] && [ -f $KMSPROXY_HOME/.kmsproxy_password ]; then
+  export KMSPROXY_PASSWORD=$(cat $KMSPROXY_HOME/.kmsproxy_password)
+fi
+
 # all other variables with defaults
 KMSPROXY_HTTP_LOG_FILE=${KMSPROXY_HTTP_LOG_FILE:-$KMSPROXY_LOGS/http.log}
 JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
@@ -107,8 +112,8 @@ if [ -z "$JAVA_CMD" ]; then
   fi
 fi
 
-# generated variables
-JARS=$(ls -1 $KMSPROXY_JAVA/*.jar)
+# generated variables; look for common jars and feature-specific jars
+JARS=$(ls -1 $KMSPROXY_JAVA/*.jar $KMSPROXY_HOME/features/*/java/*.jar)
 CLASSPATH=$(echo $JARS | tr ' ' ':')
 
 # the classpath is long and if we use the java -cp option we will not be
@@ -164,7 +169,7 @@ kmsproxy_start() {
     # the last background process pid $! must be stored from the subshell.
     (
       cd $KMSPROXY_HOME
-      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main start >>$KMSPROXY_HTTP_LOG_FILE 2>&1 &
+      $prog $JAVA_OPTS com.intel.mtwilson.launcher.console.Main jetty-start >>$KMSPROXY_HTTP_LOG_FILE 2>&1 &
       echo $! > $KMSPROXY_PID_FILE
     )
     if kmsproxy_is_running; then
@@ -188,7 +193,7 @@ kmsproxy_is_running() {
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # check the process list just in case the pid file is stale
-    KMSPROXY_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main start" | grep "$KMSPROXY_CONFIGURATION" | awk '{ print $1 }')
+    KMSPROXY_PID=$(ps -A ww | grep -v grep | grep java | grep "com.intel.mtwilson.launcher.console.Main jetty-start" | grep "$KMSPROXY_CONFIGURATION" | awk '{ print $1 }')
   fi
   if [ -z "$KMSPROXY_PID" ]; then
     # KMSPROXY is not running
@@ -222,9 +227,17 @@ kmsproxy_stop() {
 kmsproxy_uninstall() {
     remove_startup_script kmsproxy
 	rm -f /usr/local/bin/kmsproxy
-    rm -rf /opt/kmsproxy
-    groupdel kmsproxy > /dev/null 2>&1
-    userdel kmsproxy > /dev/null 2>&1
+    if [ -z "$KMSPROXY_HOME" ]; then
+      echo_failure "Cannot uninstall because KMSPROXY_HOME is not set"
+      return 1
+    fi
+    if [ "$1" == "--purge" ]; then
+      rm -rf $KMSPROXY_HOME
+    else
+      rm -rf $KMSPROXY_HOME/bin $KMSPROXY_HOME/java $KMSPROXY_HOME/features
+    fi
+    groupdel $KMSPROXY_USERNAME > /dev/null 2>&1
+    userdel $KMSPROXY_USERNAME > /dev/null 2>&1
 }
 
 print_help() {
