@@ -248,6 +248,14 @@ if [ -z "$KMS_NOSETUP" ]; then
   fi
 
   kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
+
+# dashboard
+  kms config mtwilson.navbar.buttons kms-keys,mtwilson-configuration-settings-ws-v2,mtwilson-core-html5
+  kms config mtwilson.navbar.hometab keys
+
+  kms config jetty.port ${JETTY_PORT:-80}
+  kms config jetty.secure.port ${JETTY_SECURE_PORT:-443}
+
   kms setup
 fi
 

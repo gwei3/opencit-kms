@@ -61,6 +61,13 @@
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-setup</artifactId>
         </dependency>
+        
+<dependency>
+	<groupId>com.intel.mtwilson.core</groupId>
+	<artifactId>mtwilson-core-data-bundle</artifactId>
+	<version>0.1-SNAPSHOT</version>
+</dependency>
+        
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore-api</artifactId>

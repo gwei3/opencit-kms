@@ -257,6 +257,13 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
   fi
 
   kmsproxy config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
+
+  kmsproxy config mtwilson.navbar.buttons mtwilson-configuration-settings-ws-v2,mtwilson-core-html5
+  kmsproxy config mtwilson.navbar.hometab mtwilson-configuration-settings-ws-v2
+
+  kmsproxy config jetty.port ${JETTY_PORT:-80}
+  kmsproxy config jetty.secure.port ${JETTY_SECURE_PORT:-443}
+
   kmsproxy setup
 fi
 

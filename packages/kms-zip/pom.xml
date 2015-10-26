@@ -86,6 +86,13 @@
             <classifier>feature</classifier>
             <type>zip</type>
         </dependency>
+<dependency>
+	<groupId>com.intel.mtwilson.core</groupId>
+	<artifactId>mtwilson-core-data-bundle</artifactId>
+	<classifier>feature</classifier>
+	<type>zip</type>
+	<version>0.1-SNAPSHOT</version>
+</dependency>
 
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
