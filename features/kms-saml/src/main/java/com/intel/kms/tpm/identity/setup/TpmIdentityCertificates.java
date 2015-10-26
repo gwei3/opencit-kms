@@ -13,6 +13,8 @@ import com.intel.mtwilson.setup.AbstractSetupTask;
 import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
 import com.intel.mtwilson.util.crypto.keystore.PublicKeyX509CertificateStore;
 import java.io.File;
+import java.io.IOException;
+import java.security.KeyStoreException;
 
 /**
  * @author jbuhacoff
@@ -33,22 +35,32 @@ public class TpmIdentityCertificates extends AbstractSetupTask {
 //    private String mtwilsonApiPassword;
 //    private String mtwilsonTlsCertSha1;
 
+    public File getTpmIdentityCertificatesKeystoreFile() {
+        return new File(getConfiguration().get(MTWILSON_TPM_IDENTITY_CERTIFICATES_FILE, Folders.configuration() + File.separator + "tpm.identity.jks"));
+    }
+
+    public Password getTpmIdentityCertificatesKeystorePassword() throws KeyStoreException, IOException {
+        try (PasswordKeyStore passwordVault = PasswordVaultFactory.getPasswordKeyStore(getConfiguration())) {
+            if (passwordVault.contains(MTWILSON_TPM_IDENTITY_CERTIFICATES_PASSWORD)) {
+                return passwordVault.get(MTWILSON_TPM_IDENTITY_CERTIFICATES_PASSWORD);
+            } else {
+                return null;
+            }
+        }
+    }
+
     @Override
     protected void configure() throws Exception {
-        tpmIdentityCertificatesFile = new File(getConfiguration().get(MTWILSON_TPM_IDENTITY_CERTIFICATES_FILE, Folders.configuration() + File.separator + "tpm.identity.jks"));
+        tpmIdentityCertificatesFile = getTpmIdentityCertificatesKeystoreFile();
 //        mtwilsonApiUrl = getConfiguration().get(MTWILSON_API_URL);
 //        mtwilsonApiUsername = getConfiguration().get(MTWILSON_API_USERNAME);
 //        mtwilsonApiPassword = getConfiguration().get(MTWILSON_API_PASSWORD);
 //        mtwilsonTlsCertSha1 = getConfiguration().get(MTWILSON_TLS_CERT_SHA1);
         if (tpmIdentityCertificatesFile.exists()) {
             log.debug("Configure TPM Identity certificates file at: {}", tpmIdentityCertificatesFile.getAbsolutePath());
-            try (PasswordKeyStore passwordVault = PasswordVaultFactory.getPasswordKeyStore(getConfiguration())) {
-
-                if (passwordVault.contains(MTWILSON_TPM_IDENTITY_CERTIFICATES_PASSWORD)) {
-                    keystorePassword = passwordVault.get(MTWILSON_TPM_IDENTITY_CERTIFICATES_PASSWORD);
-                } else {
-                    configuration("Trusted TPM Identity certificates file exists but password is missing");
-                }
+            keystorePassword = getTpmIdentityCertificatesKeystorePassword();
+            if (keystorePassword == null) {
+                configuration("Trusted TPM Identity certificates file exists but password is missing");
             }
         }
         /*
