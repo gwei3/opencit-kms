@@ -272,12 +272,13 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
   fi
 
   kmsproxy config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
+  kmsproxy config mtwilson.extensions.packageIncludeFilter.startsWith "${MTWILSON_EXTENSIONS_PACKAGEINCLUDEFILTER_STARTSWITH:-com.intel,org.glassfish.jersey.media.multipart}" >/dev/null
 
-  kmsproxy config mtwilson.navbar.buttons mtwilson-configuration-settings-ws-v2,mtwilson-core-html5
-  kmsproxy config mtwilson.navbar.hometab mtwilson-configuration-settings-ws-v2
+  kmsproxy config mtwilson.navbar.buttons mtwilson-configuration-settings-ws-v2,mtwilson-core-html5 >/dev/null
+  kmsproxy config mtwilson.navbar.hometab mtwilson-configuration-settings-ws-v2 >/dev/null
 
-  kmsproxy config jetty.port ${JETTY_PORT:-80}
-  kmsproxy config jetty.secure.port ${JETTY_SECURE_PORT:-443}
+  kmsproxy config jetty.port ${JETTY_PORT:-80} >/dev/null
+  kmsproxy config jetty.secure.port ${JETTY_SECURE_PORT:-443} >/dev/null
 
   kmsproxy setup
 fi

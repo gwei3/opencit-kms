@@ -261,14 +261,15 @@ if [ -z "$KMS_NOSETUP" ]; then
     kms generate-password > $KMS_CONFIGURATION/.kms_password
   fi
 
-  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
+  kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms,jersey-media-multipart}" >/dev/null
+  kms config mtwilson.extensions.packageIncludeFilter.startsWith "${MTWILSON_EXTENSIONS_PACKAGEINCLUDEFILTER_STARTSWITH:-com.intel,org.glassfish.jersey.media.multipart}" >/dev/null
 
-# dashboard
-  kms config mtwilson.navbar.buttons kms-keys,mtwilson-configuration-settings-ws-v2,mtwilson-core-html5
-  kms config mtwilson.navbar.hometab keys
+  # dashboard
+  kms config mtwilson.navbar.buttons kms-keys,mtwilson-configuration-settings-ws-v2,mtwilson-core-html5 >/dev/null
+  kms config mtwilson.navbar.hometab keys >/dev/null
 
-  kms config jetty.port ${JETTY_PORT:-80}
-  kms config jetty.secure.port ${JETTY_SECURE_PORT:-443}
+  kms config jetty.port ${JETTY_PORT:-80} >/dev/null
+  kms config jetty.secure.port ${JETTY_SECURE_PORT:-443} >/dev/null
 
   kms setup
 fi
