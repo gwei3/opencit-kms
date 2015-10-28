@@ -129,6 +129,7 @@ echo "export KMS_JAVA=$KMS_JAVA" >> $KMS_ENV/kms-layout
 echo "export KMS_BIN=$KMS_BIN" >> $KMS_ENV/kms-layout
 echo "export KMS_REPOSITORY=$KMS_REPOSITORY" >> $KMS_ENV/kms-layout
 echo "export KMS_LOGS=$KMS_LOGS" >> $KMS_ENV/kms-layout
+if [ -n "$KMS_PID_FILE" ]; then echo "export KMS_PID_FILE=$KMS_PID_FILE" >> $KMS_ENV/kms-layout; fi
 
 # store kms username in env file
 echo "# $(date)" > $KMS_ENV/kms-username
@@ -215,6 +216,19 @@ echo "Extracting application..."
 KMS_ZIPFILE=`ls -1 kms-*.zip 2>/dev/null | head -n 1`
 unzip -oq $KMS_ZIPFILE -d $KMS_HOME
 
+# if the configuration folder was specified, move the default configurations there
+# that were extracted from the zip
+if [ "$KMS_CONFIGURATION" != "$KMS_HOME/configuration" ]; then
+  # only copy files that don't already exist in destination, to avoid overwriting
+  # user's prior edits
+  cp -n $KMS_HOME/configuration/* $KMS_CONFIGURATION/
+  # in the future, if we have a version variable we could move the remaining
+  # files into the configuration directory in a versioned subdirectory.
+  # finally, remove the configuration folder so user will not be confused about
+  # where to edit. 
+  rm -rf $KMS_HOME/configuration
+fi
+
 # copy utilities script file to application folder
 cp $UTIL_SCRIPT_FILE $KMS_HOME/bin/functions.sh
 
@@ -233,7 +247,7 @@ fi
 if [ "$KMS_USERNAME" == "root" ]; then
   register_startup_script $KMS_HOME/bin/kms.sh kms
 else
-  echo '@reboot /opt/kms/bin/kms.sh start' > $KMS_CONFIGURATION/crontab
+  echo "@reboot $KMS_HOME/bin/kms.sh start" > $KMS_CONFIGURATION/crontab
   crontab -u $KMS_USERNAME -l | cat - $KMS_CONFIGURATION/crontab | crontab -u $KMS_USERNAME -
 fi
 
@@ -243,8 +257,8 @@ if [ -z "$KMS_NOSETUP" ]; then
   # the master password is required
   # if already user provided we assume user will also provide later for restarts
   # otherwise, we generate and store the password
-  if [ -z "$KMS_PASSWORD" ] && [ ! -f $KMS_HOME/.kms_password ]; then
-    kms generate-password > $KMS_HOME/.kms_password
+  if [ -z "$KMS_PASSWORD" ] && [ ! -f $KMS_CONFIGURATION/.kms_password ]; then
+    kms generate-password > $KMS_CONFIGURATION/.kms_password
   fi
 
   kms config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null

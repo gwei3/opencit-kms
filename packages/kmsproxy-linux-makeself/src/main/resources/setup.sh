@@ -140,6 +140,7 @@ echo "export KMSPROXY_JAVA=$KMSPROXY_JAVA" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_BIN=$KMSPROXY_BIN" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_REPOSITORY=$KMSPROXY_REPOSITORY" >> $KMSPROXY_ENV/kmsproxy-layout
 echo "export KMSPROXY_LOGS=$KMSPROXY_LOGS" >> $KMSPROXY_ENV/kmsproxy-layout
+if [ -n "$KMSPROXY_PID_FILE" ]; then echo "export KMSPROXY_PID_FILE=$KMSPROXY_PID_FILE" >> $KMSPROXY_ENV/kmsproxy-layout; fi
 
 # store kmsproxy username in env file
 echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-username
@@ -226,6 +227,20 @@ echo "Extracting application..."
 KMSPROXY_ZIPFILE=`ls -1 kmsproxy-*.zip 2>/dev/null | head -n 1`
 unzip -oq $KMSPROXY_ZIPFILE -d $KMSPROXY_HOME
 
+# if the configuration folder was specified, move the default configurations there
+# that were extracted from the zip
+if [ "$KMSPROXY_CONFIGURATION" != "$KMSPROXY_HOME/configuration" ]; then
+  # only copy files that don't already exist in destination, to avoid overwriting
+  # user's prior edits
+  cp -n $KMSPROXY_HOME/configuration/* $KMSPROXY_CONFIGURATION/
+  # in the future, if we have a version variable we could move the remaining
+  # files into the configuration directory in a versioned subdirectory.
+  # finally, remove the configuration folder so user will not be confused about
+  # where to edit. 
+  rm -rf $KMSPROXY_HOME/configuration
+fi
+
+
 # copy utilities script file to application folder
 cp $UTIL_SCRIPT_FILE $KMSPROXY_HOME/bin/functions.sh
 
@@ -244,7 +259,7 @@ fi
 if [ "$KMSPROXY_USERNAME" == "root" ]; then
   register_startup_script $KMSPROXY_HOME/bin/kmsproxy.sh kmsproxy
 else
-  echo '@reboot /opt/kmsproxy/bin/kmsproxy.sh start' > $KMSPROXY_CONFIGURATION/crontab
+  echo "@reboot $KMSPROXY_HOME/bin/kmsproxy.sh start" > $KMSPROXY_CONFIGURATION/crontab
   crontab -u $KMSPROXY_USERNAME -l | cat - $KMSPROXY_CONFIGURATION/crontab | crontab -u $KMSPROXY_USERNAME -
 fi
 
@@ -252,8 +267,8 @@ fi
 if [ -z "$KMSPROXY_NOSETUP" ]; then
 
   # the master password is required
-  if [ -z "$KMSPROXY_PASSWORD" ] && [ ! -f $KMSPROXY_HOME/.kmsproxy_password ]; then
-    kmsproxy generate-password > $KMSPROXY_HOME/.kmsproxy_password
+  if [ -z "$KMSPROXY_PASSWORD" ] && [ ! -f $KMSPROXY_CONFIGURATION/.kmsproxy_password ]; then
+    kmsproxy generate-password > $KMSPROXY_CONFIGURATION/.kmsproxy_password
   fi
 
   kmsproxy config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null

@@ -81,8 +81,8 @@ fi
 ###################################################################################################
 
 # stored master password
-if [ -z "$KMSPROXY_PASSWORD" ] && [ -f $KMSPROXY_HOME/.kmsproxy_password ]; then
-  export KMSPROXY_PASSWORD=$(cat $KMSPROXY_HOME/.kmsproxy_password)
+if [ -z "$KMSPROXY_PASSWORD" ] && [ -f $KMSPROXY_CONFIGURATION/.kmsproxy_password ]; then
+  export KMSPROXY_PASSWORD=$(cat $KMSPROXY_CONFIGURATION/.kmsproxy_password)
 fi
 
 # all other variables with defaults
@@ -97,8 +97,10 @@ KMSPROXY_SETUP_TASKS=${KMSPROXY_SETUP_TASKS:-"password-vault jetty-ports jetty-t
 # if we are running as non-root and the standard location isn't writable 
 # then we need a different place
 KMSPROXY_PID_FILE=${KMSPROXY_PID_FILE:-/var/run/kmsproxy.pid}
-if [ ! -w "$KMSPROXY_PID_FILE" ] && [ ! -w $(dirname "$KMSPROXY_PID_FILE") ]; then
-  KMSPROXY_PID_FILE=$KMSPROXY_REPOSITORY/kmsproxy.pid
+KMSPROXY_PID_DIR=$(dirname $KMSPROXY_PID_FILE)
+if [ ! -d $KMSPROXY_PID_DIR ]; then mkdir -p $KMSPROXY_PID_DIR; fi
+if [ ! -w "$KMSPROXY_PID_FILE" ] && [ ! -d "$KMSPROXY_PID_DIR" ]; then
+  KMSPROXY_PID_FILE=$KMSPROXY_LOGS/kmsproxy.pid
 fi
 
 ###################################################################################################
@@ -232,7 +234,7 @@ kmsproxy_uninstall() {
       return 1
     fi
     if [ "$1" == "--purge" ]; then
-      rm -rf $KMSPROXY_HOME
+      rm -rf $KMSPROXY_HOME $KMSPROXY_CONFIGURATION $KMSPROXY_DATA $KMSPROXY_LOGS
     else
       rm -rf $KMSPROXY_HOME/bin $KMSPROXY_HOME/java $KMSPROXY_HOME/features
     fi

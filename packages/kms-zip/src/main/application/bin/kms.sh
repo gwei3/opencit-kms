@@ -78,8 +78,8 @@ fi
 ###################################################################################################
 
 # stored master password
-if [ -z "$KMS_PASSWORD" ] && [ -f $KMS_HOME/.kms_password ]; then
-  export KMS_PASSWORD=$(cat $KMS_HOME/.kms_password)
+if [ -z "$KMS_PASSWORD" ] && [ -f $KMS_CONFIGURATION/.kms_password ]; then
+  export KMS_PASSWORD=$(cat $KMS_CONFIGURATION/.kms_password)
 fi
 
 # all other variables with defaults
@@ -94,8 +94,10 @@ KMS_SETUP_TASKS=${KMS_SETUP_TASKS:-"password-vault jetty-ports jetty-tls-keystor
 # if we are running as non-root and the standard location isn't writable 
 # then we need a different place
 KMS_PID_FILE=${KMS_PID_FILE:-/var/run/kms.pid}
-if [ ! -w "$KMS_PID_FILE" ] && [ ! -w $(dirname "$KMS_PID_FILE") ]; then
-  KMS_PID_FILE=$KMS_REPOSITORY/kms.pid
+KMS_PID_DIR=$(dirname $KMS_PID_FILE)
+if [ ! -d $KMS_PID_DIR ]; then mkdir -p $KMS_PID_DIR; fi
+if [ ! -w "$KMS_PID_FILE" ] && [ ! -d "$KMS_PID_DIR" ]; then
+  KMS_PID_FILE=$KMS_LOGS/kms.pid
 fi
 
 ###################################################################################################
@@ -229,7 +231,7 @@ kms_uninstall() {
       return 1
     fi
     if [ "$1" == "--purge" ]; then
-      rm -rf $KMS_HOME
+      rm -rf $KMS_HOME $KMS_CONFIGURATION $KMS_DATA $KMS_LOGS
     else
       rm -rf $KMS_HOME/bin $KMS_HOME/java $KMS_HOME/features
     fi
