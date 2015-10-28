@@ -92,13 +92,10 @@ KMS_SETUP_TASKS=${KMS_SETUP_TASKS:-"password-vault jetty-ports jetty-tls-keystor
 
 # the standard PID file location /var/run is typically owned by root;
 # if we are running as non-root and the standard location isn't writable 
-# then we need a different place
+# then we need a different place;  assume /var/run and logs dir already exist
 KMS_PID_FILE=${KMS_PID_FILE:-/var/run/kms.pid}
-KMS_PID_DIR=$(dirname $KMS_PID_FILE)
-if [ ! -d $KMS_PID_DIR ]; then mkdir -p $KMS_PID_DIR; fi
-if [ ! -w "$KMS_PID_FILE" ] && [ ! -d "$KMS_PID_DIR" ]; then
-  KMS_PID_FILE=$KMS_LOGS/kms.pid
-fi
+touch $KMS_PID_FILE >/dev/null 2>&1
+if [ $? == 1 ]; then KMS_PID_FILE=$KMS_LOGS/kms.pid; fi
 
 ###################################################################################################
 

@@ -97,11 +97,8 @@ KMSPROXY_SETUP_TASKS=${KMSPROXY_SETUP_TASKS:-"password-vault jetty-ports jetty-t
 # if we are running as non-root and the standard location isn't writable 
 # then we need a different place
 KMSPROXY_PID_FILE=${KMSPROXY_PID_FILE:-/var/run/kmsproxy.pid}
-KMSPROXY_PID_DIR=$(dirname $KMSPROXY_PID_FILE)
-if [ ! -d $KMSPROXY_PID_DIR ]; then mkdir -p $KMSPROXY_PID_DIR; fi
-if [ ! -w "$KMSPROXY_PID_FILE" ] && [ ! -d "$KMSPROXY_PID_DIR" ]; then
-  KMSPROXY_PID_FILE=$KMSPROXY_LOGS/kmsproxy.pid
-fi
+touch $KMSPROXY_PID_FILE >/dev/null 2>&1
+if [ $? == 1 ]; then KMSPROXY_PID_FILE=$KMSPROXY_LOGS/kmsproxy.pid; fi
 
 ###################################################################################################
 
