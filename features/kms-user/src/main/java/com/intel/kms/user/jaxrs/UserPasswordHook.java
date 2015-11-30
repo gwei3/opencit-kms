@@ -23,11 +23,19 @@ public class UserPasswordHook implements UserEventHook {
     public void afterCreateUser(String username){ //Creates a new empty user for the UserRepository
         log.debug("Creating user profile {}", username);
         UserRepository userRepo = new UserRepository(); 
+        UserFilterCriteria criteria = new UserFilterCriteria();
         User user = new User();
         user.setUsername(username);
+        criteria.usernameEqualTo = user.getUsername();
         try{
-            userRepo.create(user);
-            log.debug("Created user profile: {}", username);
+            UserCollection userCollection = userRepo.search(criteria);
+            if (userCollection.getUsers().isEmpty()) {
+                //search for username. If not present, create
+                userRepo.create(user);
+                log.debug("Created user profile: {}", username);           
+            }
+            else
+                log.debug("User profile already exists: {}", username);     
         } catch (Exception ex){
             log.error("Error creating user profile", ex);
         }  
