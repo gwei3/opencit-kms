@@ -271,7 +271,7 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
     kmsproxy generate-password > $KMSPROXY_CONFIGURATION/.kmsproxy_password
   fi
 
-  kmsproxy config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms}" >/dev/null
+  kmsproxy config mtwilson.extensions.fileIncludeFilter.contains "${MTWILSON_EXTENSIONS_FILEINCLUDEFILTER_CONTAINS:-mtwilson,kms,jersey-media-multipart}" >/dev/null
   kmsproxy config mtwilson.extensions.packageIncludeFilter.startsWith "${MTWILSON_EXTENSIONS_PACKAGEINCLUDEFILTER_STARTSWITH:-com.intel,org.glassfish.jersey.media.multipart}" >/dev/null
 
   kmsproxy config mtwilson.navbar.buttons mtwilson-configuration-settings-ws-v2,mtwilson-core-html5 >/dev/null

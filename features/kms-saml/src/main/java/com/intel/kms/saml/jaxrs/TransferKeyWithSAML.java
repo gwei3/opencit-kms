@@ -17,6 +17,7 @@ import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.extensions.Extensions;
 import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.pem.Pem;
+import com.intel.dcsg.cpg.validation.Fault;
 import com.intel.mtwilson.util.archive.TarGzipBuilder;
 import com.intel.kms.api.KeyManager;
 import com.intel.kms.keystore.KeyManagerFactory;
@@ -51,6 +52,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -74,6 +76,12 @@ public class TransferKeyWithSAML {
         }
         return keyManager;
     }
+    
+    private void logFaults(String message, List<Fault> faults) {
+        for(Fault f : faults) {
+            log.error("{}: {}", message, f.toString());
+        }
+    }
 
     /**
      * Given a SAML trust report from Mt Wilson, checks the trust of the subject
@@ -94,15 +102,22 @@ public class TransferKeyWithSAML {
     @Consumes(CryptoMediaType.APPLICATION_SAML)
     @Produces(ZipMediaType.ARCHIVE_TAR_GZ)
 //    @RequiresPermissions("keys:transfer")
-    public byte[] getKeyWithSamlAsTgz(@PathParam("keyId") String keyId, String saml) {
+    public byte[] getKeyWithSamlAsTgz(@PathParam("keyId") String keyId, String saml, @Context HttpServletResponse response) {
         log.debug("getKeyWithSamlAsTgz");
-        log.debug("Received trust assertion to transfer key: {}" + saml);
+        log.debug("Received trust assertion to transfer key: {}" , saml);
 
         try {
             TransferKeyResponse transferKeyResponse = transferKeyWithSAML(keyId, saml);
+            if( !transferKeyResponse.getFaults().isEmpty() ) {
+                logFaults("Cannot process key transfer", transferKeyResponse.getFaults());
+                Integer status = transferKeyResponse.getHttpResponse().getStatusCode();
+                if( status == null ) { status = Response.Status.UNAUTHORIZED.getStatusCode(); }
+                throw new WebApplicationException(Response.status(status).entity("").build()); // results in full html not authorized response
+            }
             byte[] container = createTgzFromTransferKeyResponse(transferKeyResponse);
             return container;
         } catch (IOException e) {
+            log.error("Cannot process key request", e);
             throw new WebApplicationException("Internal error", Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -129,11 +144,19 @@ public class TransferKeyWithSAML {
     @Consumes(CryptoMediaType.APPLICATION_SAML)
     @Produces(CryptoMediaType.APPLICATION_X_PEM_FILE)
 //    @RequiresPermissions("keys:transfer")
-    public String getKeyWithSamlAsPem(@PathParam("keyId") String keyId, String saml) {
+    public String getKeyWithSamlAsPem(@PathParam("keyId") String keyId, String saml, @Context HttpServletResponse response) {
         log.debug("getKeyWithSamlAsPem");
-        log.debug("Received trust assertion to transfer key: {}" + saml);
+        log.debug("Received trust assertion to transfer key: {}" , saml);
 //        try {
         TransferKeyResponse transferKeyResponse = transferKeyWithSAML(keyId, saml);
+        
+            if( !transferKeyResponse.getFaults().isEmpty() ) {
+                logFaults("Cannot process key transfer", transferKeyResponse.getFaults());
+                Integer status = transferKeyResponse.getHttpResponse().getStatusCode();
+                if( status == null ) { status = Response.Status.UNAUTHORIZED.getStatusCode(); }
+                throw new WebApplicationException(Response.status(status).entity("").build()); // results in full html not authorized response
+            }
+        
         Pem pem = createPemFromTransferKeyResponse(transferKeyResponse);
 
         return pem.toString();
@@ -181,6 +204,7 @@ public class TransferKeyWithSAML {
             return transferKeyResponse.getKey();
         }
         // otherwise, return an error message using hint provided by business object, if available
+        logFaults("Cannot process key transfer", transferKeyResponse.getFaults());
         if (transferKeyResponse.getHttpResponse().getStatusCode() != null) {
             log.debug("Setting http status code {}", transferKeyResponse.getHttpResponse().getStatusCode());
             /*
@@ -207,6 +231,14 @@ public class TransferKeyWithSAML {
      * unauthorized to receive the key
      */
     private TransferKeyResponse transferKeyWithSAML(String keyId, String saml) {
+        
+        if( saml == null || saml.isEmpty() ) {
+            TransferKeyResponse transferKeyResponse = new TransferKeyResponse(null, null);
+            transferKeyResponse.getHttpResponse().setStatusCode(Response.Status.UNAUTHORIZED.getStatusCode());
+            transferKeyResponse.getFaults().add(new NotTrusted("No SAML in request"));
+            return transferKeyResponse;
+        }
+        
         try {
             TrustReport client = isTrustedByMtWilson(saml);
             if (client.isTrusted()) {
@@ -379,7 +411,7 @@ public class TransferKeyWithSAML {
         }
         String hostname = hostnames.toArray(new String[1])[0];
 
-        log.debug("hostname: {}" + hostname);
+        log.debug("hostname: {}", hostname);
         com.intel.mtwilson.saml.TrustAssertion.HostTrustAssertion hostTrustAssertion = trustAssertion.getTrustAssertion(hostname);
 
         log.debug("trust assertion for host {}", hostTrustAssertion);
