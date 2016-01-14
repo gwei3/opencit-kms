@@ -280,8 +280,9 @@ case "$1" in
     fi
     ;;
   uninstall)
+    shift
     kms_stop
-    kms_uninstall
+    kms_uninstall $*
     ;;
   *)
     if [ -z "$*" ]; then
