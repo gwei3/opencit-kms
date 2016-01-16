@@ -283,8 +283,9 @@ case "$1" in
     fi
     ;;
   uninstall)
+    shift
     kmsproxy_stop
-    kmsproxy_uninstall
+    kmsproxy_uninstall $*
     ;;
   *)
     if [ -z "$*" ]; then

@@ -50,10 +50,17 @@
         <appender-ref ref="ConsoleInfo"/>
     </root>
     
-    <!--
+    <logger name="org.apache.shiro" level="WARN"/>
+    <logger name="org.apache.commons" level="WARN"/>
+     <logger name="com.intel.dcsg.cpg.util.shiro" level="INFO">
+        <appender-ref ref="LogFile"/>
+    </logger>
+    <logger name="com.intel.dcsg.cpg.util.shiro" level="WARN">
+        <appender-ref ref="ConsoleError"/>
+        <appender-ref ref="ConsoleWarn"/>
+    </logger>
+   <!--
     <logger name="org.eclipse.jetty" level="INFO"/>
-    <logger name="org.apache.shiro" level="INFO"/>
-    <logger name="org.apache.commons" level="INFO"/>
     <logger name="com.intel.dcsg.cpg" level="INFO"/>
     <logger name="com.intel.dcsg.cpg.console" level="INFO"/>
     <logger name="com.intel.dcsg.cpg.configuration" level="INFO"/>
@@ -61,4 +68,12 @@
     <logger name="com.intel.dcsg.cpg.classpath" level="INFO"/>
     <logger name="com.intel.dcsg.cpg.extensions" level="INFO"/>
     <logger name="com.intel.mtwilson.extensions" level="INFO"/>
+    
+    <logger name="org.apache.shiro.session.mgt" level="ERROR"/>
+    <!-- INFO:  Enabling session validation scheduler...  -->
+    
+    <logger name="com.intel.dcsg.cpg.util.shiro" level="ERROR"/>
+    <!-- INFO:  Logged in cit as superuser -->
+    
+    
 </configuration>

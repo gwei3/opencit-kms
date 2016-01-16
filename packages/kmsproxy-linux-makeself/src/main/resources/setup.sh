@@ -164,43 +164,29 @@ done
 
 # kmsproxy requires java 1.7 or later
 # detect or install java (jdk-1.7.0_51-linux-x64.tar.gz)
+echo "Installing Java..."
 JAVA_REQUIRED_VERSION=${JAVA_REQUIRED_VERSION:-1.7}
-java_detect 2>&1 >/dev/null
-if ! java_ready; then
-  # java not installed, check if we have the bundle
-  JAVA_INSTALL_REQ_BUNDLE=`ls -1 java-*.bin 2>/dev/null | head -n 1`
-  JAVA_INSTALL_REQ_TGZ=`ls -1 jdk*.tar.gz 2>/dev/null | head -n 1`
-  if [ -n "$JAVA_INSTALL_REQ_BUNDLE" ]; then
-    chmod +x $JAVA_INSTALL_REQ_BUNDLE
-    ./$JAVA_INSTALL_REQ_BUNDLE
-    java_detect
-  elif [ -n "$JAVA_INSTALL_REQ_TGZ" ]; then
-    tar xzf $JAVA_INSTALL_REQ_TGZ
-    JAVA_INSTALL_REQ_TGZ_UNPACKED=`ls -1d jdk* jre* 2>/dev/null`
-    for f in $JAVA_INSTALL_REQ_TGZ_UNPACKED
-    do
-      #echo "$f"
-      if [ -d "$f" ]; then
-        if [ -d "/usr/share/$f" ]; then
-          echo "Java already installed at /usr/share/$f"
-          export JAVA_HOME="/usr/share/$f"
-        else
-          mv "$f" /usr/share && export JAVA_HOME="/usr/share/$f"
-        fi
-      fi
-    done    
-    java_detect
+JAVA_PACKAGE=`ls -1 jdk-* jre-* java-*.bin 2>/dev/null | tail -n 1`
+# check if java is readable to the non-root user
+if [ -z "$JAVA_HOME" ]; then
+  java_detect > /dev/null
+fi
+if [ -n "$JAVA_HOME" ]; then
+  if [ $(whoami) == "root" ]; then
+    JAVA_USER_READABLE=$(sudo -u $KMSPROXY_USERNAME /bin/bash -c "if [ -r $JAVA_HOME ]; then echo 'yes'; fi")
+  else
+    JAVA_USER_READABLE=$(/bin/bash -c "if [ -r $JAVA_HOME ]; then echo 'yes'; fi")
   fi
 fi
-if java_ready_report; then
-  # store java location in env file
-  echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-java
-  echo "export JAVA_HOME=$JAVA_HOME" >> $KMSPROXY_ENV/kmsproxy-java
-  echo "export JAVA_CMD=$java" >> $KMSPROXY_ENV/kmsproxy-java
-else
-  echo_failure "Java $JAVA_REQUIRED_VERSION not found"
-  exit 1
+if [ -z "$JAVA_HOME" ] || [ -z "$JAVA_USER_READABLE" ]; then
+  JAVA_HOME=$KMSPROXY_HOME/share/jdk1.7.0_51
 fi
+mkdir -p $JAVA_HOME
+java_install_in_home $JAVA_PACKAGE
+echo "# $(date)" > $KMSPROXY_ENV/kmsproxy-java
+echo "export JAVA_HOME=$JAVA_HOME" >> $KMSPROXY_ENV/kmsproxy-java
+echo "export JAVA_CMD=$JAVA_HOME/bin/java" >> $KMSPROXY_ENV/kmsproxy-java
+echo "export JAVA_REQUIRED_VERSION=$JAVA_REQUIRED_VERSION" >> $KMSPROXY_ENV/kmsproxy-java
 
 # make sure unzip and authbind are installed
 KMSPROXY_YUM_PACKAGES="zip unzip authbind"
@@ -209,12 +195,20 @@ KMSPROXY_YAST_PACKAGES="zip unzip authbind"
 KMSPROXY_ZYPPER_PACKAGES="zip unzip authbind"
 auto_install "Installer requirements" "KMSPROXY"
 
+KMSPROXY_PORT_HTTP=${KMSPROXY_PORT_HTTP:-${JETTY_PORT:-80}}
+KMSPROXY_PORT_HTTPS=${KMSPROXY_PORT_HTTPS:-${JETTY_SECURE_PORT:-443}}
 # setup authbind to allow non-root kmsproxy to listen on ports 80 and 443
-if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ -d /etc/authbind/byport ]; then
-  touch /etc/authbind/byport/80 /etc/authbind/byport/443
-  chmod 500 /etc/authbind/byport/80 /etc/authbind/byport/443
-  chown $KMSPROXY_USERNAME /etc/authbind/byport/80 /etc/authbind/byport/443
+if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ -d /etc/authbind/byport ] && [ "$KMSPROXY_PORT_HTTP" -lt "1024" ]; then
+  touch /etc/authbind/byport/$KMSPROXY_PORT_HTTP
+  chmod 500 /etc/authbind/byport/$KMSPROXY_PORT_HTTP
+  chown $KMSPROXY_USERNAME /etc/authbind/byport/$KMSPROXY_PORT_HTTP
 fi
+if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ -d /etc/authbind/byport ] && [ "$KMSPROXY_PORT_HTTPS" -lt "1024" ]; then
+  touch /etc/authbind/byport/$KMSPROXY_PORT_HTTPS
+  chmod 500 /etc/authbind/byport/$KMSPROXY_PORT_HTTPS
+  chown $KMSPROXY_USERNAME /etc/authbind/byport/$KMSPROXY_PORT_HTTPS
+fi
+
 
 # delete existing java files, to prevent a situation where the installer copies
 # a newer file but the older file is also there
@@ -277,8 +271,8 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
   kmsproxy config mtwilson.navbar.buttons mtwilson-configuration-settings-ws-v2,mtwilson-core-html5 >/dev/null
   kmsproxy config mtwilson.navbar.hometab mtwilson-configuration-settings-ws-v2 >/dev/null
 
-  kmsproxy config jetty.port ${JETTY_PORT:-80} >/dev/null
-  kmsproxy config jetty.secure.port ${JETTY_SECURE_PORT:-443} >/dev/null
+  kmsproxy config jetty.port $KMSPROXY_PORT_HTTP >/dev/null
+  kmsproxy config jetty.secure.port $KMSPROXY_PORT_HTTPS >/dev/null
 
   kmsproxy setup
 fi
