@@ -16,15 +16,22 @@ import com.intel.mtwilson.api.ClientException;
 import com.intel.mtwilson.collection.MultivaluedHashMap;
 import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
+import com.intel.mtwilson.saml.TrustAssertion;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.Enumeration;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -44,9 +51,9 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 @V2
 @Path("/keys")
 public class ProxyGetKeyWithAik {
-    
+
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProxyGetKeyWithAik.class);
-   
+
     /**
      * Example request:
      *
@@ -122,7 +129,7 @@ public class ProxyGetKeyWithAik {
             throw new WebApplicationException("Cannot retrieve key", e);
         }
     }
-    
+
     private void prepareResponse(HttpServletResponse httpResponse, ProxyResponse backendResponse) {
         // copy all response headers from key server to our response, should include content type
         for (String headerName : backendResponse.headers.keys()) {
@@ -130,63 +137,78 @@ public class ProxyGetKeyWithAik {
                 log.debug("Adding response header {}: {}", headerName, headerValue);
                 httpResponse.addHeader(headerName, headerValue);
             }
-        }        
+        }
     }
-    
+
     private static class ProxyResponse {
 
         byte[] content = null;
         MultivaluedHashMap<String, String> headers = new MultivaluedHashMap<>();
     }
-    
-    private ProxyResponse proxyKeyRequestByAik(String keyId, Sha1Digest aikId, HttpServletRequest request) throws CryptographyException, ClientException, ApiException, GeneralSecurityException, IOException {
-        log.debug("proxyKeyRequestByAik for keyId: {}, aikId: {}", keyId, aikId.toHexString());
+
+    private ProxyResponse proxyKeyRequestByAik(String keyId, Sha1Digest aikPubKeySha1Digest, HttpServletRequest request) throws CryptographyException, ClientException, ApiException, GeneralSecurityException, IOException {
+        String aikId = aikPubKeySha1Digest.toHexString();
+        log.debug("proxyKeyRequestByAik for keyId: {}, aikId: {}", keyId, aikId);
 //            HostTrustResponse hostTrustResponse = api.getHostTrustByAik(new com.intel.mtwilson.model.Sha1Digest(aikId.toByteArray()));  // convert from cpg-crypto Sha1Digest to mtwilson-crypto Sha1Digest, needed until Mt Wilson is updated to use cpg-crypto
 //            log.debug("trust status for {}", hostTrustResponse.hostname.toString());
 //            log.debug("bios: {}", hostTrustResponse.trust.bios);
 //            log.debug("vmm: {}", hostTrustResponse.trust.vmm);
         DirectoryTrustReportCache trustReportCache = new DirectoryTrustReportCache();
-        
+
         String saml;
 
-        // first try the cache
+        // first try the local cache
         try {
-            saml = trustReportCache.getAssertionForSubject(aikId.toHexString());
+            log.debug("Checking local cache for aik: {}", aikId);
+            // will return saml if found,  null if not found or expired,  or throw exception only on read error
+            saml = trustReportCache.getAssertionForSubject(aikId);
+            if( saml != null ) {
+                // we found a report in the cache, and it's not expired according to our setting trust.report.cache.expires.after 
+                // but we have to also check the expiration date in the report itself
+                MtWilsonV2Client client = new MtWilsonV2Client();
+                if( !client.isReportValid(saml) ) {
+                    log.debug("Invalid report cached for aik: {}", aikId);
+                    trustReportCache.storeAssertion(aikId, null);
+                    saml = null;
+                }
+            }
+            if( saml == null ) {
+                log.debug("No current report cached for aik: {}", aikId);
+            }
         } catch (IOException e) {
-            log.error("Cannot check trust report cache for aik {}", aikId.toHexString(), e);
+            log.error("Error while reading cached report for aik: {}", aikId, e);
             saml = null;
         }
-        
+
+            // second, try getting the report from attestation service
         if (saml == null) {
-            try {
-        // 1. call mtwilson to get SAML report
-                MtWilsonV2Client client = new MtWilsonV2Client();
-                saml = client.getAssertionForSubject(aikId.toHexString());
-                if( saml != null ) {
-                    // store it in cache
-                    trustReportCache.storeAssertion(aikId.toHexString(), saml);
+            log.debug("Checking attestation service for aik: {}", aikId);
+            MtWilsonV2Client client = new MtWilsonV2Client();
+            saml = client.getAssertionForSubject(aikId);
+            log.debug("Trust report received from attestation service: {}", saml);
+            if (saml != null) {
+                // store it in cache
+                try {
+                    trustReportCache.storeAssertion(aikId, saml);
+                } catch (IOException e) {
+                    log.error("Cannot store report in cache for aik: {}", aikId, e);
                 }
-            } catch (IOException e) {
-                log.error("Cannot get SAML report for aik",aikId.toHexString(), e);
-                /*
-                if (e.getHttpStatusCode() == 404) {
-                    log.error("No SAML report available for AIK {}", aikId.toHexString());
-                    // no SAML report for the specified host means we don't release the key - regardless of whether the key actually exists or not
-                    throw new WebApplicationException(Status.UNAUTHORIZED);
-                }
-                // for anything else, we just echo the mtwilson status code and text
-                throw new WebApplicationException(e.getHttpReasonPhrase(), e.getHttpStatusCode());
-                * */
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         }
+        
+        // if we don't have a report by now, return an error to client - we won't be able to retrieve the key
+        if( saml == null ) {
+            log.debug("No trust report available for aik: {}", aikId);
+            throw new NotFoundException();
+        }
+        
         // 2. post SAML report to original URL, capture result
 
         // create  http client for request.getRequestURL()  , post the saml content and fwd same accept header provided by client
         log.debug("proxyKeyRequestByAik to key server: {}", request.getRequestURL().toString());
         HttpClient client = new HttpClient();
         PostMethod post = new PostMethod(request.getRequestURL().toString());
-        
+
         log.debug("proxyKeyRequestByAik POST URI: {}", post.getURI().toString());
 
         // we need to copy AT LEAST the "Accept" header, but since we're a proxy we should copy ALL the headers
@@ -205,16 +227,16 @@ public class ProxyGetKeyWithAik {
         // truncated message at server (due to incorrect content-length)
         post.removeRequestHeader("Content-Type"); // post.setRequestHeader("Content-Type", CryptoMediaType.APPLICATION_SAML);
         post.removeRequestHeader("Content-Length");
-        
+
         post.setRequestEntity(new StringRequestEntity(saml, CryptoMediaType.APPLICATION_SAML, "UTF-8"));
-        
+
         int status = client.executeMethod(post);
         if (status != HttpStatus.SC_OK) {
             log.error("proxyKeyRequestByAik got error response from key server: {} {}", post.getStatusCode(), post.getStatusText());
             // forward the remote error to the client with same code and status text;  currently not forwarding the response body 
             throw new WebApplicationException(post.getStatusText(), status);
         }
-        
+
         ProxyResponse response = new ProxyResponse();
         response.content = post.getResponseBody();
 
