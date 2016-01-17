@@ -41,12 +41,29 @@ public class DirectoryTrustReportCache implements SecurityAssertionProvider, Sec
         return new File(Folders.repository(FEATURE_ID)+File.separator+subject);
     }
 
+    /**
+     * 
+     * @param subject
+     * @param assertion saml to store in cache;  or NULL to delete any cached assertion for this subject
+     * @throws IOException 
+     */
     @Override
     public void storeAssertion(String subject, String assertion) throws IOException {
         File reportFile = getFile(subject);
-        FileUtils.writeStringToFile(reportFile, assertion, UTF8);
+        if( assertion == null ) {
+            FileUtils.deleteQuietly(reportFile);
+        }
+        else {
+            FileUtils.writeStringToFile(reportFile, assertion, UTF8);
+        }
     }
 
+    /**
+     * 
+     * @param subject
+     * @return the SAML assertion if found and not expired according to file timestamp, or null if not found
+     * @throws IOException only on a read error; does NOT throw FileNotFoundException
+     */
     @Override
     public String getAssertionForSubject(String subject) throws IOException {
         File reportFile = getFile(subject);
