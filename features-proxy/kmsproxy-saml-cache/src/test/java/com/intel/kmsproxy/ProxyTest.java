@@ -77,12 +77,15 @@ public class ProxyTest {
      * cit3.keybroker.proxy.host
      * cit3.keybroker.proxy.port
      * 
+     * 66:  1f843926-6ec0-47e5-8950-97f181680458
+     * 51:  7e498cd8-8220-4bcc-947f-9310a39b8874
+     * 
      * @throws Exception
      */
     @Test
     public void testKeyBrokerProxy() throws Exception {
         String aik = getAIK();
-        Properties properties = PropertiesUtil.removePrefix(Env.getProperties("cit3-keybroker"), "cit3.keybroker.");
+        Properties properties = PropertiesUtil.removePrefix(Env.getProperties("cit3-keybroker-proxy"), "cit3.keybroker.");
 
         MtWilsonClient client = new MtWilsonClient(properties);
         byte[] result = client.getTarget().path("/v1/keys/86bcdec3-b553-4665-b21e-baa70a7bd376/transfer").request(MediaType.APPLICATION_OCTET_STREAM).post(Entity.entity(aik, CryptoMediaType.APPLICATION_X_PEM_FILE), byte[].class);
@@ -120,7 +123,7 @@ public class ProxyTest {
         Properties properties = PropertiesUtil.removePrefix(Env.getProperties("cit3-keybroker"), "cit3.keybroker.");
 
         MtWilsonClient client = new MtWilsonClient(properties);
-        byte[] result = client.getTarget().path("/v1/keys/86bcdec3-b553-4665-b21e-baa70a7bd376/transfer").request(MediaType.APPLICATION_OCTET_STREAM).post(Entity.entity(saml, CryptoMediaType.APPLICATION_SAML), byte[].class);
+        byte[] result = client.getTarget().path("/v1/keys/1f843926-6ec0-47e5-8950-97f181680458/transfer").request(MediaType.APPLICATION_OCTET_STREAM).post(Entity.entity(saml, CryptoMediaType.APPLICATION_SAML), byte[].class);
         log.debug("result: {}", result);
     }
     
