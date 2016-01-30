@@ -265,6 +265,10 @@ if [ -z "$KMS_NOSETUP" ]; then
   kms config jetty.secure.port $KMS_PORT_HTTPS >/dev/null
 
   kms setup
+
+  # temporary fix for bug #5008
+  echo >> $KMS_CONFIGURATION/extensions.cache
+  echo org.glassfish.jersey.media.multipart.MultiPartFeature >> $KMS_CONFIGURATION/extensions.cache
 fi
 
 # delete the temporary setup environment variables file

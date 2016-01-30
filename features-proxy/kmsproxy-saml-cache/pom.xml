@@ -118,6 +118,13 @@
 		-->
 
         <!-- mtwilson integration -->
+        
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-saml-verifier</artifactId>
+            <version>${mtwilson.version}</version>
+        </dependency>
+        
         <!--
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
@@ -145,6 +152,12 @@
         </dependency>
         <!-- end mtwilson integration -->
       
+        <dependency>
+            <groupId>com.intel.mtwilson.core</groupId>
+            <artifactId>mtwilson-core-junit</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
             
         <dependency>
             <groupId>junit</groupId>

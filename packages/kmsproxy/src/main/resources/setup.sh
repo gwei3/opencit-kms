@@ -275,6 +275,10 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
   kmsproxy config jetty.secure.port $KMSPROXY_PORT_HTTPS >/dev/null
 
   kmsproxy setup
+
+  # temporary fix for bug #5008
+  echo >> $KMSPROXY_CONFIGURATION/extensions.cache
+  echo org.glassfish.jersey.media.multipart.MultiPartFeature >> $KMSPROXY_CONFIGURATION/extensions.cache
 fi
 
 # delete the temporary setup environment variables file
