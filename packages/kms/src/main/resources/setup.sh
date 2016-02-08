@@ -251,6 +251,8 @@ if [ -z "$KMS_NOSETUP" ]; then
   # if already user provided we assume user will also provide later for restarts
   # otherwise, we generate and store the password
   if [ -z "$KMS_PASSWORD" ] && [ ! -f $KMS_CONFIGURATION/.kms_password ]; then
+    touch $KMS_CONFIGURATION/.kms_password
+    chown $KMS_USERNAME:$KMS_USERNAME $KMS_CONFIGURATION/.kms_password
     kms generate-password > $KMS_CONFIGURATION/.kms_password
   fi
 
