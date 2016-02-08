@@ -262,6 +262,8 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
 
   # the master password is required
   if [ -z "$KMSPROXY_PASSWORD" ] && [ ! -f $KMSPROXY_CONFIGURATION/.kmsproxy_password ]; then
+    touch $KMSPROXY_CONFIGURATION/.kmsproxy_password
+    chown $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $KMSPROXY_CONFIGURATION/.kmsproxy_password
     kmsproxy generate-password > $KMSPROXY_CONFIGURATION/.kmsproxy_password
   fi
 
