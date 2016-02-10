@@ -265,6 +265,50 @@ if [ -z "$KMS_NOSETUP" ]; then
 
   kms config jetty.port $KMS_PORT_HTTP >/dev/null
   kms config jetty.secure.port $KMS_PORT_HTTPS >/dev/null
+  
+  if [ -n "$KEY_MANAGER_PROVIDER" ]; then
+		kms config key.manager.provider $KEY_MANAGER_PROVIDER
+  fi
+  
+  if [ -n "$KMIP_ENCODER" ]; then
+		kms config kmip.encoder $KMIP_ENCODER
+  fi
+  
+  if [ -n "$KMIP_DECODER" ]; then
+		kms config kmip.decoder $KMIP_DECODER
+  fi
+  
+  if [ -n "$KMIP_TRANSPORTLAYER" ]; then
+		kms config kmip.transportLayer $KMIP_TRANSPORTLAYER
+  fi
+  
+  if [ -n "$KMIP_ENDPOINT" ]; then
+		kms config kmip.endpoint $KMIP_ENDPOINT
+  fi
+  
+  if [ -n "$BARBICAN_PROJECT_ID" ]; then
+		kms config barbican.project.id $BARBICAN_PROJECT_ID
+  fi
+  
+  if [ -n "$BARBICAN_ENDPOINT_URL" ]; then
+		kms config barbican.endpoint.url $BARBICAN_ENDPOINT_URL
+  fi
+  
+  if [ -n "$BARBICAN_KEYSTONE_PUBLIC_ENDPOINT" ]; then
+		kms config barbican.keystone.public.endpoint $BARBICAN_KEYSTONE_PUBLIC_ENDPOINT
+  fi
+
+  if [ -n "$BARBICAN_TENANTNAME" ]; then
+		kms config barbican.tenantname $BARBICAN_TENANTNAME
+  fi
+
+  if [ -n "$BARBICAN_USERNAME" ]; then
+		kms config barbican.username $BARBICAN_USERNAME
+  fi
+
+  if [ -n "$BARBICAN_PASSWORD" ]; then
+		kms config barbican.password $BARBICAN_PASSWORD
+  fi
 
   kms setup
 
