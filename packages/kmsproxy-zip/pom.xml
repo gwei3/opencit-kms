@@ -238,6 +238,7 @@ reference : https://java.net/jira/browse/JERSEY-2325
                 <version>2.4.1</version>
             </dependency>
             <dependency>
+                <!-- Purpose: multipart file upload  used by mtwilson-core-data-bundle -->
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-multipart</artifactId>
                 <version>2.4.1</version>

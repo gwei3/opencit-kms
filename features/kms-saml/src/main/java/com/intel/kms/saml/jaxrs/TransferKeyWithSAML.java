@@ -14,6 +14,7 @@ import java.util.Set;
 import javax.ws.rs.Produces;
 import com.intel.dcsg.cpg.crypto.CryptographyException;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
+import com.intel.dcsg.cpg.crypto.Sha256Digest;
 import com.intel.dcsg.cpg.extensions.Extensions;
 import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.pem.Pem;
@@ -42,6 +43,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
@@ -71,14 +73,14 @@ public class TransferKeyWithSAML {
     private KeyManager keyManager;
 
     public KeyManager getKeyManager() throws IOException {
-        if( keyManager == null ) {
+        if (keyManager == null) {
             keyManager = KeyManagerFactory.getKeyManager();
         }
         return keyManager;
     }
-    
+
     private void logFaults(String message, List<Fault> faults) {
-        for(Fault f : faults) {
+        for (Fault f : faults) {
             log.error("{}: {}", message, f.toString());
         }
     }
@@ -92,7 +94,7 @@ public class TransferKeyWithSAML {
      * Note that the "keys:transfer" permission is NOT required to access this
      * API since we expect that anonymous clients will use this API to request
      * keys based on trust only.
-     * 
+     *
      * @param keyId
      * @param saml
      * @return
@@ -104,14 +106,16 @@ public class TransferKeyWithSAML {
 //    @RequiresPermissions("keys:transfer")
     public byte[] getKeyWithSamlAsTgz(@PathParam("keyId") String keyId, String saml, @Context HttpServletResponse response) {
         log.debug("getKeyWithSamlAsTgz");
-        log.debug("Received trust assertion to transfer key: {}" , saml);
+        log.debug("Received trust assertion to transfer key: {}", saml);
 
         try {
             TransferKeyResponse transferKeyResponse = transferKeyWithSAML(keyId, saml);
-            if( !transferKeyResponse.getFaults().isEmpty() ) {
+            if (!transferKeyResponse.getFaults().isEmpty()) {
                 logFaults("Cannot process key transfer", transferKeyResponse.getFaults());
                 Integer status = transferKeyResponse.getHttpResponse().getStatusCode();
-                if( status == null ) { status = Response.Status.UNAUTHORIZED.getStatusCode(); }
+                if (status == null) {
+                    status = Response.Status.UNAUTHORIZED.getStatusCode();
+                }
                 throw new WebApplicationException(Response.status(status).entity("").build()); // results in full html not authorized response
             }
             byte[] container = createTgzFromTransferKeyResponse(transferKeyResponse);
@@ -134,7 +138,7 @@ public class TransferKeyWithSAML {
      * Note that the "keys:transfer" permission is NOT required to access this
      * API since we expect that anonymous clients will use this API to request
      * keys based on trust only.
-     * 
+     *
      * @param keyId
      * @param saml
      * @return
@@ -146,17 +150,19 @@ public class TransferKeyWithSAML {
 //    @RequiresPermissions("keys:transfer")
     public String getKeyWithSamlAsPem(@PathParam("keyId") String keyId, String saml, @Context HttpServletResponse response) {
         log.debug("getKeyWithSamlAsPem");
-        log.debug("Received trust assertion to transfer key: {}" , saml);
+        log.debug("Received trust assertion to transfer key: {}", saml);
 //        try {
         TransferKeyResponse transferKeyResponse = transferKeyWithSAML(keyId, saml);
-        
-            if( !transferKeyResponse.getFaults().isEmpty() ) {
-                logFaults("Cannot process key transfer", transferKeyResponse.getFaults());
-                Integer status = transferKeyResponse.getHttpResponse().getStatusCode();
-                if( status == null ) { status = Response.Status.UNAUTHORIZED.getStatusCode(); }
-                throw new WebApplicationException(Response.status(status).entity("").build()); // results in full html not authorized response
+
+        if (!transferKeyResponse.getFaults().isEmpty()) {
+            logFaults("Cannot process key transfer", transferKeyResponse.getFaults());
+            Integer status = transferKeyResponse.getHttpResponse().getStatusCode();
+            if (status == null) {
+                status = Response.Status.UNAUTHORIZED.getStatusCode();
             }
-        
+            throw new WebApplicationException(Response.status(status).entity("").build()); // results in full html not authorized response
+        }
+
         Pem pem = createPemFromTransferKeyResponse(transferKeyResponse);
 
         return pem.toString();
@@ -181,7 +187,7 @@ public class TransferKeyWithSAML {
      * Note that the "keys:transfer" permission is NOT required to access this
      * API since we expect that anonymous clients will use this API to request
      * keys based on trust only.
-     * 
+     *
      * @param keyId
      * @param saml
      * @return
@@ -231,14 +237,14 @@ public class TransferKeyWithSAML {
      * unauthorized to receive the key
      */
     private TransferKeyResponse transferKeyWithSAML(String keyId, String saml) {
-        
-        if( saml == null || saml.isEmpty() ) {
+
+        if (saml == null || saml.isEmpty()) {
             TransferKeyResponse transferKeyResponse = new TransferKeyResponse(null, null);
             transferKeyResponse.getHttpResponse().setStatusCode(Response.Status.UNAUTHORIZED.getStatusCode());
             transferKeyResponse.getFaults().add(new NotTrusted("No SAML in request"));
             return transferKeyResponse;
         }
-        
+
         try {
             TrustReport client = isTrustedByMtWilson(saml);
             if (client.isTrusted()) {
@@ -333,6 +339,7 @@ public class TransferKeyWithSAML {
         List<X509Certificate> list = repository.getCertificates();
         return list.toArray(new X509Certificate[0]);
     }
+
     private X509Certificate[] getTrustedTpmIdentityCertificateAuthorities() throws IOException, ClientException, GeneralSecurityException, CryptographyException {
 //        Configuration configuration = ConfigurationFactory.getConfiguration();
 //        File mtwilsonKeystore = new File(Folders.configuration() + File.separator + "mtwilson.jks");
@@ -371,18 +378,24 @@ public class TransferKeyWithSAML {
             return publicKey;
         }
     }
-    
+
     private X509Certificate findCertificateIssuer(X509Certificate subject, X509Certificate[] authorities) {
         X509Certificate issuer = null;
-        for(X509Certificate authority : authorities) {
-            log.debug("Checking certificate against authority: {}", authority.getSubjectX500Principal().getName());
-            if( authority.getSubjectX500Principal().getName().equals(subject.getIssuerX500Principal().getName())) {
+        for (X509Certificate authority : authorities) {
+            if (log.isDebugEnabled()) {
+                try {
+                    String authorityCertificateDigest = Sha256Digest.digestOf(authority.getEncoded()).toHexString();
+                    log.debug("Checking certificate against authority: {} in certificate: {}", authority.getSubjectX500Principal().getName(), authorityCertificateDigest);
+                } catch (CertificateEncodingException e) {
+                    log.error("Cannot encode certificate for authority: {}", authority.getSubjectX500Principal().getName(), e);
+                }
+            }
+            if (authority.getSubjectX500Principal().getName().equals(subject.getIssuerX500Principal().getName())) {
                 try {
                     subject.verify(authority.getPublicKey());
                     issuer = authority;
                     log.debug("Certificate verified by authority: {}", authority.getSubjectX500Principal().getName());
-                }
-                catch(GeneralSecurityException e) {
+                } catch (GeneralSecurityException e) {
                     log.debug("Verification failed: {}", e.getMessage());
                 }
             }
@@ -424,12 +437,12 @@ public class TransferKeyWithSAML {
         }
 
         log.debug("Host is trusted: {}", hostname);
-        
-        
+
+
         X509Certificate[] trustedTpmIdentityAuthorities = getTrustedTpmIdentityCertificateAuthorities();
 
         X509Certificate aikCertificate = hostTrustAssertion.getAikCertificate();
-        if( aikCertificate == null ) {
+        if (aikCertificate == null) {
             log.error("Assertion does not include AIK Certificate");
             return TrustReport.UNTRUSTED;
         }
@@ -439,17 +452,17 @@ public class TransferKeyWithSAML {
          * Verify the AIK is signed by a trusted Privacy CA (Mt Wilson)
          */
         X509Certificate aikIssuer = findCertificateIssuer(aikCertificate, trustedTpmIdentityAuthorities);
-        if( aikIssuer == null ) {
+        if (aikIssuer == null) {
             log.error("AIK certificate not verified any trusted authority");
             return TrustReport.UNTRUSTED;
         }
         /*
-        PublicKey aikPublicKey = hostTrustAssertion.getAikPublicKey();
-        if( aikPublicKey == null ) {
-            log.error("Assertion does not include AIK Public Key");
-            return TrustReport.UNTRUSTED;
-        }
-        */
+         PublicKey aikPublicKey = hostTrustAssertion.getAikPublicKey();
+         if( aikPublicKey == null ) {
+         log.error("Assertion does not include AIK Public Key");
+         return TrustReport.UNTRUSTED;
+         }
+         */
         PublicKey aikPublicKey = aikCertificate.getPublicKey();
         log.debug("AIK Public Key SHA-1: {}", Sha1Digest.digestOf(aikPublicKey.getEncoded()).toHexString());
 
@@ -475,8 +488,8 @@ public class TransferKeyWithSAML {
         log.debug("Binding Certificate SHA-1: {}", Sha1Digest.digestOf(bindingKeyCertificate.getEncoded()).toHexString());
         log.debug("Binding Public Key SHA-1: {}", Sha1Digest.digestOf(bindingKeyCertificate.getPublicKey().getEncoded()).toHexString());
         X509Certificate bindingKeyIssuer = findCertificateIssuer(bindingKeyCertificate, trustedTpmIdentityAuthorities);
-        if( bindingKeyIssuer == null ) {
-            log.error("Binding key certificate not verified any trusted authority");
+        if (bindingKeyIssuer == null) {
+            log.error("Binding key certificate not verified by any trusted authority");
             return TrustReport.UNTRUSTED;
         }
 
@@ -486,13 +499,13 @@ public class TransferKeyWithSAML {
             log.error("Cannot verify that AIK certified the binding key", e);
             return TrustReport.UNTRUSTED;
         }
-        
+
         /* now verify binding key has the tpm-bind-data flag set and the migration flag NOT set */
-        if( !CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey) ) {
+        if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey)) {
             log.error("Binding key certificate has invalid attributes or cannot be verified with the AIK");
             return TrustReport.UNTRUSTED;
         }
-        
+
         return new TrustReport(true, bindingKeyCertificate.getPublicKey());
     }
 }

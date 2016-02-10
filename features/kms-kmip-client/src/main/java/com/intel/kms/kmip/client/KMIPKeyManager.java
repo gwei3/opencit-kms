@@ -77,7 +77,7 @@ public class KMIPKeyManager implements KeyManager {
 	public static final String ENCODER = "kmip.encoder";
 	public static final String DECODER = "kmip.decoder";
 	public static final String TRANSPORTLAYER = "kmip.transportLayer";
-	public static final String TARGETHOSTNAME = "kmip.targetHostname";
+	public static final String ENDPOINT = "kmip.endpoint";
 	public static final String KEYSTORELOCATION = "kmip.keyStoreLocation";
 	public static final String KEYSTOREPW = "kmip.keyStorePW";
 	// TODO: following constant duplicated from kms-keystore-directory

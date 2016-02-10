@@ -262,6 +262,8 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
 
   # the master password is required
   if [ -z "$KMSPROXY_PASSWORD" ] && [ ! -f $KMSPROXY_CONFIGURATION/.kmsproxy_password ]; then
+    touch $KMSPROXY_CONFIGURATION/.kmsproxy_password
+    chown $KMSPROXY_USERNAME:$KMSPROXY_USERNAME $KMSPROXY_CONFIGURATION/.kmsproxy_password
     kmsproxy generate-password > $KMSPROXY_CONFIGURATION/.kmsproxy_password
   fi
 
@@ -275,6 +277,10 @@ if [ -z "$KMSPROXY_NOSETUP" ]; then
   kmsproxy config jetty.secure.port $KMSPROXY_PORT_HTTPS >/dev/null
 
   kmsproxy setup
+
+  # temporary fix for bug #5008
+  echo >> $KMSPROXY_CONFIGURATION/extensions.cache
+  echo org.glassfish.jersey.media.multipart.MultiPartFeature >> $KMSPROXY_CONFIGURATION/extensions.cache
 fi
 
 # delete the temporary setup environment variables file

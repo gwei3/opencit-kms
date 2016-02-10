@@ -11,7 +11,7 @@ import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTORELOCATION;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTOREPW;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KMS_STORAGE_KEYSTORE_FILE_PROPERTY;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY;
-import static com.intel.kms.kmip.client.KMIPKeyManager.TARGETHOSTNAME;
+import static com.intel.kms.kmip.client.KMIPKeyManager.ENDPOINT;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -75,7 +75,7 @@ public class KMIPKeyManagerTest {
 		config.set(DECODER, "ch.ntb.inf.kmip.process.decoder.KMIPDecoder");
 		config.set(TRANSPORTLAYER,
 				"ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerHTTPSLocalHost");
-		config.set(TARGETHOSTNAME,
+		config.set(ENDPOINT,
 				"https://localhost:8443/KMIPWebAppServer/KMIPServlet");
 		config.set(KEYSTORELOCATION, "D:\\keystore\\keystore.jks");
 		config.set(KEYSTOREPW, "password");

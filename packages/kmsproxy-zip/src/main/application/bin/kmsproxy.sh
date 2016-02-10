@@ -158,7 +158,7 @@ kmsproxy_start() {
 
     # check if we need to use authbind or if we can start java directly
     prog="$JAVA_CMD"
-    if [ -n "$KMS_USERNAME" ] && [ "$KMS_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n "$(which authbind 2>/dev/null)" ]; then
+    if [ -n "$KMSPROXY_USERNAME" ] && [ "$KMSPROXY_USERNAME" != "root" ] && [ $(whoami) != "root" ] && [ -n "$(which authbind 2>/dev/null)" ]; then
       prog="authbind $JAVA_CMD"
       JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true"
     fi
