@@ -56,7 +56,9 @@ public class Secrets extends BarbicanOperation {
         Map<String, Object> map = new HashMap<>();
         map.put("id", transferSecretRequest.id);
         byte[] sc = getTarget().path("/v1/secrets/{id}").
-                resolveTemplates(map).request().header("X-Project-Id", xProjectID).
+                resolveTemplates(map).request().
+                header("X-Project-Id", xProjectID).
+                header("X-Auth-Token", barbAuthToken.getToken()).
                 accept(transferSecretRequest.accept).
                 get(byte[].class);
         TransferSecretResponse transferSecretResponse = new TransferSecretResponse();
@@ -70,6 +72,7 @@ public class Secrets extends BarbicanOperation {
         LOG.debug("registerSecretResponse: {}", getTarget().getUri().toString());
         Response response = getTarget().path("/v1/secrets").request().
                 header("X-Project-Id", xProjectID).
+                header("X-Auth-Token", barbAuthToken.getToken()). 
                 header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).
                 post(Entity.json(registerSecretRequest));
         registerSecretResponse = response.readEntity(RegisterSecretResponse.class);
@@ -84,6 +87,7 @@ public class Secrets extends BarbicanOperation {
         map.put("id", deleteSecretRequest.id);
         Response response = getTarget().path("/v1/secrets/{id}").resolveTemplates(map).request().
                 header("X-Project-Id", xProjectID).
+                header("X-Auth-Token", barbAuthToken.getToken()).
                 accept(MediaType.APPLICATION_JSON).
                 delete();
         deleteSecretResponse = new DeleteSecretResponse();
@@ -97,7 +101,9 @@ public class Secrets extends BarbicanOperation {
         WebTarget path = getTarget().path("/v1/secrets");
         path.queryParam("limit", listSecretsRequest.limit);
         path.queryParam("offset", listSecretsRequest.offset);
-        Response response = path.request().header("X-Project-Id", xProjectID).get();
+        Response response = path.request().
+                header("X-Project-Id", xProjectID).
+                header("X-Auth-Token", barbAuthToken.getToken()).get();
         listSecretsResponse = response.readEntity(ListSecretsResponse.class);
 
         return listSecretsResponse;

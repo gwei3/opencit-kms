@@ -30,7 +30,7 @@ import static com.intel.kms.kmip.client.KMIPKeyManager.DECODER;
 import static com.intel.kms.kmip.client.KMIPKeyManager.ENCODER;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTORELOCATION;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTOREPW;
-import static com.intel.kms.kmip.client.KMIPKeyManager.TARGETHOSTNAME;
+import static com.intel.kms.kmip.client.KMIPKeyManager.ENDPOINT;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
 import com.intel.kms.kmip.client.exception.KMIPClientException;
 import java.io.UnsupportedEncodingException;
@@ -65,7 +65,7 @@ public class KMIPKmsStub implements KMIPStubInterface {
                     config.get(TRANSPORTLAYER),
                     "ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerHTTP")
                     .newInstance();
-            this.transportLayer.setTargetHostname(config.get(TARGETHOSTNAME));
+            this.transportLayer.setTargetHostname(config.get(ENDPOINT)); //really requires an endpoint, KMIP4j just calls it a target hostname
             this.transportLayer.setKeyStoreLocation(config
                     .get(KEYSTORELOCATION));
             this.transportLayer.setKeyStorePW(config.get(KEYSTOREPW));

@@ -33,6 +33,7 @@ public class Orders extends BarbicanOperation {
         LOG.debug("createOrderRequest: {}", getTarget().getUri().toString());
         createOrderResponse = getTarget().path("/v1/orders").request().
                 header("X-Project-Id", xProjectID).
+                header("X-Auth-Token", barbAuthToken.getToken()).
                 header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).
                 post(Entity.json(createOrderRequest), CreateOrderResponse.class);
         return createOrderResponse;
@@ -48,6 +49,7 @@ public class Orders extends BarbicanOperation {
                 resolveTemplates(map).
                 request().
                 header("X-Project-Id", xProjectID).
+                header("X-Auth-Token", barbAuthToken.getToken()).
                 get();
         getOrderResponse = getResponse.readEntity(GetOrderResponse.class);
         return getOrderResponse;
