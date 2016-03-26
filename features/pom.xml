@@ -1,30 +1,31 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <groupId>com.intel.mtwilson.kms</groupId>
-  <artifactId>kms-maven-build-kms</artifactId>
-  <version>0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
-
-  <modules>
-    <module>kms-barbican-api</module>
-    <module>kms-barbican-server</module>
-	<module>kms-barbican-client</module>
-    <module>kms-client-jaxrs2</module>
-    <module>kms-integrity</module>
-    <module>kms-jsonapi</module>
-    <module>kms-jsonapi-keys</module>
-    <module>kms-keystore</module>
-    <module>kms-keystore-api</module>
-    <module>kms-keystore-directory</module>
-    <module>kms-keys-ws-v2</module>
-    <module>kms-keys-ws-v2-api</module>
-	<module>kms-saml</module>
-	<module>kms-test</module>
-	<module>kms-transfer-policy</module>
-	<module>kms-user</module>
-	<module>kms-user-api</module>
-	<module>kms-kmip-client</module>
-  </modules>
-
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.intel.mtwilson.kms</groupId>
+    <artifactId>kms-maven-build-kms</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    
+    <packaging>pom</packaging>
+    
+    <modules>
+        <module>kms-barbican-api</module>
+        <module>kms-barbican-client</module>
+        <module>kms-barbican-server</module>
+        <module>kms-client-jaxrs2</module>
+        <module>kms-integrity</module>
+        <module>kms-jsonapi</module>
+        <module>kms-jsonapi-keys</module>
+        <module>kms-keys-ws-v2</module>
+        <module>kms-keys-ws-v2-api</module>
+        <module>kms-keystore</module>
+        <module>kms-keystore-api</module>
+        <module>kms-keystore-directory</module>
+        <module>kms-kmip-client</module>
+        <module>kms-saml</module>
+        <module>kms-test</module>
+        <module>kms-transfer-policy</module>
+        <module>kms-user</module>
+        <module>kms-user-api</module>
+    </modules>
+    
 </project>

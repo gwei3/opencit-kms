@@ -1,20 +1,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-
+    
+    <groupId>com.intel.mtwilson.kms</groupId>
     <artifactId>kms-keystore-directory</artifactId>
+    
     <packaging>jar</packaging>
     <description>Local generation and storage of keys in a directory</description>
+    
     <parent>
-		  <groupId>com.intel.mtwilson.kms</groupId>
-		  <artifactId>kms-maven-java</artifactId>
-		  <version>0.1-SNAPSHOT</version>
-          <relativePath/>
+        <groupId>com.intel.mtwilson.kms</groupId>
+        <artifactId>kms-maven-java</artifactId>
+        <version>0.1-SNAPSHOT</version>
+        <relativePath/>
     </parent>
-
-
+    
     <dependencies>
-
+        <!-- common-java -->
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-configuration</artifactId>
@@ -24,26 +25,20 @@
             <artifactId>mtwilson-password-vault</artifactId>
             <version>3.0-SNAPSHOT</version>
         </dependency>
-<!--        <dependency>
+        <!--
+        <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-password-vault</artifactId>
-        </dependency>-->
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-keystore-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
-              <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-user</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
+        -->
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-setup-ext</artifactId>
         </dependency>
-      
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-saml-verifier</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-configuration</artifactId>
@@ -57,36 +52,43 @@
             <artifactId>mtwilson-util-tpm12</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.intel.mtwilson.services</groupId>
-            <artifactId>mtwilson-saml-verifier</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-crypto</artifactId>
         </dependency>
-	<dependency>
-		<groupId>com.intel.mtwilson.util</groupId>
-		<artifactId>mtwilson-util-pem</artifactId>
-	</dependency>
-      
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>com.intel.mtwilson.util</groupId>
-                <artifactId>mtwilson-util-jaxrs2</artifactId>
-            </dependency>
-      
-            
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-pem</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.util</groupId>
+            <artifactId>mtwilson-util-jaxrs2</artifactId>
+        </dependency>
+        
+        <!-- kms -->
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-keystore-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+              <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-user</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- external -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -100,9 +102,8 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency> 
-
-		<!--
+        </dependency>
+        <!--
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
@@ -115,7 +116,6 @@
             <version>2.4</version>
             <type>jar</type>
         </dependency>
-    
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
@@ -126,13 +126,12 @@
             <artifactId>httpclient</artifactId>
             <version>4.2</version>
         </dependency>
-
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>2.0.1</version>
         </dependency>
-		-->
-		
-    </dependencies>  
+        -->
+    </dependencies>
+    
 </project>
