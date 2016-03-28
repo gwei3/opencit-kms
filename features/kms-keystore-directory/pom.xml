@@ -23,7 +23,6 @@
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-password-vault</artifactId>
-            <version>3.0-SNAPSHOT</version>
         </dependency>
         <!--
         <dependency>

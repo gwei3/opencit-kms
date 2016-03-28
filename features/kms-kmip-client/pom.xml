@@ -55,7 +55,7 @@
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-barbican-api</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>

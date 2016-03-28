@@ -31,7 +31,6 @@
         <dependency>            
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-crypto-key</artifactId>
-            <version>0.1-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -45,7 +44,6 @@
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-io</artifactId>
-            <version>0.3-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <!--
@@ -64,7 +62,7 @@
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-barbican-api</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
