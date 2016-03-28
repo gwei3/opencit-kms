@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.intel.mtwilson.linux</groupId>
             <artifactId>mtwilson-linux-util</artifactId>
-            <version>${mtwilson.version}</version>
+            <version>${project.version}</version>
             <type>sh</type>
         </dependency>
         

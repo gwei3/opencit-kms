@@ -112,14 +112,14 @@
             <dependency>
                 <groupId>com.intel.mtwilson.maven</groupId>
                 <artifactId>mtwilson-maven-bom-coreutil</artifactId>
-                <version>3.0-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.maven</groupId>
                 <artifactId>mtwilson-maven-bom-external</artifactId>
-                <version>3.0-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -128,42 +128,42 @@
             <dependency>
                 <groupId>com.intel.mtwilson.integration</groupId>
                 <artifactId>mtwilson-configuration</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.integration</groupId>
                 <artifactId>mtwilson-launcher</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.integration</groupId>
                 <artifactId>mtwilson-launcher-api</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.integration</groupId>
                 <artifactId>mtwilson-password-vault</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.services</groupId>
                 <artifactId>mtwilson-jersey2-util</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.services</groupId>
                 <artifactId>mtwilson-saml-verifier</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.services</groupId>
                 <artifactId>mtwilson-setup</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intel.mtwilson.services</groupId>
                 <artifactId>mtwilson-setup-ext</artifactId>
-                <version>${mtwilson.version}</version>
+                <version>${project.version}</version>
             </dependency>
             
             <!-- external -->
@@ -246,7 +246,6 @@
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mtwilson.version>3.0-SNAPSHOT</mtwilson.version> <!-- for any components that we use from the latest mt wilson build -->
         <license.copyright>2014 Intel Corporation. All rights reserved.</license.copyright>
         <license.url>http://cscenter.intel.com/portal/</license.url>
     </properties>

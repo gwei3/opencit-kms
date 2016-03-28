@@ -55,18 +55,16 @@
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-shiro-file</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-shiro-ws-v2</artifactId>
-            <version>${mtwilson.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- for the RepeatableRequestFilter -->
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-http-servlets</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>

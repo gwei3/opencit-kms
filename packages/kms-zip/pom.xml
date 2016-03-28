@@ -102,7 +102,7 @@
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-configuration-settings-ws-v2</artifactId>
-            <version>${mtwilson.version}</version>
+            <version>${project.version}</version>
             <classifier>feature</classifier>
             <type>zip</type>
         </dependency>
@@ -132,7 +132,7 @@
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-shiro-ws-v2</artifactId>
-            <version>${mtwilson.version}</version>
+            <version>${project.version}</version>
         </dependency>
         -->
         
@@ -248,7 +248,6 @@
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-configuration-settings-ws-v2</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.core</groupId>

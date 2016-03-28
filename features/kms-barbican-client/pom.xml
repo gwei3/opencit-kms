@@ -23,12 +23,10 @@
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-configuration</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-password-vault</artifactId>
-            <version>${mtwilson.version}</version>
         </dependency>
         <dependency>            
             <groupId>com.intel.mtwilson.util</groupId>
