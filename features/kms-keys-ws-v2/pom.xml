@@ -3,7 +3,6 @@
     
     <groupId>com.intel.mtwilson.kms</groupId>
     <artifactId>kms-keys-ws-v2</artifactId>
-    <version>0.1-SNAPSHOT</version>
     
     <description>JAX-RS interface to key wrapping and storage service in Mt Wilson 2.0 style</description>
     

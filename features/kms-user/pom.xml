@@ -3,7 +3,6 @@
     
     <groupId>com.intel.mtwilson.kms</groupId>
     <artifactId>kms-user</artifactId>
-    <version>0.1-SNAPSHOT</version>
     
     <description>User information</description>
     

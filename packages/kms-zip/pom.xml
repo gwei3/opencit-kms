@@ -3,7 +3,6 @@
     
     <groupId>com.intel.mtwilson.kms</groupId>
     <artifactId>kms-zip</artifactId>
-    <version>0.1-SNAPSHOT</version>
     
     <packaging>jar</packaging>
     <description>Key management server</description>
