@@ -1,3 +1,3 @@
 # A successful build produces the following files:
-packages/kms/target/kms-0.1-SNAPSHOT.bin
-packages/kmsproxy/target/kmsproxy-0.1-SNAPSHOT.bin
+packages/kms/target/kms-3.1-SNAPSHOT.bin
+packages/kmsproxy/target/kmsproxy-3.1-SNAPSHOT.bin
