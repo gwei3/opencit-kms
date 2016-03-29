@@ -1,82 +1,84 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-
+    
+    <groupId>com.intel.mtwilson.kms</groupId>
     <artifactId>kms-javadoc</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    
     <packaging>jar</packaging>
     <description>Javadocs for KMS</description>
+    
     <parent>
-		  <groupId>com.intel.mtwilson.kms</groupId>
-		  <artifactId>kms-maven-java</artifactId>
-		  <version>0.1-SNAPSHOT</version>
-          <relativePath/>
+        <groupId>com.intel.mtwilson.kms</groupId>
+        <artifactId>kms-maven-java</artifactId>
+        <version>0.1-SNAPSHOT</version>
+        <relativePath/>
     </parent>
-
-  <build>
-	<plugins>
-		<plugin>
-			<artifactId>maven-javadoc-plugin</artifactId>
-			<version>2.10.1</version>
-            <!--
-            <stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
-            -->
-			<executions>
-				<!-- this execution produces a jar that includes mtwilson server javadocs -->
-				<execution>
-					<id>all-javadoc-jar</id>
-					<phase>package</phase>
-					<goals>
-						<goal>jar</goal>
-						<goal>resource-bundle</goal>
-					</goals>
-					<configuration>
-						<!-- this turns on dependency-driven aggregation, 
-						so we can have one javadoc distribution that includes any maven dependencies we need -->
-						<includeDependencySources>true</includeDependencySources>
-						<includeTransitiveDependencySources>true</includeTransitiveDependencySources>
-						<dependencySourceIncludes>
-							<dependencySourceInclude>com.intel.mtwilson.kms:*</dependencySourceInclude>
-							<dependencySourceInclude>com.intel.mtwilson.util:*</dependencySourceInclude>
-                            <!-- note: leaving out the portal code to prevent confusion with the mtwilson server -->
-						</dependencySourceIncludes>
-                        <!-- class diagrams by graphviz and umlgraph -->
-                        <doclet>org.umlgraph.doclet.UmlGraphDoc</doclet>
-                        <docletArtifact>
-                            <groupId>org.umlgraph</groupId>
-                            <artifactId>umlgraph</artifactId>
-                            <version>5.6.6</version>
-                        </docletArtifact>
-                        <additionalparam>-views</additionalparam>
-                        <useStandardDocletOptions>true</useStandardDocletOptions>
-					</configuration>
-				</execution>
-			</executions>
-		</plugin>
-	</plugins>
-  </build>
-
-
-		<!--  dependencies without java code are commented out because they break the javadoc plugin -->
+    
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.1</version>
+                <!--
+                <stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
+                -->
+                <executions>
+                    <!-- this execution produces a jar that includes mtwilson server javadocs -->
+                    <execution>
+                        <id>all-javadoc-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                            <goal>resource-bundle</goal>
+                        </goals>
+                        <configuration>
+                            <!-- this turns on dependency-driven aggregation, 
+                            so we can have one javadoc distribution that includes any maven dependencies we need -->
+                            <includeDependencySources>true</includeDependencySources>
+                            <includeTransitiveDependencySources>true</includeTransitiveDependencySources>
+                            <dependencySourceIncludes>
+                                <dependencySourceInclude>com.intel.mtwilson.kms:*</dependencySourceInclude>
+                                <dependencySourceInclude>com.intel.mtwilson.util:*</dependencySourceInclude>
+                                <!-- note: leaving out the portal code to prevent confusion with the mtwilson server -->
+                            </dependencySourceIncludes>
+                            <!-- class diagrams by graphviz and umlgraph -->
+                            <doclet>org.umlgraph.doclet.UmlGraphDoc</doclet>
+                            <docletArtifact>
+                                <groupId>org.umlgraph</groupId>
+                                <artifactId>umlgraph</artifactId>
+                                <version>5.6.6</version>
+                            </docletArtifact>
+                            <additionalparam>-views</additionalparam>
+                            <useStandardDocletOptions>true</useStandardDocletOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <!--  dependencies without java code are commented out because they break the javadoc plugin -->
     <dependencies>
-		<!--
-		also a transitive dependency from kms-keystore and kms-jetty9
-		-->
-        <dependency>
-            <groupId>com.intel.mtwilson.kms</groupId>
-            <artifactId>kms-jersey2</artifactId>
-            <version>0.1-SNAPSHOT</version>
-        </dependency>
+        <!-- common-java -->
         <dependency>
             <groupId>com.intel.mtwilson.core</groupId>
             <artifactId>mtwilson-core-jetty9</artifactId>
-            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        
+        <!-- kms -->
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-jersey2</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
-
+        
+        <!-- external -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -90,7 +92,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency>        
-
-    </dependencies>  
+        </dependency>
+    </dependencies>
+    
 </project>

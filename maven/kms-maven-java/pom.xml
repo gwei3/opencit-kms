@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     
-    <artifactId>kms-maven-java</artifactId>
     <groupId>com.intel.mtwilson.kms</groupId>
-    <version>0.1-SNAPSHOT</version>
+    <artifactId>kms-maven-java</artifactId>
+    <version>3.1-SNAPSHOT</version>
     
     <packaging>pom</packaging>
     <description>Java project in key management server</description>
@@ -11,7 +11,7 @@
     <parent>
         <groupId>com.intel.mtwilson.kms</groupId>
         <artifactId>kms-maven-root</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>3.1-SNAPSHOT</version>
         <relativePath />
     </parent>
     

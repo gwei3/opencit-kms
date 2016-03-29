@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.intel.mtwilson.maven</groupId>
         <artifactId>mtwilson-core-application-zip</artifactId>
-        <version>3.0-SNAPSHOT</version>
+        <version>3.1-SNAPSHOT</version>
         <relativePath/>
     </parent>
     
@@ -18,13 +18,14 @@
         <!-- common-java -->
         <dependency>
             <groupId>com.intel.mtwilson.core</groupId>
-            <artifactId>mtwilson-core-jetty9</artifactId>
+            <artifactId>mtwilson-core-data-bundle</artifactId>
+            <version>${project.version}</version>
+            <classifier>feature</classifier>
+            <type>zip</type>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.core</groupId>
-            <artifactId>mtwilson-core-data-bundle</artifactId>
-            <classifier>feature</classifier>
-            <type>zip</type>
+            <artifactId>mtwilson-core-jetty9</artifactId>
         </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.core</groupId>
@@ -43,10 +44,6 @@
             <groupId>com.intel.mtwilson.integration</groupId>
             <artifactId>mtwilson-password-vault</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.intel.mtwilson.services</groupId>
-            <artifactId>mtwilson-jersey2-util</artifactId>
-        </dependency>
         <!-- for Shiro permission annotations and processing -->
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
@@ -63,6 +60,11 @@
         </dependency>
         
         <!-- mtwilson -->
+        <dependency>
+            <groupId>com.intel.mtwilson.services</groupId>
+            <artifactId>mtwilson-jersey2-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.services</groupId>
             <artifactId>mtwilson-shiro-ws-v2</artifactId>
