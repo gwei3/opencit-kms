@@ -3,7 +3,6 @@
     
     <groupId>com.intel.mtwilson.kms</groupId>
     <artifactId>kms-maven-java</artifactId>
-    <version>3.1-SNAPSHOT</version>
     
     <packaging>pom</packaging>
     <description>Java project in key management server</description>

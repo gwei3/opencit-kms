@@ -3,7 +3,6 @@
     
     <artifactId>kms-maven-package-makeself</artifactId>
     <groupId>com.intel.mtwilson.kms</groupId>
-    <version>3.1-SNAPSHOT</version>
     
     <packaging>pom</packaging>
     <description>Describes how to create an application self-extracting file</description>
