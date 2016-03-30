@@ -29,6 +29,10 @@ changeVersionCommand="mvn versions:set -DnewVersion=${version}"
 changeParentVersionCommand="mvn versions:update-parent -DallowSnapshots=true -DparentVersion=${version}"
 mvnInstallCommand="mvn clean install"
 
+(cd maven/kms-maven-root && $changeVersionCommand)
+if [ $? -ne 0 ]; then echo "Failed to change maven version on \"maven/kms-maven-root\" folder" >&2; exit 3; fi
+(cd maven/kms-maven-root && $mvnInstallCommand)
+if [ $? -ne 0 ]; then echo "Failed to maven install \"maven/kms-maven-root\"" >&2; exit 3; fi
 (cd maven && $changeVersionCommand)
 if [ $? -ne 0 ]; then echo "Failed to change maven version on \"maven\" folder" >&2; exit 3; fi
 ant ready
@@ -37,6 +41,8 @@ $changeVersionCommand
 if [ $? -ne 0 ]; then echo "Failed to change maven version at top level" >&2; exit 3; fi
 $changeParentVersionCommand
 if [ $? -ne 0 ]; then echo "Failed to change maven parent versions" >&2; exit 3; fi
+(cd features && $changeVersionCommand)
+if [ $? -ne 0 ]; then echo "Failed to change maven version on \"features-proxy\" folder" >&2; exit 3; fi
 sed -i 's/\(<version>\).*\(<\/version>\)/\1'${version}'\2/g' features/kms-saml/feature.xml
 if [ $? -ne 0 ]; then echo "Failed to change version in \"features/kms-saml/feature.xml\"" >&2; exit 3; fi
 sed -i 's/\(<version>\).*\(<\/version>\)/\1'${version}'\2/g' features/kms-keys-ws-v2/feature.xml
@@ -47,6 +53,8 @@ sed -i 's/\(<version>\).*\(<\/version>\)/\1'${version}'\2/g' features/kms-barbic
 if [ $? -ne 0 ]; then echo "Failed to change version in \"features/kms-barbican-client/feature.xml\"" >&2; exit 3; fi
 sed -i 's/\(<version>\).*\(<\/version>\)/\1'${version}'\2/g' features/kms-kmip-client/feature.xml
 if [ $? -ne 0 ]; then echo "Failed to change version in \"features/kms-kmip-client/feature.xml\"" >&2; exit 3; fi
+if [ $? -ne 0 ]; then echo "Failed to change maven version on \"features\" folder" >&2; exit 3; fi
+(cd features-proxy && $changeVersionCommand)
 
 (cd packages  && $changeVersionCommand)
 if [ $? -ne 0 ]; then echo "Failed to change maven version on \"packages\" folder" >&2; exit 3; fi
