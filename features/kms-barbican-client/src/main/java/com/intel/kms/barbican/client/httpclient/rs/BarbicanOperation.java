@@ -18,11 +18,14 @@ public class BarbicanOperation extends BarbicanRsClient {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BarbicanOperation.class);
     protected static String xProjectID = null;
+    protected static BarbicanAuthToken barbAuthToken = null; 
 
     public BarbicanOperation(Configuration configuration) throws BarbicanClientException {
         super(BarbicanRsClientBuilder.factory().configuration(configuration).build());
         xProjectID = configuration.get("barbican.project.id");
-
+        
+        if(barbAuthToken == null)
+            barbAuthToken = new BarbicanAuthToken(configuration);        
     }
 
 }

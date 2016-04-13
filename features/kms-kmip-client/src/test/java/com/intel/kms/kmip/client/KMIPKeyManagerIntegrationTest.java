@@ -11,7 +11,7 @@ import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTORELOCATION;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KEYSTOREPW;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KMS_STORAGE_KEYSTORE_FILE_PROPERTY;
 import static com.intel.kms.kmip.client.KMIPKeyManager.KMS_STORAGE_KEYSTORE_PASSWORD_PROPERTY;
-import static com.intel.kms.kmip.client.KMIPKeyManager.TARGETHOSTNAME;
+import static com.intel.kms.kmip.client.KMIPKeyManager.ENDPOINT;
 import static com.intel.kms.kmip.client.KMIPKeyManager.TRANSPORTLAYER;
 import static com.intel.mtwilson.core.PasswordVaultFactory.PASSWORD_VAULT_FILE_PROPERTY;
 import static com.intel.mtwilson.core.PasswordVaultFactory.PASSWORD_VAULT_KEY_PROPERTY;
@@ -57,7 +57,7 @@ public class KMIPKeyManagerIntegrationTest {
 				"ch.ntb.inf.kmip.process.decoder.KMIPDecoder");
 		configuration.set(TRANSPORTLAYER,
 				"ch.ntb.inf.kmip.stub.transport.KMIPStubTransportLayerHTTP");
-		configuration.set(TARGETHOSTNAME,
+		configuration.set(ENDPOINT,
 				"http://localhost:8090/KMIPWebAppServer/KMIPServlet");
 		configuration.set(KEYSTORELOCATION, "D:\\keystore\\keystore.jks");
 		configuration.set(KEYSTOREPW, "password");
