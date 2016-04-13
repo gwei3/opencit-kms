@@ -5,7 +5,7 @@
     <artifactId>kms-maven-package-zip</artifactId>
 	<groupId>com.intel.mtwilson.kms</groupId>
 	<version>0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <description>Describes how to create an application zip file</description>
 
     <parent>
