@@ -57,7 +57,7 @@ public class MtWilsonV1Client implements SecurityAssertionProvider {
             throw new IllegalArgumentException("Mt Wilson URL is required");
         }
         log.debug("MtWilson URL: {}", mtwilsonUrl);
-        String mtwilsonTlsCertSha1 = configuration.get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA1);
+        String mtwilsonTlsCertSha256 = configuration.get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA256);
         /**
          * We use the v1 API for SAML report so we need to append "/v1" to the
          * URL
@@ -65,7 +65,7 @@ public class MtWilsonV1Client implements SecurityAssertionProvider {
         URL v1 = new URL(String.format("%s/v1", mtwilsonUrl.toExternalForm()));
 
         Properties p = new Properties();
-        p.setProperty("mtwilson.api.tls.policy.certificate.sha1", mtwilsonTlsCertSha1);
+        p.setProperty("mtwilson.api.tls.policy.certificate.sha256", mtwilsonTlsCertSha256);
         TlsPolicy tlsPolicy = PropertiesTlsPolicyFactory.createTlsPolicy(p);
 
         ApiClient api = KeystoreUtil.clientForUserInResource(new FileResource(mtwilsonKeystore), mtwilsonUsername, new String(mtwilsonPassword.toCharArray()), v1, tlsPolicy); // throws ClientException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableEntryException, CertificateEncodingException, FileNotFoundException, KeyManagementException

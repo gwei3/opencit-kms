@@ -444,7 +444,7 @@ public class RemoteKeyManager implements KeyManager {
 
     // NOTE: this is a rough first draft;  should refer to NIST 800-57 part 1, table 2 "comparable strengths" for more detailed recommendation on key lengths
     private boolean isProtectionAdequate(TransferKeyResponse response, CipherKeyAttributes subject, CipherKeyAttributes encryption) {
-        // first, we allow protection using a key of the same algorithm of equal or greater length ( AES-128,192,256 can wrap AES-128,  RSA 1024,2048,4096 can wrap RSA 1024, etc.)
+        // first, we allow protection using a key of the same algorithm of equal or greater length ( AES-128,192,256 can wrap AES-128, or in RSA 2048 can wrap 1024, and RSA 3072 can wrap 2048, etc. because of their max message lengths)
         if (subject.getAlgorithm().equals(encryption.getAlgorithm()) && subject.getKeyLength() <= encryption.getKeyLength()) {
             log.debug("Requested key algorithm {} same as encryption algorithm {} and key lengths ok subject {} <= encryption {}", subject.getAlgorithm(), encryption.getAlgorithm(), subject.getKeyLength(), encryption.getKeyLength());
             return true;

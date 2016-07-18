@@ -13,6 +13,7 @@ import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.fault.InvalidParameter;
 import com.intel.kms.api.fault.MissingRequiredParameter;
 import com.intel.kms.api.fault.UnsupportedAlgorithm;
+import com.intel.kms.cipher.SecretKeyReport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,29 +26,9 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public class RequestValidator {
 
-    public static List<Fault> validateCreateKey(CreateKeyRequest createKeyRequest) {
-        List<Fault> faults = new ArrayList<>();
-        if (createKeyRequest.getAlgorithm() == null) {
-            faults.add(new MissingRequiredParameter("algorithm"));
-            return faults;
-        }
-        if (!createKeyRequest.getAlgorithm().equalsIgnoreCase("AES")) {
-            faults.add(new InvalidParameter("algorithm", new UnsupportedAlgorithm(createKeyRequest.getAlgorithm())));
-            return faults;
-        }
-        // check AES specific parameters
-        if (createKeyRequest.getAlgorithm().equalsIgnoreCase("AES")) {
-            if (createKeyRequest.getKeyLength() == null) {
-                faults.add(new MissingRequiredParameter("keyLength")); // TODO: the "parameter" field of the MissingRequiredParameter class needs to be annotated so a filter can automatically convert it's VALUE from keyLength to key_length (javascript) or keep it as keyLength (xml) or KeyLength (SAML) etc.  ... that's something the jackson mapper doesn't do so we have to ipmlement a custom filter for VALUES taht represent key names.
-                return faults;
-            }
-            if (!ArrayUtils.contains(new int[]{128, 192, 256}, createKeyRequest.getKeyLength())) {
-                faults.add(new InvalidParameter("keyLength"));
-                return faults;
-            }
-        }
-
-        return faults;
+    public static Collection<Fault> validateCreateKey(CreateKeyRequest createKeyRequest) {
+        SecretKeyReport report = new SecretKeyReport(createKeyRequest.getAlgorithm(), createKeyRequest.getKeyLength());
+        return report.getFaults();
     }
 
     public static List<Fault> validateTransferKey(TransferKeyRequest transferKeyRequest) {

@@ -17,5 +17,6 @@ public class TransferSecretResponse {
     @JsonValue
     public byte[] toByteArray() {
         return secret;
-    }
+    }    
+    
 }

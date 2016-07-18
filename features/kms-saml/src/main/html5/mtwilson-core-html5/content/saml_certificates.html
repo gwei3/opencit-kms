@@ -30,7 +30,7 @@
                     <table class="table table-striped" data-bind="visible: samlCertificates().length > 0">
                         <thead>
                             <tr>
-                                <th style="width: 75px;">SHA-1 Digest</th>
+                                <th style="width: 75px;">SHA-256 Digest</th>
                                 <th style="width: 150px;">Subject</th>
                                 <th style="width: 150px;">Issuer</th>
                                 <!--
@@ -42,7 +42,7 @@
                         </thead>
                         <tbody data-bind="foreach: samlCertificates">
                             <tr>
-                                <td><span data-bind="text: sha1"></span></td>
+                                <td><span data-bind="text: sha256"></span></td>
                                 <td><span data-bind="text: subject"></span></td>
                                 <td><span data-bind="text: issuer"></span></td>
                                 <!--

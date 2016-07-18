@@ -59,7 +59,7 @@ public class MtWilsonClient extends AbstractSetupTask {
     private String[] dns;
     private String mtwilsonUsername;
     private URL mtwilsonUrl;
-    private String mtwilsonTlsCertSha1;
+    private String mtwilsonTlsCertSha256;
     private final ObjectMapper yaml;
     private MtWilsonClientConfiguration configuration;
 
@@ -112,7 +112,7 @@ public class MtWilsonClient extends AbstractSetupTask {
         }
         
         //mtwilsonUrl = getConfiguration().get(MtWilsonClientConfiguration.MTWILSON_API_URL);
-        mtwilsonTlsCertSha1 = getConfiguration().get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA1);
+        mtwilsonTlsCertSha256 = getConfiguration().get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA256);
         
         try {
             //URL url = new URL(mtwilsonUrl);
@@ -193,7 +193,7 @@ public class MtWilsonClient extends AbstractSetupTask {
         FileResource resource = new FileResource(keystoreFile);
         Properties p = new Properties();
 //        p.setProperty("mtwilson.api.url", mtwilsonUrl); // past bug in MwClientUtil required us to set this, but now it uses the URL we pass in as a parameter
-        p.setProperty("mtwilson.api.tls.policy.certificate.sha1", mtwilsonTlsCertSha1);
+        p.setProperty("mtwilson.api.tls.policy.certificate.sha256", mtwilsonTlsCertSha256);
 //        TlsPolicy tlsPolicy = PropertiesTlsPolicyFactory.createTlsPolicy(p);
 //        KeystoreUtil.createUserInResource(resource, mtwilsonUsername, new String(keystorePassword.toCharArray()), new URL(mtwilsonUrl), tlsPolicy, new String[] { "Attestation" }, "TLS");
 
@@ -252,7 +252,7 @@ public class MtWilsonClient extends AbstractSetupTask {
         getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_KEYSTORE_FILE_PROPERTY, keystorePath);
         getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_KEYSTORE_PASSWORD_PROPERTY, keystorePasswordAlias);
         getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_API_URL, mtwilsonUrl.toExternalForm());
-        getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA1, mtwilsonTlsCertSha1);
+        getConfiguration().set(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA256, mtwilsonTlsCertSha256);
         getConfiguration().set(KMSPROXY_TLS_CERT_DN, dn);
         if (ip != null) {
             getConfiguration().set(KMSPROXY_TLS_CERT_IP, StringUtils.join(ip, ","));

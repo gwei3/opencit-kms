@@ -61,7 +61,7 @@ public class KeyManagerTest {
         // configure the kms client
         Properties properties = new Properties();
         properties.setProperty("endpoint.url", "https://127.0.0.1");
-        properties.setProperty("tls.policy.certificate.sha1", "e236856b8e691d7d2d709a5d96076fdbca615096");
+        properties.setProperty("tls.policy.certificate.sha256", "751c70c9f2789d3c17f29478eacc158e68436ec6d7808b1f76fb80fe43a45b90");
         properties.setProperty("login.basic.username", "username");
         properties.setProperty("login.basic.password", "password");
         keys = new Keys(properties);

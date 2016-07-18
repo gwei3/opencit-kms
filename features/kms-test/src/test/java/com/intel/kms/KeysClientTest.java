@@ -37,7 +37,7 @@ public class KeysClientTest {
     private Properties getEndpointProperties() {
         Properties properties = new Properties();
         properties.setProperty("endpoint.url", "https://10.1.68.32");
-        properties.setProperty("tls.policy.certificate.sha1", "e61c08586654a335c1136796c870f8de5ae5c0fc");
+        properties.setProperty("tls.policy.certificate.sha256", "751c70c9f2789d3c17f29478eacc158e68436ec6d7808b1f76fb80fe43a45b90");
         properties.setProperty("login.basic.username", "jonathan");
         properties.setProperty("login.basic.password", "jonathan");
         return properties;

@@ -8,12 +8,14 @@ import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.dcsg.cpg.configuration.PrefixConfiguration;
 import com.intel.dcsg.cpg.configuration.PropertiesConfiguration;
 import com.intel.dcsg.cpg.crypto.key.password.Password;
+import com.intel.dcsg.cpg.io.ByteArrayResource;
 import com.intel.mtwilson.api.ApiException;
 import com.intel.mtwilson.as.rest.v2.model.HostAttestation;
 import com.intel.mtwilson.as.rest.v2.model.HostAttestationFilterCriteria;
 import com.intel.mtwilson.attestation.client.jaxrs.HostAttestations;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.saml.TrustAssertion;
+import com.intel.mtwilson.util.crypto.keystore.PasswordKeyStore;
 import java.io.IOException;
 import java.net.URL;
 import java.security.KeyManagementException;
@@ -21,6 +23,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateEncodingException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 import java.util.Properties;
 
@@ -134,19 +137,32 @@ public class MtWilsonV2Client implements SecurityAssertionProvider {
     }
 
     private HostAttestations getMtWilsonClient() throws IOException {
-        Properties properties;
-        if (configuration.get("mtwilson.endpoint.url") != null && configuration.get("mtwilson.tls.policy.certificate.sha1") != null) {
-            properties = PropertiesConfiguration.toProperties(new PrefixConfiguration(configuration, "mtwilson."));
+        if (configuration.get("mtwilson.endpoint.url") != null && configuration.get("mtwilson.tls.policy.certificate.sha256") != null) {
+            Properties properties = PropertiesConfiguration.toProperties(new PrefixConfiguration(configuration, "mtwilson."));
+            
+            try {
+                HostAttestations client = new HostAttestations(properties);
+                return client;
+            } catch (Exception e) {
+                log.error("Cannot instantiate Mt Wilson v2 client", e);
+                throw new IOException(e);
+            }
+            
         } else {
+            Properties properties = new Properties();
+            
             MtWilsonClientConfiguration clientConfig = new MtWilsonClientConfiguration(configuration);
-            properties = new Properties();
             try {
                 Password password = clientConfig.getKeystorePassword();
                 if (password == null) {
                     log.warn("MtWilson Password is not set");
                     password = new Password();
                 }
-                String passwordText = new String(password.toCharArray());
+                
+                PasswordKeyStore passwordKeyStore = new PasswordKeyStore(new ByteArrayResource(), new Password(new char[0])); // empty password because it's only for in-memory use, we won't be writing out this keystore anywhere
+                passwordKeyStore.set("mtwilson.api.key.password", password);
+                passwordKeyStore.set("mtwilson.api.keystore.password", password);
+                
                 URL endpointURL = clientConfig.getEndpointURL();
                 if (endpointURL == null) {
                     log.error("MtWilson URL is not set");
@@ -154,22 +170,22 @@ public class MtWilsonV2Client implements SecurityAssertionProvider {
                 }
                 properties.setProperty("mtwilson.api.url", String.format("%s/v2", endpointURL.toExternalForm()));
                 properties.setProperty("mtwilson.api.keystore", clientConfig.getKeystorePath());
-                properties.setProperty("mtwilson.api.keystore.password", passwordText);
                 properties.setProperty("mtwilson.api.key.alias", clientConfig.getEndpointUsername());
-                properties.setProperty("mtwilson.api.key.password", passwordText);
-                properties.setProperty("mtwilson.api.tls.policy.certificate.sha1", configuration.get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA1));
-            } catch (KeyStoreException e) {
+                properties.setProperty("mtwilson.api.tls.policy.certificate.sha256", configuration.get(MtWilsonClientConfiguration.MTWILSON_TLS_CERT_SHA256));
+
+                try {
+                    HostAttestations client = new HostAttestations(properties, passwordKeyStore);
+                    return client;
+                } catch (Exception e) {
+                    log.error("Cannot instantiate Mt Wilson v2 client", e);
+                    throw new IOException(e);
+                }
+
+            } catch (KeyStoreException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 log.error("Cannot load password", e);
                 throw new IOException(e);
             }
         }
 
-        try {
-            HostAttestations client = new HostAttestations(properties);
-            return client;
-        } catch (Exception e) {
-            log.error("Cannot instantiate Mt Wilson v2 client", e);
-            throw new IOException(e);
-        }
     }
 }

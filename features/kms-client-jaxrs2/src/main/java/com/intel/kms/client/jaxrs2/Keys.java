@@ -39,7 +39,7 @@ import com.intel.kms.ws.v2.api.KeyFilterCriteria;
  * 
  * <pre>
 endpoint.url=https://kms.example.com
-tls.policy.certificate.sha1=8d657a6b344a91d9744c3e9ee73071bd39979adf
+tls.policy.certificate.sha256=751c70c9f2789d3c17f29478eacc158e68436ec6d7808b1f76fb80fe43a45b90
 login.basic.username=client-username
 login.basic.password=client-password
  * </pre>

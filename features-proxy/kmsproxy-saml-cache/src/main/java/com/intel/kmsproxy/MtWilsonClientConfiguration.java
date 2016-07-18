@@ -20,7 +20,7 @@ import java.security.KeyStoreException;
  * @author jbuhacoff
  */
 public class MtWilsonClientConfiguration {
-    public static final String MTWILSON_TLS_CERT_SHA1 = "mtwilson.tls.cert.sha1";
+    public static final String MTWILSON_TLS_CERT_SHA256 = "mtwilson.tls.cert.sha256";
     public static final String MTWILSON_KEYSTORE_PASSWORD_PROPERTY = "mtwilson.keystore.password";
     public static final String MTWILSON_KEYSTORE_FILE_PROPERTY = "mtwilson.keystore.file";
     // constants

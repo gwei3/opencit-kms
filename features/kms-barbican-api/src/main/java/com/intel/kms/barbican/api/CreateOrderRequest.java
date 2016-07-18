@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import javax.ws.rs.HeaderParam;
 
 /**
- * Represents reques to {@code POST /v1/orders}
+ * Represents request to {@code POST /v1/orders}
  * 
  * @author jbuhacoff
  */
@@ -19,6 +19,6 @@ public class CreateOrderRequest {
     @HeaderParam("X-Project-Id")
     public String projectId; // from header X-Project-Id: {project_id}
 
-    public String type; // "key"
+    public String type; // the literal "key" to identify the object type
     public RegisterSecretRequest meta;
 }

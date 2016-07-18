@@ -30,8 +30,8 @@ public class MtWilsonV2ClientTest {
     }
     
     /**
-     * How to get mtwilson.tls.cert.sha1:
-     * sha1sum /opt/mtwilson/configuration/ssl.crt
+     * How to get mtwilson.tls.cert.sha256:
+     * sha256sum /opt/mtwilson/configuration/ssl.crt
      * 
      * How to get username and password:
      * mtwilson login-password username password --permissions *:*

@@ -69,8 +69,7 @@ public class KMIPKeyManagerIntegrationTest {
 		configuration.set(PASSWORD_VAULT_TYPE_PROPERTY, "JCEKS");
 		configuration.set(PASSWORD_VAULT_KEY_PROPERTY, "password");
 		configuration.set(PASSWORD_VAULT_KEY_PROVIDER_PROPERTY, "environment");
-		kmipKeyManager = new KMIPKeyManager();
-		kmipKeyManager.setupKeyStore(configuration);
+		kmipKeyManager = new KMIPKeyManager(configuration);
 	}
 
 	@Test

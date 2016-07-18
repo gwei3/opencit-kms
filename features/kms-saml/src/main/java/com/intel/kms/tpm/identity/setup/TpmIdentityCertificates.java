@@ -27,13 +27,13 @@ public class TpmIdentityCertificates extends AbstractSetupTask {
 //    public static final String MTWILSON_API_URL = "mtwilson.api.url";
 //    public static final String MTWILSON_API_USERNAME = "mtwilson.api.username";
 //    public static final String MTWILSON_API_PASSWORD = "mtwilson.api.password";
-//    public static final String MTWILSON_TLS_CERT_SHA1 = "mtwilson.tls.cert.sha1";
+//    public static final String MTWILSON_TLS_CERT_SHA256 = "mtwilson.tls.cert.sha256";
     private File tpmIdentityCertificatesFile;
     private Password keystorePassword;
 //    private String mtwilsonApiUrl;
 //    private String mtwilsonApiUsername;
 //    private String mtwilsonApiPassword;
-//    private String mtwilsonTlsCertSha1;
+//    private String mtwilsonTlsCertSha256;
 
     public File getTpmIdentityCertificatesKeystoreFile() {
         return new File(getConfiguration().get(MTWILSON_TPM_IDENTITY_CERTIFICATES_FILE, Folders.configuration() + File.separator + "tpm.identity.jks"));
@@ -55,7 +55,7 @@ public class TpmIdentityCertificates extends AbstractSetupTask {
 //        mtwilsonApiUrl = getConfiguration().get(MTWILSON_API_URL);
 //        mtwilsonApiUsername = getConfiguration().get(MTWILSON_API_USERNAME);
 //        mtwilsonApiPassword = getConfiguration().get(MTWILSON_API_PASSWORD);
-//        mtwilsonTlsCertSha1 = getConfiguration().get(MTWILSON_TLS_CERT_SHA1);
+//        mtwilsonTlsCertSha256 = getConfiguration().get(MTWILSON_TLS_CERT_SHA256);
         if (tpmIdentityCertificatesFile.exists()) {
             log.debug("Configure TPM Identity certificates file at: {}", tpmIdentityCertificatesFile.getAbsolutePath());
             keystorePassword = getTpmIdentityCertificatesKeystorePassword();
@@ -65,7 +65,7 @@ public class TpmIdentityCertificates extends AbstractSetupTask {
         }
         /*
          else {
-         // if the tpmIdentity certs file doesn't exist, we should have api url and tls cert sha1 to download it
+         // if the tpmIdentity certs file doesn't exist, we should have api url and tls cert sha256 to download it
             
          if (mtwilsonApiUrl == null) {
          configuration("Missing Mt Wilson API URL");
@@ -76,8 +76,8 @@ public class TpmIdentityCertificates extends AbstractSetupTask {
          if (mtwilsonApiPassword == null) {
          configuration("Missing Mt Wilson API password");
          }
-         if (mtwilsonTlsCertSha1 == null) {
-         configuration("Missing Mt Wilson TLS certificate SHA-1 fingerprint");
+         if (mtwilsonTlsCertSha256 == null) {
+         configuration("Missing Mt Wilson TLS certificate SHA-256 fingerprint");
          }
          }
          */
@@ -123,7 +123,7 @@ public class TpmIdentityCertificates extends AbstractSetupTask {
          mtwilsonProperties.setProperty("mtwilson.api.url", mtwilsonApiUrl);
          mtwilsonProperties.setProperty("mtwilson.api.username", mtwilsonApiUsername);
          mtwilsonProperties.setProperty("mtwilson.api.password", mtwilsonApiPassword);
-         mtwilsonProperties.setProperty("mtwilson.api.tls.policy.certificate.sha1", mtwilsonTlsCertSha1); // for other options see PropertiesTlsPolicyFactory in mtwilson-util-jaxrs2-client
+         mtwilsonProperties.setProperty("mtwilson.api.tls.policy.certificate.sha256", mtwilsonTlsCertSha256); // for other options see PropertiesTlsPolicyFactory in mtwilson-util-jaxrs2-client
          MtWilsonClient mtwilson = new MtWilsonClient(mtwilsonProperties);
          X509Certificate certificate = mtwilson.getTargetPath("ca-certificates/tpmIdentity").request(CryptoMediaType.APPLICATION_PKIX_CERT).get(X509Certificate.class);
         

@@ -10,7 +10,9 @@ import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.validation.Regex;
 import com.intel.dcsg.cpg.validation.Unchecked;
 import com.intel.dcsg.cpg.x509.X509Util;
+import com.intel.kms.cipher.PublicKeyReport;
 import com.intel.mtwilson.jaxrs2.AbstractDocument;
+import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -21,6 +23,7 @@ import java.security.cert.X509Certificate;
  * @author jbuhacoff
  */
 public class User extends AbstractDocument {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(User.class);
     private String username;
     private Contact contact;
     private String transferKeyPem;
@@ -87,17 +90,32 @@ public class User extends AbstractDocument {
         if( transferKeyPem.startsWith("-----BEGIN CERTIFICATE-----")) {
             return X509Util.decodePemCertificate(transferKeyPem).getPublicKey();
         }
-        else {
+        else if( transferKeyPem.startsWith("-----BEGIN PUBLIC KEY-----")) {
             return RsaUtil.decodePemPublicKey(transferKeyPem);
+        }
+        else {
+            log.error("Stored key in unrecognized format: {}", transferKeyPem);
+            return null;
         }
     }
 
     @JsonIgnore
     public void setTransferKey(PublicKey transferKey) {
+        PublicKeyReport publicKeyReport = new PublicKeyReport(transferKey);
+        if( !publicKeyReport.isPermitted() ) {
+            throw new IllegalArgumentException("Unsupported public key algorithm or key length");
+        }
         this.transferKeyPem = RsaUtil.encodePemPublicKey(transferKey);
     }
     @JsonIgnore
     public void setTransferKey(X509Certificate transferKey) throws CertificateEncodingException {
+        PublicKeyReport publicKeyReport = new PublicKeyReport(transferKey.getPublicKey());
+        if( !publicKeyReport.isPermitted() ) {
+            throw new IllegalArgumentException("Unsupported public key algorithm or key length");
+        }
+        // intentionally do not check the certificate validity - even if
+        // we check it now, what matters is the validity at the time it is
+        // used. a client could be setting a certificate early.
         this.transferKeyPem = X509Util.encodePemCertificate(transferKey);
     }
         

@@ -69,14 +69,22 @@ public class SamlCertificates extends AbstractCertificateJsonapiResource<Certifi
     @GET
     public CertificateCollection searchCollection(@BeanParam CertificateFilterCriteria selector) {
 //        try { log.debug("searchCollection: {}", mapper.writeValueAsString(selector)); } catch(JsonProcessingException e) { log.debug("searchCollection: cannot serialize selector: {}", e.getMessage()); }
-        ValidationUtil.validate(selector); // throw new MWException(e, ErrorCode.AS_INPUT_VALIDATION_ERROR, input, method.getName());
-        CertificateCollection collection = getRepository().search(selector);
-        List<Certificate> documents = collection.getDocuments();
-        for(Certificate document : documents) {
-            // the href should really be to the json (no suffix) document... we should use a link for the cert format
-            document.getMeta().put("href", String.format("/v1/saml-certificates/%s.crt", document.getId().toString())); // XXX TODO: because we're overriding search method from superclass, we cant get new parameter context httprequest and find our base url... hard-coding /v1 here is not good.
+        try {
+            ValidationUtil.validate(selector);
+            CertificateCollection collection = getRepository().search(selector);
+            List<Certificate> documents = collection.getDocuments();
+            for(Certificate document : documents) {
+                // the href should really be to the json (no suffix) document... we should use a link for the cert format
+                document.getMeta().put("href", String.format("/v1/saml-certificates/%s.crt", document.getId().toString())); // XXX TODO: because we're overriding search method from superclass, we cant get new parameter context httprequest and find our base url... hard-coding /v1 here is not good.
+            }
+            return collection;
         }
-        return collection;
+        catch(Exception e) {
+            log.error("Search on SAML certificates failed", e);
+            CertificateCollection collection = new CertificateCollection();
+            collection.getMeta().put("error", "unable to perform the search; check filter criteria");
+            return collection;
+        }
     }
     
 

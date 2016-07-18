@@ -74,6 +74,11 @@
             <artifactId>kms-user</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-cipher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         
         <!-- external -->
         <dependency>

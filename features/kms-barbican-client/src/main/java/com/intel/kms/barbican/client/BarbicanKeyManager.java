@@ -31,6 +31,7 @@ import com.intel.kms.api.KeyAttributes;
 import com.intel.kms.api.KeyDescriptor;
 import com.intel.kms.barbican.api.RegisterSecretRequest;
 import com.intel.kms.barbican.client.util.BarbicanApiUtil;
+import com.intel.kms.cipher.EncryptionSecretKeyCipher;
 import com.intel.kms.keystore.directory.JacksonFileRepository;
 import com.intel.mtwilson.Folders;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
@@ -97,11 +98,10 @@ public class BarbicanKeyManager implements KeyManager {
         keysDirectory = new File(Folders.repository("keys"));
         if (!keysDirectory.exists()) {
             if (!keysDirectory.mkdirs()) {
-                log.error("Cannot create keys directory");
+                throw new IllegalStateException("Cannot create keys directory");
             }
         }
         repository = new JacksonFileRepository<>(keysDirectory);
-
     }
 
     private void setupKeyStore(Configuration configuration) throws IOException, KeyStoreException {
@@ -401,12 +401,18 @@ public class BarbicanKeyManager implements KeyManager {
      * @throws InvalidKeyException
      */
     private byte[] deriveKeyFromBarbican(byte[] barbicanCreatedKey, String algorithm, int keyLengthBits) throws NoSuchAlgorithmException, InvalidKeyException {
-        int keyLengthBytes = keyLengthBits / 8;
-        HKDF hkdf = new HKDF("HmacSHA256");
-        byte[] salt = RandomUtil.randomByteArray(128);
-        byte[] info = String.format("Barbican %s-%d", algorithm, keyLengthBytes).getBytes(Charset.forName("UTF-8"));
-        byte[] derivedKey = hkdf.deriveKey(salt, barbicanCreatedKey, keyLengthBytes, info);
-        return derivedKey;
+        SecretKey barbicanSecretKey = new SecretKeySpec(barbicanCreatedKey, algorithm);
+        if( EncryptionSecretKeyCipher.isPermitted(barbicanSecretKey) ) {
+            int keyLengthBytes = keyLengthBits / 8;
+            HKDF hkdf = new HKDF("HmacSHA256");
+            byte[] salt = RandomUtil.randomByteArray(128);
+            byte[] info = String.format("Barbican %s-%d", algorithm, keyLengthBytes).getBytes(Charset.forName("UTF-8"));
+            byte[] derivedKey = hkdf.deriveKey(salt, barbicanCreatedKey, keyLengthBytes, info);
+            return derivedKey;
+        }
+        else {
+            throw new IllegalArgumentException("Invalid key");
+        }
     }
 
     private static String toJavaCipherSpec(CipherKeyAttributes cipherKey) {
@@ -425,7 +431,7 @@ public class BarbicanKeyManager implements KeyManager {
         storageKeyAttributes.copyFrom(storageKey);
         KeyDescriptor descriptor = new KeyDescriptor();
         descriptor.setEncryption(storageKeyAttributes);
-        descriptor.getEncryption().set("iv", Base64.encodeBase64String(iv)); // TODO:  "iv" is a typical encryption parameter, possibly need to adjust the KeyDescriptor class to accomodate this in the encryption section
+        descriptor.getEncryption().set("iv", Base64.encodeBase64String(iv)); 
         TransferKeyResponse response = new TransferKeyResponse();
         response.setKey(ciphertext); // wrapped key
         response.setDescriptor(descriptor);

@@ -42,6 +42,7 @@ import com.intel.kms.api.GetKeyAttributesRequest;
 import com.intel.kms.api.GetKeyAttributesResponse;
 import com.intel.kms.api.fault.KeyNotFound;
 import com.intel.kms.api.fault.KeyTransferProtectionNotAcceptable;
+import com.intel.kms.cipher.SecretKeyReport;
 import com.intel.kms.keystore.directory.setup.EnvelopeKey;
 import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.core.PasswordVaultFactory;
@@ -80,6 +81,7 @@ import com.intel.mtwilson.setup.faults.ConfigurationFault;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.CertificateException;
+import javax.security.auth.DestroyFailedException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -144,6 +146,17 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
     @Override
     public CreateKeyResponse createKey(CreateKeyRequest createKeyRequest) {
         log.debug("createKey");
+        // validate the input
+        SecretKeyReport report = new SecretKeyReport(createKeyRequest.getAlgorithm(), createKeyRequest.getKeyLength());
+        if( !report.isPermitted() ) {
+            CreateKeyResponse response = new CreateKeyResponse();
+            response.getFaults().addAll(report.getFaults());
+            return response;
+        }
+        
+        SecretKey skey = null;
+        CipherKey cipherKey = new CipherKey();
+        
 //        Protection protection = ProtectionBuilder.factory().algorithm(createKeyRequest.algorithm).keyLengthBits(createKeyRequest.keyLength).mode("OFB8").build();
         ArrayList<Fault> faults = new ArrayList<>();
         try {
@@ -158,9 +171,8 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             created.setTransferLink(getTransferLinkForKeyId(created.getKeyId()));
             * */
             // create the key
-            SecretKey skey = generateKey(createKeyRequest.getAlgorithm(), createKeyRequest.getKeyLength());
+            skey = generateKey(createKeyRequest.getAlgorithm(), createKeyRequest.getKeyLength());
 
-            CipherKey cipherKey = new CipherKey();
             cipherKey.setAlgorithm(created.getAlgorithm());
             cipherKey.setKeyId(created.getKeyId());
             cipherKey.setKeyLength(created.getKeyLength());
@@ -181,6 +193,18 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             // wrap it with a storage key
         } catch (NoSuchAlgorithmException e) {
             log.debug("GenerateKey failed", e);
+            if( skey != null ) {
+                /* THE DESTROY METHOD IS NEW IN JAVA 8 - ENABLE THIS WHEN WE UPGRADE TO JAVA 8 */
+                /*
+                try {
+                    skey.destroy();
+                }
+                catch(DestroyFailedException e2) {
+                    log.error("Failed to destroy secret key", e2);
+                }
+                */
+            }
+            cipherKey.clear();
             faults.add(new InvalidParameter("algorithm", new UnsupportedAlgorithm(createKeyRequest.getAlgorithm())));
             CreateKeyResponse response = new CreateKeyResponse();
             response.getFaults().addAll(faults);
@@ -215,7 +239,7 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
             return response;
         }
         try {
-            log.debug("transferKey loaded key: {}", mapper.writeValueAsString(cipherKey));
+            log.debug("transferKey loaded key with attributes: {}", mapper.writeValueAsString(cipherKey.map()));
             // XXX TODO hmm doesn' thave policy: urn:intel:trustedcomputing:key-transfer-policy:require-trust-or-authorization    even though it's shown by "createkey" respons.... probably the API layer is adding it, we need it in the backend !!
         } catch (Exception e) {
             log.error("transferKey loaded key but cannot serialize", e);
@@ -349,6 +373,7 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
                     log.error("Cannot register key", e);
                     RegisterKeyResponse response = new RegisterKeyResponse();
                     response.getFaults().add(new Fault("Cannot load encryption key"));
+                    return response;
                 }
             } else {
                 // if the client did not specify an encryption key id, we can try 
@@ -368,22 +393,34 @@ public class DirectoryKeyManager implements KeyManager, Configurable {
                     log.error("Cannot load encryption private key to unwrap", e);
                     RegisterKeyResponse response = new RegisterKeyResponse();
                     response.getFaults().add(new Fault("Cannot load encryption key"));
+                    return response;
                 }
             } else {
                 RegisterKeyResponse response = new RegisterKeyResponse();
                 response.getFaults().add(new Fault("Cannot find encryption key"));
+                return response;
             }
         }
 
+        // check that key id is not already in use
+        CipherKey existingCipherKey = repository.retrieve(cipherKey.getKeyId());
+        if( existingCipherKey != null ) {
+            RegisterKeyResponse response = new RegisterKeyResponse();
+            response.getFaults().add(new Fault("Key with specifie id already exists"));
+            return response;
+        }
 
         // store the key and its attributes
         // TODO: encrypt the key using a storage key then write a PEM
         // file with the info. 
         repository.store(cipherKey.getKeyId(), cipherKey);
 
-
         KeyAttributes registered = new KeyAttributes();
         registered.copyFrom(cipherKey);
+        
+        // clear cipherkey
+        cipherKey.clear();
+        
         log.info(KeyLogMarkers.REGISTER_KEY, "Registered key id: {}", cipherKey.getKeyId());
         RegisterKeyResponse response = new RegisterKeyResponse(registered);
         return response;

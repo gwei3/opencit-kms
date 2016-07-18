@@ -87,6 +87,7 @@
             <groupId>com.intel.mtwilson.util</groupId>
             <artifactId>mtwilson-util-pem</artifactId>
         </dependency>
+        <!--<version>0.1-SNAPSHOT</version>-->
         <!--
         <dependency>
             <groupId>com.intel.mtwilson.util</groupId>
@@ -128,6 +129,11 @@
         -->
         
         <!-- kms -->
+        <dependency>
+            <groupId>com.intel.mtwilson.kms</groupId>
+            <artifactId>kms-cipher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.intel.mtwilson.kms</groupId>
             <artifactId>kms-keystore-api</artifactId>

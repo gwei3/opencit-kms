@@ -172,8 +172,18 @@ public class BarbicanApiUtil {
             throw new BarbicanClientException(new NullPointerException("mapSearchKeyAttributesRequestToListSecretsRequest: The SearchKeyAttributesRequest is null"));
         }
         ListSecretsRequest listSecretsRequest = new ListSecretsRequest();
-        listSecretsRequest.limit= request.limit;
-        listSecretsRequest.offset = request.page*10-10;
+        if( request.limit != null && request.limit > 0 ) {
+            listSecretsRequest.limit= request.limit;
+        }
+        else {
+            listSecretsRequest.limit = 10;
+        }
+        if( request.page != null && request.page > 0 ) {
+            listSecretsRequest.offset = request.page*10-10;
+        }
+        else {
+            listSecretsRequest.offset = 0;
+        }
 
         return listSecretsRequest;
     }

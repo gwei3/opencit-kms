@@ -5,7 +5,6 @@
 package com.intel.kms.saml.jaxrs;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.intel.dcsg.cpg.configuration.Configuration;
 import com.intel.kms.api.TransferKeyRequest;
 import com.intel.kms.api.TransferKeyResponse;
 import com.intel.mtwilson.TrustAssertion;
@@ -13,22 +12,19 @@ import com.intel.mtwilson.jaxrs2.mediatype.ZipMediaType;
 import java.util.Set;
 import javax.ws.rs.Produces;
 import com.intel.dcsg.cpg.crypto.CryptographyException;
-import com.intel.dcsg.cpg.crypto.Sha1Digest;
 import com.intel.dcsg.cpg.crypto.Sha256Digest;
-import com.intel.dcsg.cpg.extensions.Extensions;
-import com.intel.dcsg.cpg.extensions.Plugins;
 import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.dcsg.cpg.validation.Fault;
 import com.intel.mtwilson.util.archive.TarGzipBuilder;
 import com.intel.kms.api.KeyManager;
+import com.intel.kms.cipher.PublicKeyReport;
+import com.intel.kms.cipher.TransferPublicKeyCipher;
 import com.intel.kms.keystore.KeyManagerFactory;
-import com.intel.kms.keystore.RemoteKeyManager;
 import com.intel.kms.saml.api.fault.NotTrusted;
 import com.intel.kms.tpm.identity.jaxrs.TpmIdentityCertificateRepository;
 import com.intel.mtwilson.jaxrs2.Link;
 import com.intel.mtwilson.api.ApiException;
 import com.intel.mtwilson.api.ClientException;
-import com.intel.mtwilson.configuration.ConfigurationFactory;
 import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
@@ -36,7 +32,6 @@ import com.intel.mtwilson.util.tpm12.CertifyKey;
 import com.intel.mtwilson.util.validation.faults.Thrown;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -45,6 +40,8 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.List;
@@ -54,7 +51,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -250,6 +246,13 @@ public class TransferKeyWithSAML {
             if (client.isTrusted()) {
                 log.debug("Client is trusted, need to return key now");
 
+                PublicKey recipientPublicKey = client.getPublicKey();                
+                PublicKeyReport publicKeyReport = new PublicKeyReport(recipientPublicKey);
+                if( !publicKeyReport.isPermitted() ) {
+                    throw new InvalidKeyException("Unsupported public key algorithm or key length");
+                }
+                
+                
                 TransferKeyRequest transferKeyRequest = new TransferKeyRequest(keyId);
 
                 // add the trust report to the request as an attribute;
@@ -257,13 +260,15 @@ public class TransferKeyWithSAML {
                 // extracts the binding public key to use for wrapping the
                 // requested key
                 transferKeyRequest.set("saml", saml);
-
-                RSAPublicKey recipientPublicKey = (RSAPublicKey) client.getPublicKey();
+                
+                String recipientAlgorithm = publicKeyReport.getAlgorithm();
+                Integer recipientKeyBitLength = publicKeyReport.getKeyLength();
+                
                 transferKeyRequest.set("recipientPublicKey", recipientPublicKey);
 
                 CipherKeyAttributes wrappingKeyAttributes = new CipherKeyAttributes();
-                wrappingKeyAttributes.setAlgorithm("RSA");
-                wrappingKeyAttributes.setKeyLength(recipientPublicKey.getModulus().bitLength()); // for example, 2048
+                wrappingKeyAttributes.setAlgorithm(recipientAlgorithm); // for example "RSA"
+                wrappingKeyAttributes.setKeyLength(recipientKeyBitLength); // for example, 2048
                 wrappingKeyAttributes.setMode("ECB"); // standard for wrapping a key with a public key since it's only one block
                 wrappingKeyAttributes.setPaddingMode("OAEP-TCPA"); // indicates use of OAEP with 'TCPA' as the padding parameter
                 transferKeyRequest.set("recipientPublicKeyAttributes", wrappingKeyAttributes);
@@ -392,9 +397,10 @@ public class TransferKeyWithSAML {
             }
             if (authority.getSubjectX500Principal().getName().equals(subject.getIssuerX500Principal().getName())) {
                 try {
+                    authority.checkValidity();
                     subject.verify(authority.getPublicKey());
                     issuer = authority;
-                    log.debug("Certificate verified by authority: {}", authority.getSubjectX500Principal().getName());
+                    log.debug("Certificate signed by authority: {}", authority.getSubjectX500Principal().getName());
                 } catch (GeneralSecurityException e) {
                     log.debug("Verification failed: {}", e.getMessage());
                 }
@@ -446,7 +452,7 @@ public class TransferKeyWithSAML {
             log.error("Assertion does not include AIK Certificate");
             return TrustReport.UNTRUSTED;
         }
-        log.debug("AIK Certificate SHA-1: {}", Sha1Digest.digestOf(aikCertificate.getEncoded()).toHexString());
+        log.debug("AIK Certificate SHA-256: {}", Sha256Digest.digestOf(aikCertificate.getEncoded()).toHexString());
 
         /*
          * Verify the AIK is signed by a trusted Privacy CA (Mt Wilson)
@@ -456,6 +462,17 @@ public class TransferKeyWithSAML {
             log.error("AIK certificate not verified any trusted authority");
             return TrustReport.UNTRUSTED;
         }
+
+        /*
+         * Check that AIK is currently valid
+        */
+        try {
+            aikCertificate.checkValidity();
+        }
+        catch(CertificateExpiredException | CertificateNotYetValidException e) {
+            log.error("AIK certificate not currently valid; dates from {} to {}", aikCertificate.getNotBefore().toString(), aikCertificate.getNotAfter().toString());
+        }
+        
         /*
          PublicKey aikPublicKey = hostTrustAssertion.getAikPublicKey();
          if( aikPublicKey == null ) {
@@ -464,7 +481,7 @@ public class TransferKeyWithSAML {
          }
          */
         PublicKey aikPublicKey = aikCertificate.getPublicKey();
-        log.debug("AIK Public Key SHA-1: {}", Sha1Digest.digestOf(aikPublicKey.getEncoded()).toHexString());
+        log.debug("AIK Public Key SHA-256: {}", Sha256Digest.digestOf(aikPublicKey.getEncoded()).toHexString());
 
 
         /*
@@ -485,20 +502,24 @@ public class TransferKeyWithSAML {
             log.error("No binding key certificate in trust report");
             return TrustReport.UNTRUSTED;
         }
-        log.debug("Binding Certificate SHA-1: {}", Sha1Digest.digestOf(bindingKeyCertificate.getEncoded()).toHexString());
-        log.debug("Binding Public Key SHA-1: {}", Sha1Digest.digestOf(bindingKeyCertificate.getPublicKey().getEncoded()).toHexString());
+        log.debug("Binding Certificate SHA-256: {}", Sha256Digest.digestOf(bindingKeyCertificate.getEncoded()).toHexString());
+        log.debug("Binding Public Key SHA-256: {}", Sha256Digest.digestOf(bindingKeyCertificate.getPublicKey().getEncoded()).toHexString());
         X509Certificate bindingKeyIssuer = findCertificateIssuer(bindingKeyCertificate, trustedTpmIdentityAuthorities);
         if (bindingKeyIssuer == null) {
             log.error("Binding key certificate not verified by any trusted authority");
             return TrustReport.UNTRUSTED;
         }
-
+        
+        /*
+         * Check that binding key certificate is currently valid
+        */
         try {
-            bindingKeyCertificate.verify(bindingKeyIssuer.getPublicKey());
-        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
-            log.error("Cannot verify that AIK certified the binding key", e);
-            return TrustReport.UNTRUSTED;
+            bindingKeyCertificate.checkValidity();
         }
+        catch(CertificateExpiredException | CertificateNotYetValidException e) {
+            log.error("Binding key certificate not currently valid; dates from {} to {}", bindingKeyCertificate.getNotBefore().toString(), bindingKeyCertificate.getNotAfter().toString());
+        }
+        
 
         /* now verify binding key has the tpm-bind-data flag set and the migration flag NOT set */
         if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey)) {

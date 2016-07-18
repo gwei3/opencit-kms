@@ -7,6 +7,7 @@ package com.intel.kms.keystore.directory;
 import com.intel.mtwilson.util.crypto.keystore.PrivateKeyStore;
 import com.intel.dcsg.cpg.io.UUID;
 import com.intel.kms.api.KeyAttributes;
+import com.intel.kms.cipher.TransferPublicKeyCipher;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -108,6 +109,16 @@ public class EnvelopeKeyManager implements Closeable {
             while (keystore.contains(keyAttributes.getKeyId())) {
                 log.warn("Duplicate UUID detected: {}", keyAttributes.getKeyId());
                 keyAttributes.setKeyId(new UUID().toString());
+            }
+            
+            // check public key parameters
+            if( !TransferPublicKeyCipher.isPermitted(publicKeyCertificate.getPublicKey()) ) {
+                throw new IllegalArgumentException("Invalid envelope key algorithm or key length");
+            }
+            
+            // check that private key and public key are related
+            if( !TransferPublicKeyCipher.isRelated(privateKey, publicKeyCertificate.getPublicKey())) {
+                throw new IllegalArgumentException("Unrelated private and public key pair");
             }
             
             if( privateKey.getAlgorithm() != null && !privateKey.getAlgorithm().equalsIgnoreCase("RSA")) {
