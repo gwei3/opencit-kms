@@ -162,6 +162,7 @@ public class BarbicanAuthToken {
 		if(responseHasError){
 			//throw new BarbicanClientException("Unable to communicate with Barbican at "+ barbicanKeystonePublicEndpoint);
                         log.error("createAuthToken: Error in response.");
+                        throw new IllegalStateException("Error in createAuthToken");
 		}
 	}
     
