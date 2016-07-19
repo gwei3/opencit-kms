@@ -64,11 +64,13 @@ public class SecretKeyReport implements Faults {
         }
         if( !faults.isEmpty() ) { return; }
         // check for known algorithms
-        if (algorithm.equalsIgnoreCase("AES")) {
-            validateAES();
-        }
-        else {
-            faults.add(new InvalidParameter("algorithm", new Algorithm(algorithm)));
+        if (algorithm != null) {
+            if (algorithm.equalsIgnoreCase("AES") && (keyLength != null)) {
+                validateAES();
+            }
+            else {
+                faults.add(new InvalidParameter("algorithm", new Algorithm(algorithm)));
+            }
         }
     }
     

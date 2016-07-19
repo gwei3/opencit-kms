@@ -52,12 +52,14 @@ public class PublicKeyReport implements Faults {
             faults.add(new MissingRequiredParameter("keyLength")); // TODO: the "parameter" field of the MissingRequiredParameter class needs to be annotated so a filter can automatically convert it's VALUE from keyLength to key_length (javascript) or keep it as keyLength (xml) or KeyLength (SAML) etc.  ... that's something the jackson mapper doesn't do so we have to ipmlement a custom filter for VALUES taht represent key names.
         }
         if( !faults.isEmpty() ) { return; }
-        // check for known algorithms        
-        if (algorithm.equalsIgnoreCase("RSA")) {
-            validateRSA();
-        }
-        else {
-            faults.add(new InvalidParameter("algorithm", new Algorithm(algorithm)));
+        if (algorithm != null) {
+            // check for known algorithms        
+            if (algorithm.equalsIgnoreCase("RSA") && (keyLength != null)) {
+                validateRSA();
+            }
+            else {
+                faults.add(new InvalidParameter("algorithm", new Algorithm(algorithm)));
+            }
         }
     }
     
