@@ -157,8 +157,6 @@ public class OperationRequestGenerator {
 		keyValue.setKeyMaterial(new KeyMaterial(new KMIPByteString(
 				registerKeyRequest.getKey())));
 
-		// /System.out.println("resgistered string::"+KMIPUtils.convertByteStringToHexString(registerKeyRequest.getKey())
-		// );
 		keyBlock.addAttribute(new CryptographicAlgorithm(
 				(new EnumCryptographicAlgorithm(registerKeyRequest
 						.getDescriptor().getEncryption().getAlgorithm()))

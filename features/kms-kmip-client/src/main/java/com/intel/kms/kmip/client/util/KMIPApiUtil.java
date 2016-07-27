@@ -110,8 +110,6 @@ public class KMIPApiUtil {
 		KeyAttributes attributes = new KeyAttributes();
 		CipherKeyAttributes encryption = registerKeyRequest.getDescriptor()
 				.getEncryption();
-		System.out.println("//encryption.getKeyLength()::"
-				+ encryption.getKeyLength());
 		attributes.setAlgorithm(encryption.getAlgorithm());
 		attributes.setKeyLength(encryption.getKeyLength());
 		attributes.setKeyId(uid);
