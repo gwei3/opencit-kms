@@ -69,9 +69,9 @@ public class BarbicanAuthToken {
     self.userProfile.authorizationTokenExpires(tokenExpiresDate.getTime()); // now it's in client time, useful for scheduling timers, because it's adjusted for any time difference between client and server  
     */
     private Date getTokenExpiresLocalTime(){     
-        Date date = new Date(); 
-        Iso8601Date iso = new Iso8601Date(date); 
-        Iso8601Date serverNow = iso.valueOf(issuedAt);    
+        //Date date = new Date(); 
+        //Iso8601Date iso = new Iso8601Date(date); 
+        Iso8601Date serverNow = Iso8601Date.valueOf(issuedAt);    
         
         Date clientNow = new Date(); 
         long timeDiff = clientNow.getTime() - serverNow.getTime();   
@@ -82,7 +82,7 @@ public class BarbicanAuthToken {
         return date;
         };
         */
-        Iso8601Date tokenExpiresDate = iso.valueOf(expires); 
+        Iso8601Date tokenExpiresDate = Iso8601Date.valueOf(expires); 
         long tokenExpiresTime = tokenExpiresDate.getTime() + timeDiff; 
         Date expiresLocalTime = new Date(tokenExpiresTime); 
         
@@ -161,6 +161,8 @@ public class BarbicanAuthToken {
 		printTimeDiff("createAuthToken", start, end);
 		if(responseHasError){
 			//throw new BarbicanClientException("Unable to communicate with Barbican at "+ barbicanKeystonePublicEndpoint);
+                        log.error("createAuthToken: Error in response.");
+                        throw new IllegalStateException("Error in createAuthToken");
 		}
 	}
     
