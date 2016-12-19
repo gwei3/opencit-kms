@@ -539,6 +539,6 @@ public class TransferKeyWithSAML {
             return TrustReport.UNTRUSTED;
         }
 
-        return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.1"));
+        return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue(CertifyKey.TCG_STRUCTURE_CERTIFY_INFO_ENC_SCHEME_OID));
     }
 }
