@@ -32,6 +32,7 @@ import com.intel.mtwilson.util.tpm12.CertifyKey;
 import com.intel.mtwilson.util.validation.faults.Thrown;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -261,6 +262,9 @@ public class TransferKeyWithSAML {
                 // requested key
                 transferKeyRequest.set("saml", saml);
                 
+                int encScheme = client.getEncScheme();
+                transferKeyRequest.set("encScheme", encScheme);
+                
                 String recipientAlgorithm = publicKeyReport.getAlgorithm();
                 Integer recipientKeyBitLength = publicKeyReport.getKeyLength();
                 
@@ -355,13 +359,15 @@ public class TransferKeyWithSAML {
 
     public static class TrustReport {
 
-        public static final TrustReport UNTRUSTED = new TrustReport(false, null);
+        public static final TrustReport UNTRUSTED = new TrustReport(false, null, new byte[0]);
         private boolean trusted = false;
         private PublicKey publicKey = null;
+        private byte[] encScheme = {0};
 
-        public TrustReport(boolean trusted, PublicKey publicKey) {
+        public TrustReport(boolean trusted, PublicKey publicKey, byte[] encScheme) {
             this.trusted = trusted;
             this.publicKey = publicKey;
+            this.encScheme = encScheme;
         }
 
         public boolean isTrusted() {
@@ -381,6 +387,12 @@ public class TransferKeyWithSAML {
          */
         public PublicKey getPublicKey() {
             return publicKey;
+        }
+        
+        public int getEncScheme() {
+        	ByteBuffer wrapped = ByteBuffer.wrap(encScheme);
+        	short num = wrapped.getShort();
+            return num;
         }
     }
 
@@ -527,6 +539,6 @@ public class TransferKeyWithSAML {
             return TrustReport.UNTRUSTED;
         }
 
-        return new TrustReport(true, bindingKeyCertificate.getPublicKey());
+        return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.1"));
     }
 }

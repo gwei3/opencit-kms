@@ -285,6 +285,7 @@ public class RemoteKeyManager implements KeyManager {
          */
         CipherKeyAttributes recipientPublicKeyAttributes;
         RSAPublicKey recipientPublicKey;
+        int encScheme;
 
         // is the request for an authorized user or a trust-based key transfer?
         if (keyRequest.getUsername() == null) {
@@ -303,6 +304,7 @@ public class RemoteKeyManager implements KeyManager {
                     log.error("transferKey loaded recipient public key attributes but cannot serialize", e);
                 }
                 recipientPublicKey = (RSAPublicKey) keyRequest.get("recipientPublicKey");
+                encScheme = (int) keyRequest.get("encScheme");
                 // the encrpytion attributes describe how the key is encrypted so that only the client can decrypt it
                 CipherKeyAttributes tpmBindKeyAttributes = new CipherKeyAttributes();
                 tpmBindKeyAttributes.setKeyId(Sha256Digest.digestOf(recipientPublicKey.getEncoded()).toHexString());
@@ -312,7 +314,7 @@ public class RemoteKeyManager implements KeyManager {
                 tpmBindKeyAttributes.setPaddingMode("OAEP-TCPA"); // OAEP with the 4 byte literal 'TCPA' as the padding parameter.
 
                 // wrap the key; this is the content of cipher.key
-                response.setKey(DataBind.bind(key, recipientPublicKey));
+                response.setKey(DataBind.bind(key, recipientPublicKey, encScheme));
                 response.getDescriptor().setEncryption(tpmBindKeyAttributes);
             } catch (Exception e) {
                 log.error("Cannot bind requested key", e);
