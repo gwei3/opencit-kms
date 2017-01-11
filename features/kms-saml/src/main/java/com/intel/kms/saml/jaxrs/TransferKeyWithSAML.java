@@ -29,6 +29,7 @@ import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
 import com.intel.mtwilson.util.tpm12.CertifyKey;
+import com.intel.mtwilson.util.tpm12.DataBind;
 import com.intel.mtwilson.util.validation.faults.Thrown;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -275,8 +276,8 @@ public class TransferKeyWithSAML {
                 wrappingKeyAttributes.setKeyLength(recipientKeyBitLength); // for example, 2048
                 wrappingKeyAttributes.setMode("ECB"); // standard for wrapping a key with a public key since it's only one block
                 wrappingKeyAttributes.setPaddingMode("OAEP-TCPA"); // indicates use of OAEP with 'TCPA' as the padding parameter
+                
                 transferKeyRequest.set("recipientPublicKeyAttributes", wrappingKeyAttributes);
-
                 TransferKeyResponse transferKeyResponse = getKeyManager().transferKey(transferKeyRequest);
 
                 return transferKeyResponse;
@@ -539,6 +540,6 @@ public class TransferKeyWithSAML {
             return TrustReport.UNTRUSTED;
         }
 
-        return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue(CertifyKey.TCG_STRUCTURE_CERTIFY_INFO_ENC_SCHEME_OID));
+        return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.1"));
     }
 }
