@@ -314,7 +314,11 @@ public class RemoteKeyManager implements KeyManager {
                 tpmBindKeyAttributes.setPaddingMode("OAEP-TCPA"); // OAEP with the 4 byte literal 'TCPA' as the padding parameter.
 
                 // wrap the key; this is the content of cipher.key
-                response.setKey(DataBind.bind(key, recipientPublicKey, encScheme));
+                DataBind.EncScheme encryptionScheme = DataBind.EncScheme.valueOf(encScheme);
+                if(encryptionScheme == null){
+                    throw new IllegalArgumentException("Invalid encryption scheme provided : "+encScheme);
+                }
+                response.setKey(DataBind.bind(key, recipientPublicKey, encryptionScheme));
                 response.getDescriptor().setEncryption(tpmBindKeyAttributes);
             } catch (Exception e) {
                 log.error("Cannot bind requested key", e);
