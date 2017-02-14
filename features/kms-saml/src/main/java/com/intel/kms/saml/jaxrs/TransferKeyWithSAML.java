@@ -31,6 +31,7 @@ import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
 import com.intel.mtwilson.util.tpm12.CertifyKey;
 import com.intel.mtwilson.util.tpm12.DataBind;
 import com.intel.mtwilson.util.validation.faults.Thrown;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -56,7 +57,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
+import org.bouncycastle.asn1.ASN1InputStream; 
+import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.DEROctetString;
 /**
  * Does not extend AbstractEndpoint because kms-saml does not have a dependency
  * on kms-keystore; may need to refactor.
@@ -390,11 +393,21 @@ public class TransferKeyWithSAML {
             return publicKey;
         }
         
-        public int getEncScheme() {
-        	ByteBuffer wrapped = ByteBuffer.wrap(encScheme);
-        	short num = wrapped.getShort();
+        public int getEncScheme() throws IOException {
+            Short num = null;
+            DERObject derObject = toDERObject(encScheme);
+            if (derObject instanceof DEROctetString){
+                DEROctetString derOctetString = (DEROctetString) derObject;
+                num = ByteBuffer.wrap(derOctetString.getOctets()).asShortBuffer().get();
+            }
             return num;
         }
+		
+		private DERObject toDERObject(byte[] data) throws IOException {
+			ByteArrayInputStream inStream = new ByteArrayInputStream(data);
+			ASN1InputStream asnInputStream = new ASN1InputStream(inStream);
+			return asnInputStream.readObject();
+		} 
     }
 
     private X509Certificate findCertificateIssuer(X509Certificate subject, X509Certificate[] authorities) {
@@ -540,6 +553,6 @@ public class TransferKeyWithSAML {
             return TrustReport.UNTRUSTED;
         }
 
-        return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.1"));
+        return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.2"));
     }
 }
