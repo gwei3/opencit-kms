@@ -29,6 +29,7 @@ import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
 import com.intel.mtwilson.util.tpm12.CertifyKey;
+import com.intel.mtwilson.util.tpm20.CertifyKey20;
 import com.intel.mtwilson.util.tpm12.DataBind;
 import com.intel.mtwilson.util.validation.faults.Thrown;
 import java.io.ByteArrayInputStream;
@@ -267,10 +268,12 @@ public class TransferKeyWithSAML {
                 transferKeyRequest.set("saml", saml);
                 
                 int encScheme = client.getEncScheme();
+                log.debug("Received encscheme: {}", encScheme);
                 transferKeyRequest.set("encScheme", encScheme);
                 
                 String recipientAlgorithm = publicKeyReport.getAlgorithm();
                 Integer recipientKeyBitLength = publicKeyReport.getKeyLength();
+                log.debug("Received key length: {}", recipientKeyBitLength);
                 
                 transferKeyRequest.set("recipientPublicKey", recipientPublicKey);
 
@@ -546,13 +549,25 @@ public class TransferKeyWithSAML {
             log.error("Binding key certificate not currently valid; dates from {} to {}", bindingKeyCertificate.getNotBefore().toString(), bindingKeyCertificate.getNotAfter().toString());
         }
         
-
         /* now verify binding key has the tpm-bind-data flag set and the migration flag NOT set */
-        if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey)) {
+        if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey) && !tpm20Certified(bindingKeyCertificate, aikPublicKey)) {
             log.error("Binding key certificate has invalid attributes or cannot be verified with the AIK");
             return TrustReport.UNTRUSTED;
         }
 
         return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.2"));
+    }
+    
+    private boolean tpm20Certified(X509Certificate bindingKeyCertificate, PublicKey aikPublicKey) {
+        try {
+            if (!CertifyKey20.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey)) {
+                log.error("Cannot certify TPM 2.0 binding key certificate");
+                return false;
+            }
+        } catch (Exception ex) {
+            log.error("Exception thrown while certifying TPM 2.0 binding key certificate", ex);
+            return false;
+        }
+        return true;
     }
 }

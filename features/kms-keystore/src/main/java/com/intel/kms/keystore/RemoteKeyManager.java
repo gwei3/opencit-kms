@@ -305,6 +305,7 @@ public class RemoteKeyManager implements KeyManager {
                 }
                 recipientPublicKey = (RSAPublicKey) keyRequest.get("recipientPublicKey");
                 encScheme = (int) keyRequest.get("encScheme");
+                log.debug("encscheme: {}", encScheme);
                 // the encrpytion attributes describe how the key is encrypted so that only the client can decrypt it
                 CipherKeyAttributes tpmBindKeyAttributes = new CipherKeyAttributes();
                 tpmBindKeyAttributes.setKeyId(Sha256Digest.digestOf(recipientPublicKey.getEncoded()).toHexString());
