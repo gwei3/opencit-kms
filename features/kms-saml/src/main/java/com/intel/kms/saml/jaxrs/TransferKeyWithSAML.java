@@ -268,10 +268,12 @@ public class TransferKeyWithSAML {
                 transferKeyRequest.set("saml", saml);
                 
                 int encScheme = client.getEncScheme();
+                log.debug("Received encscheme: {}", encScheme);
                 transferKeyRequest.set("encScheme", encScheme);
                 
                 String recipientAlgorithm = publicKeyReport.getAlgorithm();
                 Integer recipientKeyBitLength = publicKeyReport.getKeyLength();
+                log.debug("Received key length: {}", recipientKeyBitLength);
                 
                 transferKeyRequest.set("recipientPublicKey", recipientPublicKey);
 
