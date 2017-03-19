@@ -7,6 +7,7 @@ package com.intel.kmsproxy.jaxrs;
 import com.intel.dcsg.cpg.crypto.CryptographyException;
 import com.intel.dcsg.cpg.crypto.RsaUtil;
 import com.intel.dcsg.cpg.crypto.Sha1Digest;
+import com.intel.dcsg.cpg.crypto.Sha256Digest;
 import com.intel.dcsg.cpg.io.pem.Pem;
 import com.intel.dcsg.cpg.x509.X509Util;
 import com.intel.kmsproxy.MtWilsonV2Client;
@@ -109,7 +110,7 @@ public class ProxyGetKeyWithAik {
                 log.debug("Input is public key");
 //                PublicKey aikPublicKey = RsaUtil.decodePemPublicKey(pem);
                 PublicKey aikPublicKey = RsaUtil.decodeDerPublicKey(pemObject.getContent());
-                Sha1Digest aikId = Sha1Digest.digestOf(aikPublicKey.getEncoded());
+                Sha256Digest aikId = Sha256Digest.digestOf(aikPublicKey.getEncoded());
                 log.debug("Extracted AIK public key from PEM file");
                 ProxyResponse backendResponse = proxyKeyRequestByAik(keyId, aikId, httpRequest);
                 prepareResponse(httpResponse, backendResponse);
@@ -118,7 +119,7 @@ public class ProxyGetKeyWithAik {
                 log.debug("Input is certificate");
 //                X509Certificate aikcert = X509Util.decodePemCertificate(pem);
                 X509Certificate aikCertificate = X509Util.decodeDerCertificate(pemObject.getContent());
-                Sha1Digest aikId = Sha1Digest.digestOf(aikCertificate.getPublicKey().getEncoded());
+                Sha256Digest aikId = Sha256Digest.digestOf(aikCertificate.getPublicKey().getEncoded());
                 ProxyResponse backendResponse = proxyKeyRequestByAik(keyId, aikId, httpRequest);
                 prepareResponse(httpResponse, backendResponse);
                 return backendResponse.content;
@@ -146,8 +147,8 @@ public class ProxyGetKeyWithAik {
         MultivaluedHashMap<String, String> headers = new MultivaluedHashMap<>();
     }
 
-    private ProxyResponse proxyKeyRequestByAik(String keyId, Sha1Digest aikPubKeySha1Digest, HttpServletRequest request) throws CryptographyException, ClientException, ApiException, GeneralSecurityException, IOException {
-        String aikId = aikPubKeySha1Digest.toHexString();
+    private ProxyResponse proxyKeyRequestByAik(String keyId, Sha256Digest aikPubKeySha256Digest, HttpServletRequest request) throws CryptographyException, ClientException, ApiException, GeneralSecurityException, IOException {
+        String aikId = aikPubKeySha256Digest.toHexString();
         log.debug("proxyKeyRequestByAik for keyId: {}, aikId: {}", keyId, aikId);
 //            HostTrustResponse hostTrustResponse = api.getHostTrustByAik(new com.intel.mtwilson.model.Sha1Digest(aikId.toByteArray()));  // convert from cpg-crypto Sha1Digest to mtwilson-crypto Sha1Digest, needed until Mt Wilson is updated to use cpg-crypto
 //            log.debug("trust status for {}", hostTrustResponse.hostname.toString());
