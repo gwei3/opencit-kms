@@ -102,7 +102,7 @@ public class MtWilsonV2Client implements SecurityAssertionProvider {
         try {
             log.debug("Sending GET request to attestation service for aik: {}", subject);
             HostAttestationFilterCriteria criteria = new HostAttestationFilterCriteria();
-            criteria.aikPublicKeySha1 = subject;
+            criteria.aikPublicKeySha256 = subject;
             String saml = client.searchHostAttestationsSaml(criteria);
             if( saml != null && !saml.isEmpty() ) {
                 return saml;
@@ -115,7 +115,7 @@ public class MtWilsonV2Client implements SecurityAssertionProvider {
         try {
             log.debug("Sending POST request to attestation service for aik: {}", subject);
             HostAttestation query = new HostAttestation();
-            query.setAikPublicKeySha1(subject);
+            query.setAikPublicKeySha256(subject);
             String saml = client.createHostAttestationSaml(query);
             if( saml != null && !saml.isEmpty() ) {
                 return saml;
