@@ -29,8 +29,11 @@ import com.intel.mtwilson.jaxrs2.mediatype.CryptoMediaType;
 import com.intel.mtwilson.launcher.ws.ext.V2;
 import com.intel.mtwilson.util.crypto.key2.CipherKeyAttributes;
 import com.intel.mtwilson.util.tpm12.CertifyKey;
+import static com.intel.mtwilson.util.tpm12.CertifyKey.isCertifiedKeySignatureValid;
 import com.intel.mtwilson.util.tpm20.CertifyKey20;
 import com.intel.mtwilson.util.tpm12.DataBind;
+import com.intel.mtwilson.util.tpm12.x509.TpmCertifyKeyInfo;
+import com.intel.mtwilson.util.tpm12.x509.TpmCertifyKeySignature;
 import com.intel.mtwilson.util.validation.faults.Thrown;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -58,6 +61,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.codec.DecoderException;
 import org.bouncycastle.asn1.ASN1InputStream; 
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
@@ -442,7 +446,7 @@ public class TransferKeyWithSAML {
         X509Certificate[] trustedSamlAuthorities = getTrustedSamlCertificateAuthorities();
         TrustAssertion trustAssertion = new TrustAssertion(trustedSamlAuthorities, saml);
         log.debug("trust assertion valid? {}", trustAssertion.isValid());
-
+        
         if (!trustAssertion.isValid()) {
             log.error("Invalid signature on trust report", trustAssertion.error());
             return TrustReport.UNTRUSTED;
@@ -550,12 +554,40 @@ public class TransferKeyWithSAML {
         }
         
         /* now verify binding key has the tpm-bind-data flag set and the migration flag NOT set */
-        if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey) && !tpm20Certified(bindingKeyCertificate, aikPublicKey)) {
-            log.error("Binding key certificate has invalid attributes or cannot be verified with the AIK");
-            return TrustReport.UNTRUSTED;
+        String os = hostTrustAssertion.getVMMOSName();
+        
+        if(os.toLowerCase().contains("win")){
+            try {
+                if( !isCertifiedKeySignatureValid(TpmCertifyKeyInfo.valueOf(bindingKeyCertificate.getExtensionValue(TpmCertifyKeyInfo.OID)).getBytes(), TpmCertifyKeySignature.valueOf(bindingKeyCertificate.getExtensionValue(TpmCertifyKeySignature.OID)).getBytes(), aikPublicKey) ) {
+                    log.debug("TPM Binding Public Key cannot be verified by the given AIK public key");
+                   // return false;
+                }
+            }
+            catch(GeneralSecurityException | DecoderException e) {
+                log.debug("Cannot verify TPM Binding Public Key signature", e);
+                //return false;
+            }        
+        }  
+        else{
+            if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey) && !tpm20Certified(bindingKeyCertificate, aikPublicKey)) {
+                log.error("Binding key certificate has invalid attributes or cannot be verified with the AIK");
+                return TrustReport.UNTRUSTED;
+            }
         }
 
         return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.2"));
+    }
+    private boolean tpmCertified(X509Certificate bindingKeyCertificate, PublicKey aikPublicKey) {
+           try {
+            if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey)) {
+                log.error("Cannot certify TPM 2.0 binding key certificate");
+                return false;
+            }
+        } catch (Exception ex) {
+            log.error("Exception thrown while certifying TPM 2.0 binding key certificate", ex);
+            return false;
+        }
+        return true;
     }
     
     private boolean tpm20Certified(X509Certificate bindingKeyCertificate, PublicKey aikPublicKey) {
