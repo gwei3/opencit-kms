@@ -33,7 +33,7 @@ public class MtWilsonV1Client implements SecurityAssertionProvider {
     public String getAssertionForSubject(String subject) throws IOException {
         try {
             ApiClient mtwilson = getMtWilsonClient();
-            String saml = mtwilson.getSamlForHostByAik(new com.intel.mtwilson.model.Sha1Digest(subject), true); // throws ApiException, SignatureException ; true means we want to force a fresh attestation; set to false if it's ok to get a cached rseponse
+            String saml = mtwilson.getSamlForHostByAik(new com.intel.mtwilson.model.Sha256Digest(subject), true); // throws ApiException, SignatureException ; true means we want to force a fresh attestation; set to false if it's ok to get a cached rseponse
             return saml;
         } catch (ClientException | GeneralSecurityException | ApiException | CryptographyException e) {
             throw new IOException(e);
