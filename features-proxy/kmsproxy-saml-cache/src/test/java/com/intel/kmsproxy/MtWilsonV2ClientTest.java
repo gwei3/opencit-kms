@@ -89,7 +89,7 @@ Server: Apache-Coyote/1.1
     public void testGetTrustReportFromAttestationService() throws Exception {
         Properties properties = PropertiesUtil.removePrefix(Env.getProperties("cit3-attestation"), "cit3.attestation.");
         HostAttestationFilterCriteria criteria = new HostAttestationFilterCriteria();
-   criteria.aikPublicKeySha1 = "9080c913c570f4a56c00b36bf1598ff184e15677";
+   criteria.aikPublicKeySha256 = "f59b391c32796828ea885ec7066237492443a09fa7e0e21d1fea864799469f0d";
        HostAttestations client = new HostAttestations(properties);
         String saml = client.searchHostAttestationsSaml(criteria);
         log.debug("SAML: {}", saml);
