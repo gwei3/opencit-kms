@@ -577,18 +577,6 @@ public class TransferKeyWithSAML {
 
         return new TrustReport(true, bindingKeyCertificate.getPublicKey(), bindingKeyCertificate.getExtensionValue("2.5.4.133.3.2.41.2"));
     }
-    private boolean tpmCertified(X509Certificate bindingKeyCertificate, PublicKey aikPublicKey) {
-           try {
-            if (!CertifyKey.verifyTpmBindingKeyCertificate(bindingKeyCertificate, aikPublicKey)) {
-                log.error("Cannot certify TPM 2.0 binding key certificate");
-                return false;
-            }
-        } catch (Exception ex) {
-            log.error("Exception thrown while certifying TPM 2.0 binding key certificate", ex);
-            return false;
-        }
-        return true;
-    }
     
     private boolean tpm20Certified(X509Certificate bindingKeyCertificate, PublicKey aikPublicKey) {
         try {
