@@ -95,11 +95,14 @@ public class MtWilsonV2Client implements SecurityAssertionProvider {
     @Override
     public String getAssertionForSubject(String subject) throws IOException {
         HostAttestations client = getMtWilsonClient();
+	// Don't use the cached attestation report for host. Always use the attestation 
+	// report by forcing a complete attestation cycle for the host.
+	/*
         // try the mtwilson cache first with a GET request
         try {
             log.debug("Sending GET request to attestation service for aik: {}", subject);
             HostAttestationFilterCriteria criteria = new HostAttestationFilterCriteria();
-            criteria.aikPublicKeySha1 = subject;
+            criteria.aikPublicKeySha256 = subject;
             String saml = client.searchHostAttestationsSaml(criteria);
             if( saml != null && !saml.isEmpty() ) {
                 return saml;
@@ -107,11 +110,12 @@ public class MtWilsonV2Client implements SecurityAssertionProvider {
         } catch (Exception e) {
             log.debug("Search for cached SAML report failed: {}", e.getMessage());
         }
+	*/
         // try asking for a new attestation report with a POST request
         try {
             log.debug("Sending POST request to attestation service for aik: {}", subject);
             HostAttestation query = new HostAttestation();
-            query.setAikPublicKeySha1(subject);
+            query.setAikPublicKeySha256(subject);
             String saml = client.createHostAttestationSaml(query);
             if( saml != null && !saml.isEmpty() ) {
                 return saml;
